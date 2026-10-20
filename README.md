@@ -1,3 +1,5 @@
+![Frociart: il personaggio inserisce un blocco nel diagramma](docs/assets/frociart-cover.png)
+
 # Frociart
 
 Crea, controlla e prova diagrammi di flusso. Un'app locale per Windows e Android, con lezioni guidate e file `.frociart`.
