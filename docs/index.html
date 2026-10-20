@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Crea, controlla e prova i tuoi diagrammi di flusso con Frociart. Scarica l'app o apri un progetto esistente.">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <title>Frociart — I tuoi flowchart, dal primo blocco alla prova</title>
+  <link rel="canonical" href="https://mamt104.github.io/Frociart/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:site_name" content="Frociart">
+  <meta property="og:url" content="https://mamt104.github.io/Frociart/">
+  <meta property="og:title" content="Frociart — Un'idea. Un blocco alla volta.">
+  <meta property="og:description" content="Crea, controlla e prova i tuoi flowchart. Scarica l'app per Windows o Android oppure apri un progetto sul tuo dispositivo.">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="assets/document.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="top"><a class="brand" href="./" aria-label="Frociart, pagina iniziale"><img src="assets/document.svg" width="34" height="40" alt=""><span>Frociart</span></a><a class="nav-link" href="#apri">Hai un progetto?</a></header>
+  <main>
+    <section class="hero" aria-labelledby="headline">
+      <div class="intro"><p class="eyebrow">DISEGNA · CONTROLLA · PROVA</p><h1 id="headline">Un'idea.<br>Un blocco alla volta.</h1><p class="lead">Costruisci il tuo flowchart, segui il percorso e scopri come funziona. Sul tuo dispositivo.</p><div class="actions"><a class="button primary" href="download/Frociart_Setup_1.11.15.exe" download>Scarica per Windows <span aria-hidden="true">↓</span></a><a class="button secondary" href="#apri">Apri un progetto</a></div><p class="subtle">Windows 10/11 · Nessun account nell'app · Funziona offline</p></div>
+      <div class="flow-art" role="img" aria-label="Un flowchart collega Inizio a una domanda, distingue Sì e No e riunisce i due percorsi in Prova">
+        <svg viewBox="0 0 420 475" aria-hidden="true" focusable="false">
+          <g fill="none" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+            <path stroke="#777f95" d="M210 66V110m-4-6 4 6 4-6"/>
+            <path stroke="#52d0ac" d="M124 190H80Q70 190 70 200V296m-4-6 4 6 4-6M70 344V370Q70 380 80 380H210"/>
+            <path stroke="#ff92ad" d="M296 190H340Q350 190 350 200V296m-4-6 4 6 4-6M350 344V370Q350 380 340 380H210"/>
+            <path stroke="#777f95" d="M210 380V407m-4-6 4 6 4-6"/>
+          </g>
+          <g fill="#25272e" stroke="#474c5a" stroke-width="1.5"><rect x="145" y="18" width="130" height="48" rx="24"/><rect x="20" y="296" width="100" height="48" rx="12"/><rect x="300" y="296" width="100" height="48" rx="12"/><rect x="145" y="407" width="130" height="48" rx="24"/></g>
+          <path d="M210 110L296 190 210 270 124 190Z" fill="#29282a" stroke="#ffca72" stroke-width="2"/>
+          <g text-anchor="middle" fill="#f3f4f8" class="flow-text"><text x="210" y="48">Inizio</text><text x="70" y="326">Prosegui</text><text x="350" y="326">Migliora</text><text x="210" y="437">Prova</text><text x="48" y="280" fill="#52d0ac">Sì</text><text x="374" y="280" fill="#ff92ad">No</text><text x="210" y="185" fill="#ffca72">La tua idea<tspan x="210" dy="20">funziona?</tspan></text></g>
+        </svg>
+      </div>
+    </section>
+    <section class="open-card" id="apri" aria-labelledby="open-title"><div><p class="eyebrow">RIPARTI DAL TUO PROGETTO</p><h2 id="open-title">Hai già un file?</h2><p>Sceglilo qui e aprilo in Frociart. Il contenuto resta nel browser: non viene caricato su un server.</p></div><div class="file-area" id="drop-zone"><label class="file-button" for="project-file">Scegli un file .frociart</label><input id="project-file" type="file" accept=".frociart,.flow,application/x-frociart"><p class="subtle">Oppure trascinalo qui · massimo 4 MB</p><div id="project-result" hidden><h3 id="project-title"></h3><p id="project-details"></p><div class="actions"><a id="open-app" class="button primary" aria-disabled="true">Apri in Frociart</a><a id="save-project" class="button secondary" download>Salva il progetto</a></div></div><p id="file-status" role="status" aria-live="polite"></p><p class="subtle">Non hai ancora l'app? <a href="download/Frociart_Setup_1.11.15.exe" download>Scarica Frociart</a>, installala e riapri il file. L'apertura diretta dal browser è disponibile su Windows.</p></div></section>
+    <section class="features" aria-label="Cosa puoi fare"><article><span class="feature-number">01</span><h2>Crea e collega</h2><p>Trascina le caselle sulle frecce. Distingui i rami e trova spazio per la tua logica.</p></article><article><span class="feature-number">02</span><h2>Segui il percorso</h2><p>Controlla il diagramma e prova valori diversi. Guarda dove passa ogni decisione.</p></article><article><span class="feature-number">03</span><h2>Impara facendo</h2><p>Lezioni guidate, esempi e prove per trasformare un'idea in un programma.</p></article></section>
+    <section class="other-downloads" aria-labelledby="downloads-title"><h2 id="downloads-title">Scegli come usarlo</h2><div class="download-row"><div><h3>Windows · 1.11.15</h3><p>Il pacchetto di configurazione aggiunge icona e doppio clic ai progetti.</p></div><a href="download/Frociart_Setup_1.11.15.exe" download>Configura sul PC ↓</a></div><div class="download-row"><div><h3>Versione portatile · 1.11.15</h3><p>Apri l'EXE. Puoi attivare l'associazione dei file anche da Altro.</p></div><a href="download/Frociart_1.11.15.exe" download>Scarica EXE ↓</a></div><div class="download-row"><div><h3>Android · 1.7.11</h3><p>Disegna e impara dal telefono. Installa l'APK e apri i progetti dall'app.</p></div><a href="download/Frociart_1.7.11_Android.apk" download>Scarica APK ↓</a></div><p class="subtle"><a href="download/SHA256SUMS_1.11.15.txt">Verifica l'integrità dei download</a></p></section>
+  </main>
+  <footer><span>Frociart — La logica prende forma.</span><a href="privacy.html">Privacy e sicurezza</a></footer>
+</body>
+</html>

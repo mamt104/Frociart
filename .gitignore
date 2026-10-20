@@ -1,0 +1,12 @@
+*.log
+*.jks
+*.keystore
+*.pdb
+*.env
+.env*
+work/
+QA/
+private-signing/
+node_modules/
+.DS_Store
+Thumbs.db
