@@ -13,6 +13,7 @@ Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, cos
 - **Costruire diagrammi:** usa blocchi di inizio, fine, lettura, scrittura, operazione e decisione.
 - **Organizzare il flusso:** trascina i blocchi, inseriscili nei collegamenti e riordina il diagramma.
 - **Gestire le decisioni:** collega separatamente i rami Sì e No e personalizzane etichette e colori.
+- **Creare cicli:** collega un'uscita anche alla stessa casella. Su Android trascina il `+` sul corpo del blocco, oppure scegli **Questo blocco** nel menu degli arrivi.
 - **Provare la logica:** verifica il diagramma, inserisci i valori richiesti e segui l'esecuzione fino al risultato.
 - **Imparare facendo:** esplora lezioni guidate ed esempi, con esercizi e dimostrazioni sul diagramma.
 - **Riprendere il lavoro:** salva i progetti in formato `.frociart` e riaprili quando vuoi.
