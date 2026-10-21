@@ -1,6 +1,6 @@
 # Sicurezza di Frociart
 
-Informazioni relative a Windows 1.11.15, Android 1.7.11 e al sito di distribuzione.
+Informazioni relative a Windows v1, Android v1 e al sito di distribuzione.
 
 ## Progetti e dati locali
 
@@ -18,7 +18,7 @@ Su Windows il comando di apertura dal browser trasferisce soltanto i dati del di
 
 L'installazione Windows riguarda l'utente corrente e rispetta le associazioni dei file già scelte. La rimozione tramite il pacchetto di configurazione conserva documenti e progressi.
 
-Gli EXE Windows non hanno una firma Authenticode; l'APK Android è firmato. Gli [hash SHA256](docs/download/SHA256SUMS_1.11.15.txt) consentono di confrontare i file scaricati con quelli distribuiti. Un hash verifica l'integrità del file e non sostituisce una firma dell'editore.
+Gli EXE Windows non hanno una firma Authenticode; l'APK Android è firmato. Gli [hash SHA256](docs/download/SHA256SUMS_v1.txt) consentono di confrontare i file scaricati con quelli distribuiti. Un hash verifica l'integrità del file e non sostituisce una firma dell'editore.
 
 ## Segnalazioni
 

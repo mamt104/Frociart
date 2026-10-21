@@ -1,12 +1,12 @@
 ![Frociart — La logica prende forma](docs/assets/frociart-cover.png)
 
-# Frociart
+# Frociart v1
 
 **Disegna, esegui e comprendi i diagrammi di flusso.**
 
 Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, costruisci decisioni con due rami e prova il risultato con valori diversi. Le lezioni guidate aiutano a imparare la logica attraverso esempi ed esercizi pratici.
 
-[Sito del progetto](https://mamt104.github.io/Frociart/) · [Scarica per Windows](https://mamt104.github.io/Frociart/download/Frociart_Setup_1.11.15.exe) · [Scarica per Android](https://mamt104.github.io/Frociart/download/Frociart_1.7.11_Android.apk)
+[Sito del progetto](https://mamt104.github.io/Frociart/) · [Scarica per Windows](https://mamt104.github.io/Frociart/download/Frociart_Setup_v1.exe) · [Scarica per Android](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk)
 
 ## Cosa puoi fare
 
@@ -23,9 +23,9 @@ L'app funziona offline e non richiede un account.
 
 | Piattaforma | Versione | Pacchetto | Utilizzo |
 | --- | --- | --- | --- |
-| Windows | 1.11.15 | [Configurazione EXE](https://mamt104.github.io/Frociart/download/Frociart_Setup_1.11.15.exe) | Installa Frociart e configura icona e apertura dei progetti con doppio clic. |
-| Windows | 1.11.15 | [EXE portatile](https://mamt104.github.io/Frociart/download/Frociart_1.11.15.exe) | Avvia direttamente l'app. |
-| Android | 1.7.11 | [APK](https://mamt104.github.io/Frociart/download/Frociart_1.7.11_Android.apk) | Installa l'app sul telefono. |
+| Windows | v1 | [Configurazione EXE](https://mamt104.github.io/Frociart/download/Frociart_Setup_v1.exe) | Installa Frociart e configura icona e apertura dei progetti con doppio clic. |
+| Windows | v1 | [EXE portatile](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) | Avvia direttamente l'app. |
+| Android | v1 | [APK](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk) | Installa l'app sul telefono. |
 
 **Requisiti:** Windows 10/11 con .NET Framework 4.8, oppure Android 8.0 e successivi. La connessione serve per scaricare i pacchetti e visitare eventuali risorse didattiche esterne.
 
@@ -83,7 +83,7 @@ Per i progetti più grandi è disponibile **Salva il progetto**, seguito dall'ap
 
 Progetti e progressi restano sul dispositivo. I dettagli sul trattamento dei dati sono nella [pagina Privacy e sicurezza](https://mamt104.github.io/Frociart/privacy.html).
 
-Gli [hash SHA256](docs/download/SHA256SUMS_1.11.15.txt) permettono di verificare l'integrità dei pacchetti. Gli EXE Windows non sono firmati con Authenticode: il sistema può mostrare un avviso sull'editore. L'APK Android è firmato.
+Gli [hash SHA256](docs/download/SHA256SUMS_v1.txt) permettono di verificare l'integrità dei pacchetti. Gli EXE Windows non sono firmati con Authenticode: il sistema può mostrare un avviso sull'editore. L'APK Android è firmato.
 
 ## Assistenza
 
