@@ -33,11 +33,11 @@
       if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(new Blob([JSON.stringify(doc)],{type:'application/x-frociart'}));
       save.href=blobUrl;save.download='Progetto.frociart';$('project-title').textContent=doc.Title||'Il tuo progetto';$('project-details').textContent=doc.Nodes.length+' blocchi · '+doc.Edges.length+' collegamenti';
       open.setAttribute('aria-disabled',link?'false':'true');if(link){open.href=link;open.tabIndex=0;}else{open.removeAttribute('href');open.tabIndex=-1;}
-      result.hidden=false;status.textContent=link?'Pronto. Premi Apri in Frociart e conferma la richiesta del browser. Se l’app non è installata, usa il download qui sotto.':'Il progetto è grande: salvalo e aprilo con doppio clic dopo aver installato Frociart.';
+      result.hidden=false;status.textContent=link?'Pronto. Premi Apri in Frociart e conferma la richiesta del browser. Se l’app non è installata, usa il download qui sotto.':'Il progetto è grande: salvalo e aprilo con doppio clic dopo aver attivato icona e doppio clic dal menu Altro di Frociart.';
     }catch(error){if(current!==generation)return;status.className='error';status.textContent=(error instanceof SyntaxError||error instanceof TypeError?'Non riesco a leggere questo progetto. Scegli un file .frociart valido.':error.message)+(!result.hidden?' Il progetto già caricato resta disponibile.':'');}
   }
   input.addEventListener('change',()=>read(input.files[0]));
   zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover');});zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');if(e.dataTransfer.files.length===1)read(e.dataTransfer.files[0]);else{status.className='error';status.textContent='Scegli un solo progetto alla volta.';}});
-  open.addEventListener('click',()=>{status.className='';status.textContent='Se il browser lo chiede, conferma l’apertura di Frociart. Non compare l’app? Scaricala e installala dal collegamento qui sotto.';});
+  open.addEventListener('click',()=>{status.className='';status.textContent='Se il browser lo chiede, conferma l’apertura di Frociart. Non compare l’app? Scaricala dal collegamento qui sotto, aprila e attiva icona e doppio clic dal menu Altro.';});
   root.addEventListener('pagehide',event=>{if(!event.persisted&&blobUrl){URL.revokeObjectURL(blobUrl);blobUrl=null;}});
 })(typeof window==='object'?window:globalThis);

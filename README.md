@@ -6,11 +6,12 @@
 
 Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, costruisci decisioni con due rami e prova il risultato con valori diversi. Le lezioni guidate aiutano a imparare la logica attraverso esempi ed esercizi pratici.
 
-[Sito del progetto](https://mamt104.github.io/Frociart/) · [Scarica per Windows](https://mamt104.github.io/Frociart/download/Frociart_Setup_v1.exe) · [Scarica per Android](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk)
+[Sito del progetto](https://mamt104.github.io/Frociart/) · [Scarica per Windows](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) · [Scarica per Android](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk)
 
 ## Cosa puoi fare
 
 - **Costruire diagrammi:** usa blocchi di inizio, fine, lettura, scrittura, operazione e decisione.
+- **Usare i simboli degli esercizi:** un solo parallelogramma **Input / Output**. Scegli **Leggi** per ricevere un dato o **Scrivi** per mostrare un risultato; forma e colore sono gli stessi.
 - **Organizzare il flusso:** trascina i blocchi, inseriscili nei collegamenti e riordina il diagramma.
 - **Gestire le decisioni:** collega separatamente i rami Sì e No e personalizzane etichette e colori.
 - **Creare cicli:** collega un'uscita anche alla stessa casella. Su Android trascina il `+` sul corpo del blocco, oppure scegli **Questo blocco** nel menu degli arrivi.
@@ -25,7 +26,6 @@ L'app funziona offline e non richiede un account.
 
 | Piattaforma | Versione | Pacchetto | Utilizzo |
 | --- | --- | --- | --- |
-| Windows | v1 | [Configurazione EXE](https://mamt104.github.io/Frociart/download/Frociart_Setup_v1.exe) | Installa Frociart e configura icona e apertura dei progetti con doppio clic. |
 | Windows | v1 | [EXE portatile](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) | Avvia direttamente l'app. |
 | Android | v1 | [APK](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk) | Installa l'app sul telefono. |
 
@@ -35,13 +35,11 @@ L'app funziona offline e non richiede un account.
 
 ### Windows
 
-1. Scarica ed esegui il pacchetto di configurazione.
-2. Installa Frociart per il tuo utente; non servono privilegi amministratore.
-3. Avvia l'app oppure fai doppio clic su un file `.frociart`.
+1. Scarica e apri **Frociart_v1.exe**: l'app si avvia direttamente.
+2. Per icona e doppio clic sui progetti, chiudi eventuali altre copie dell'app e scegli **Altro → Attiva icona e doppio clic dei progetti**. La configurazione vale per il tuo utente.
+3. Apri i file `.frociart` dall'app oppure con doppio clic dopo la configurazione.
 
-Se Windows usa già un'altra applicazione per questi file, scegli **Apri con → Frociart**. Nella versione portatile puoi configurare icona e doppio clic dal menu **Altro → Attiva icona e doppio clic dei progetti**.
-
-Il pacchetto di configurazione permette anche di rimuovere l'app, conservando progetti e progressi.
+Se Windows usa già un'altra applicazione per questi file, scegli **Apri con → Frociart**.
 
 ### Android
 
@@ -100,7 +98,7 @@ La conversione ricrea la logica; posizioni, colori e nomi personalizzati dei ram
 
 ## Aprire un progetto dal sito
 
-Nella [pagina del progetto](https://mamt104.github.io/Frociart/#apri), scegli o trascina un file `.frociart`. Su Windows, **Apri in Frociart** lo passa all'app installata; il browser può chiedere conferma. Se l'app manca, scarica il pacchetto di configurazione e poi riapri il file.
+Nella [pagina del progetto](https://mamt104.github.io/Frociart/#apri), scegli o trascina un file `.frociart`. Su Windows, **Apri in Frociart** lo passa all'app installata; il browser può chiedere conferma. Se l'app manca, scarica l'EXE, attiva l'apertura dei progetti dal menu Altro e poi riapri il file.
 
 Per i progetti più grandi è disponibile **Salva il progetto**, seguito dall'apertura del file locale. Il sito legge il documento sul dispositivo e non lo carica su un server. I limiti di importazione sono 4 MB, 500 blocchi e 1.500 collegamenti.
 
