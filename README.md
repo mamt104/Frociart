@@ -17,6 +17,7 @@ Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, cos
 - **Creare cicli:** collega un'uscita anche alla stessa casella. Su Android trascina il `+` sul corpo del blocco, oppure scegli **Questo blocco** nel menu degli arrivi.
 - **Passare al pseudocodice:** converti il diagramma in testo oppure scrivi il codice e crea un nuovo flowchart, senza collegarti a servizi esterni.
 - **Lavorare con vettori:** crea un elenco di valori dello stesso tipo, leggi o modifica un elemento con `valori[i]` e calcola lunghezza, somma, minimo e massimo.
+- **Trovare funzioni ed esempi:** cerca «radice», «decimali» o il nome di una funzione nel catalogo e inserisci un esempio nel punto in cui stai scrivendo. Disponibile nei blocchi e nel pannello pseudocodice, su PC e Android.
 - **Condividere una prova leggibile:** esporta un PNG con diagramma, variabili, indici dei vettori e risultato insieme.
 - **Provare la logica:** verifica il diagramma, inserisci i valori richiesti e segui l'esecuzione fino al risultato.
 - **Riprendere il lavoro:** salva i progetti in formato `.frociart` e riaprili dalla home con un clic o un tocco. Su Windows trovi i file recenti; su Android i progetti salvati sul telefono.
@@ -114,6 +115,37 @@ FINE
 Gli indici partono da **0**. `valori[1] = 25` modifica il secondo elemento; `leggi valori[1]` ne chiede il valore. `vettore(5)` crea cinque zeri. Gli elementi devono essere tutti numeri, tutti testi oppure tutti valori logici; massimo 1.024 elementi. Sono disponibili `len`, `somma`/`sum`, `min` e `max`.
 
 `PASSO` è facoltativo e vale 1; puoi usare un altro intero costante diverso da zero, anche negativo. Il limite finale viene calcolato una volta e conservato nella variabile visibile `limite_ciclo_N`. Il ciclo si trasforma in blocchi di operazione e decisione modificabili. Quando lo riconverti in testo, viene mostrato come `MENTRE` equivalente.
+
+## Funzioni ed esempi
+
+Apri **Funzioni ed esempi** mentre modifichi il contenuto di un blocco o il pseudocodice. Cerca il nome della funzione oppure ciò che vuoi fare, come «radice», «testo» o «decimali». Ogni voce spiega gli argomenti e mostra un esempio con il suo risultato. L'inserimento sostituisce il testo selezionato o aggiunge l'esempio alla posizione del cursore.
+
+| Categoria | Funzioni disponibili |
+| --- | --- |
+| Numeri | `abs`, `sqrt`, `int`, `floor`, `round`, `sgn`, `min`, `max`, `random` |
+| Trigonometria | `sin`, `cos`, `tan`, `arcsin`, `arccos`, `arctan`; costante `pi` o `π` |
+| Logaritmi | `ln` / `log` per il logaritmo naturale; `log10` in base dieci |
+| Testi | `len`, `char`, `tochar`, `tocode` |
+| Conversioni | `tointeger`, `toreal`, `tostring`, `tofixed` |
+| Vettori | `vettore` / `array`, `size`, `len`, `somma` / `sum`, `min`, `max` |
+
+```text
+INIZIO
+prezzi = [12.5, 8, 24]
+totale = somma(prezzi)
+STAMPA "Totale: " + tofixed(totale, 2)
+dado = random(6) + 1
+STAMPA "Dado: " + dado
+FINE
+```
+
+Il primo risultato è `Totale: 44.50`. `random(6)` restituisce un intero da 0 a 5; aggiungendo 1 ottieni un dado da 1 a 6. I nomi delle funzioni non distinguono maiuscole e minuscole.
+
+Gli angoli sono in **radianti**: per convertire i gradi usa `gradi * pi / 180`. `int` elimina la parte decimale verso zero, mentre `floor` arrotonda verso il basso. `round` e `tofixed` accettano da 0 a 15 decimali e arrotondano le metà lontano da zero. I numeri hanno precisione finita: chiedere molti decimali non aggiunge precisione al valore calcolato.
+
+`tointeger` converte un testo intero tra -2147483648 e 2147483647. `toreal` accetta punto o virgola decimale ed esponenti, senza separatori delle migliaia. `len` e `char` contano i punti di codice Unicode: `len("A😀é")` vale 3 e `char("A😀é", 1)` restituisce `😀`; una sequenza composta da più punti di codice può apparire come un solo simbolo. I progetti precedenti che contavano le due metà UTF-16 di un'emoji ora usano questo conteggio coerente.
+
+Le funzioni sono locali e non richiedono servizi esterni. La lettura di file tramite `EOF` e le funzioni definite dall'utente non sono ancora disponibili.
 
 ## Diagrammi e variabili leggibili da condividere
 
