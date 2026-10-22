@@ -4,7 +4,7 @@ Informazioni relative a Windows v1, Android v1 e al sito di distribuzione.
 
 ## Progetti e dati locali
 
-Frociart funziona sul dispositivo, senza account o sincronizzazione remota. Progetti, progressi e diagnostica locale non vengono inviati automaticamente. I collegamenti didattici esterni si aprono nel browser quando vengono selezionati.
+Frociart funziona sul dispositivo, senza account o sincronizzazione remota. Progetti, preferenze, cronologia e diagnostica locale non vengono inviati automaticamente.
 
 Il sito legge i documenti nel browser e non li carica su un server. GitHub ospita il sito e i download; consulta la [pagina Privacy](https://mamt104.github.io/Frociart/privacy.html) per i dettagli.
 
@@ -16,10 +16,12 @@ Su Windows il comando di apertura dal browser trasferisce soltanto i dati del di
 
 ## Installazione e integrità
 
-L'installazione Windows riguarda l'utente corrente e rispetta le associazioni dei file già scelte. La rimozione tramite il pacchetto di configurazione conserva documenti e progressi.
+L'installazione Windows riguarda l'utente corrente e rispetta le associazioni dei file già scelte. Il download Windows è un EXE portatile; non viene distribuito un installer separato.
 
 Gli EXE Windows non hanno una firma Authenticode; l'APK Android è firmato. Gli [hash SHA256](docs/download/SHA256SUMS_v1.txt) consentono di confrontare i file scaricati con quelli distribuiti. Un hash verifica l'integrità del file e non sostituisce una firma dell'editore.
 
 ## Segnalazioni
 
 Nelle segnalazioni pubbliche includi versione, piattaforma e un esempio riproducibile senza informazioni personali. Non allegare credenziali o progetti riservati. Conserva una copia dei documenti importanti e mantieni aggiornato il sistema operativo.
+
+Una firma o un hash non garantiscono l’assenza di segnalazioni antivirus. Non disattivare le protezioni per aprire un pacchetto segnalato: conserva il nome del rilevamento e l’hash per la verifica.

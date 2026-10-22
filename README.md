@@ -4,21 +4,20 @@
 
 **Disegna, esegui e comprendi i diagrammi di flusso.**
 
-Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, costruisci decisioni con due rami e prova il risultato con valori diversi. Le lezioni guidate aiutano a imparare la logica attraverso esempi ed esercizi pratici.
+Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, costruisci decisioni con due rami e prova il risultato con valori diversi. Questa versione è dedicata alla creazione e alla simulazione dei flowchart.
 
 [Sito del progetto](https://mamt104.github.io/Frociart/) · [Scarica per Windows](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) · [Scarica per Android](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk)
 
 ## Cosa puoi fare
 
 - **Costruire diagrammi:** usa blocchi di inizio, fine, lettura, scrittura, operazione e decisione.
-- **Usare i simboli degli esercizi:** un solo parallelogramma **Input / Output**. Scegli **Leggi** per ricevere un dato o **Scrivi** per mostrare un risultato; forma e colore sono gli stessi.
+- **Usare i simboli degli esercizi:** un solo parallelogramma **Input / Output**. Scrivi direttamente **leggi x** oppure **stampa x**: la lettura diventa azzurra e la stampa viola. Il toggle **Separa Input e Output** mostra due voci nella palette senza cambiare la logica del progetto.
 - **Organizzare il flusso:** trascina i blocchi, inseriscili nei collegamenti e riordina il diagramma.
 - **Gestire le decisioni:** collega separatamente i rami Sì e No e personalizzane etichette e colori.
 - **Creare cicli:** collega un'uscita anche alla stessa casella. Su Android trascina il `+` sul corpo del blocco, oppure scegli **Questo blocco** nel menu degli arrivi.
 - **Passare al pseudocodice:** converti il diagramma in testo oppure scrivi il codice e crea un nuovo flowchart, senza collegarti a servizi esterni.
 - **Provare la logica:** verifica il diagramma, inserisci i valori richiesti e segui l'esecuzione fino al risultato.
-- **Imparare facendo:** esplora lezioni guidate ed esempi, con esercizi e dimostrazioni sul diagramma.
-- **Riprendere il lavoro:** salva i progetti in formato `.frociart` e riaprili quando vuoi.
+- **Riprendere il lavoro:** salva i progetti in formato `.frociart` e riaprili dalla home con un clic o un tocco. Su Windows trovi i file recenti; su Android i progetti salvati sul telefono.
 
 L'app funziona offline e non richiede un account.
 
@@ -29,7 +28,7 @@ L'app funziona offline e non richiede un account.
 | Windows | v1 | [EXE portatile](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) | Avvia direttamente l'app. |
 | Android | v1 | [APK](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk) | Installa l'app sul telefono. |
 
-**Requisiti:** Windows 10/11 con .NET Framework 4.8, oppure Android 8.0 e successivi. La connessione serve per scaricare i pacchetti e visitare eventuali risorse didattiche esterne.
+**Requisiti:** Windows 10/11 con .NET Framework 4.8, oppure Android 8.0 e successivi. La connessione serve per scaricare i pacchetti e visitare il sito del progetto.
 
 ## Installazione
 
@@ -53,7 +52,7 @@ Scarica l'APK sul telefono, aprilo e segui la procedura di installazione di Andr
 4. Verifica il diagramma e avvia l'esecuzione. Fornisci i valori richiesti e osserva il percorso e il risultato.
 5. Salva il progetto per continuare in seguito.
 
-Per un percorso guidato, apri **Impara**.
+La sezione Impara è sospesa in questa versione; i progetti precedenti restano conservati.
 
 ### Comandi utili
 
@@ -75,7 +74,7 @@ Durante la modifica di un campo di testo, le scorciatoie di copia e incolla agis
 
 ## Flowchart e pseudocodice
 
-Su Windows apri **Altro → Pseudocodice ↔ diagramma**. Su Android trovi la stessa voce nel menu **⋯** dell'editor e in **Esporta**.
+Su Windows il pseudocodice si aggiorna in tempo reale nel pannello in basso a destra. Per importarlo apri **Altro → Importa / modifica pseudocodice…**. Su Android apri **Pseudocodice ↔ diagramma** dal menu **⋯** dell’editor oppure usa **Importa pseudocodice** nella home.
 
 - **Dal diagramma** trascrive il progetto aperto.
 - Scrivi o incolla il testo, oppure usa **Apri testo** per un file UTF-8. **Crea diagramma** genera un nuovo progetto disposto sul foglio.
@@ -85,9 +84,9 @@ Su Windows apri **Altro → Pseudocodice ↔ diagramma**. Su Android trovi la st
 INIZIO
 LEGGI numero
 SE numero >= 0 ALLORA
-    SCRIVI "Positivo o zero"
+    STAMPA "Positivo o zero"
 ALTRIMENTI
-    SCRIVI "Negativo"
+    STAMPA "Negativo"
 FINE SE
 FINE
 ```
@@ -104,7 +103,7 @@ Per i progetti più grandi è disponibile **Salva il progetto**, seguito dall'ap
 
 ## Dati e download
 
-Progetti e progressi restano sul dispositivo. I dettagli sul trattamento dei dati sono nella [pagina Privacy e sicurezza](https://mamt104.github.io/Frociart/privacy.html).
+Progetti, bozze e cronologia dei file restano sul dispositivo. I dettagli sul trattamento dei dati sono nella [pagina Privacy e sicurezza](https://mamt104.github.io/Frociart/privacy.html).
 
 Gli [hash SHA256](docs/download/SHA256SUMS_v1.txt) permettono di verificare l'integrità dei pacchetti. Gli EXE Windows non sono firmati con Authenticode: il sistema può mostrare un avviso sull'editore. L'APK Android è firmato.
 
@@ -113,3 +112,9 @@ Gli [hash SHA256](docs/download/SHA256SUMS_v1.txt) permettono di verificare l'in
 Per segnalare un problema, [apri una issue](https://github.com/mamt104/Frociart/issues) indicando versione dell'app, sistema operativo, passaggi per riprodurlo e comportamento atteso. Allega, se utile, un esempio privo di dati personali.
 
 Questo repository ospita la pagina del progetto, la documentazione e i pacchetti di distribuzione.
+
+## Autore e condizioni d’uso
+
+**Frociart è un progetto di mamt104.** Copyright © 2026 mamt104. Tutti i diritti riservati.
+
+L’uso delle versioni ufficiali è gratuito. Non è consentito rimuovere l’attribuzione o ripubblicare l’app presentandola come un proprio prodotto. I diagrammi creati restano dell’utente. Consulta le [condizioni complete](LICENSE.txt). Per condividere Frociart, usa il collegamento a questo progetto.
