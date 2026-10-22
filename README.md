@@ -16,6 +16,8 @@ Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, cos
 - **Gestire le decisioni:** collega separatamente i rami Sì e No e personalizzane etichette e colori.
 - **Creare cicli:** collega un'uscita anche alla stessa casella. Su Android trascina il `+` sul corpo del blocco, oppure scegli **Questo blocco** nel menu degli arrivi.
 - **Passare al pseudocodice:** converti il diagramma in testo oppure scrivi il codice e crea un nuovo flowchart, senza collegarti a servizi esterni.
+- **Lavorare con vettori:** crea un elenco di valori dello stesso tipo, leggi o modifica un elemento con `valori[i]` e calcola lunghezza, somma, minimo e massimo.
+- **Condividere una prova leggibile:** esporta un PNG con diagramma, variabili, indici dei vettori e risultato insieme.
 - **Provare la logica:** verifica il diagramma, inserisci i valori richiesti e segui l'esecuzione fino al risultato.
 - **Riprendere il lavoro:** salva i progetti in formato `.frociart` e riaprili dalla home con un clic o un tocco. Su Windows trovi i file recenti; su Android i progetti salvati sul telefono.
 
@@ -91,9 +93,36 @@ FINE SE
 FINE
 ```
 
-Sono supportati assegnazioni, lettura e scrittura, `SE/ALTRIMENTI`, `MENTRE` e `RIPETI/FINCHÉ`, anche con le parole chiave equivalenti in inglese. Nei grafi complessi, etichette e `VAI A` mantengono esplicite le destinazioni. `SCOLLEGATO` rappresenta un'uscita libera. Gli errori di sintassi indicano la riga da correggere e lasciano il testo nell'editor.
+Sono supportati assegnazioni, lettura e scrittura, `SE/ALTRIMENTI`, `MENTRE`, `PER/FOR` e `RIPETI/FINCHÉ`, anche con le parole chiave equivalenti in inglese. Nei grafi complessi, etichette e `VAI A` mantengono esplicite le destinazioni. `SCOLLEGATO` rappresenta un'uscita libera. Gli errori di sintassi indicano la riga da correggere e lasciano il testo nell'editor.
 
-La conversione ricrea la logica; posizioni, colori e nomi personalizzati dei rami si conservano nel formato `.frociart`. Le espressioni usano lo stesso motore del simulatore: funzioni personali e liste non sono supportate. Il limite è di 256 Ki caratteri, 5.000 righe, 48 livelli annidati e 500 blocchi. Dopo la conversione usa **Verifica** ed **Esegui** per controllare il programma con i tuoi dati.
+La conversione ricrea la logica; posizioni, colori e nomi personalizzati dei rami si conservano nel formato `.frociart`. Le espressioni usano lo stesso motore del simulatore: i vettori sono supportati; le funzioni personali non sono ancora disponibili. Il limite è di 256 Ki caratteri, 5.000 righe, 48 livelli annidati e 500 blocchi. Dopo la conversione usa **Verifica** ed **Esegui** per controllare il programma con i tuoi dati.
+
+## Vettori e cicli FOR
+
+Nell'editor di pseudocodice trovi **Esempi → Vettori e ciclo FOR**. Puoi anche usare le stesse espressioni direttamente nei blocchi:
+
+```text
+INIZIO
+valori = [10, 20, 30]
+PER i DA 0 A len(valori) - 1 FAI
+    STAMPA valori[i]
+FINE PER
+STAMPA "Totale: " + somma(valori)
+FINE
+```
+
+Gli indici partono da **0**. `valori[1] = 25` modifica il secondo elemento; `leggi valori[1]` ne chiede il valore. `vettore(5)` crea cinque zeri. Gli elementi devono essere tutti numeri, tutti testi oppure tutti valori logici; massimo 1.024 elementi. Sono disponibili `len`, `somma`/`sum`, `min` e `max`.
+
+`PASSO` è facoltativo e vale 1; puoi usare un altro intero costante diverso da zero, anche negativo. Il limite finale viene calcolato una volta e conservato nella variabile visibile `limite_ciclo_N`. Il ciclo si trasforma in blocchi di operazione e decisione modificabili. Quando lo riconverti in testo, viene mostrato come `MENTRE` equivalente.
+
+## Diagrammi e variabili leggibili da condividere
+
+- **Windows:** nel pannello Esecuzione scegli **Vista da condividere**, controlla l'anteprima e premi **Salva PNG**.
+- **Android:** nella prova scegli **Immagine con dati**, poi **Salva immagine** oppure **Condividi immagine**. La stessa voce è disponibile nel menu di esportazione.
+- La prova si mette in pausa: l'immagine conserva diagramma, valori e risultato di quel momento. I vettori mostrano ogni indice con il suo valore. I testi lunghi vanno a capo.
+- Le variabili si leggono anche durante la prova. Su PC fai doppio clic su una variabile; su Android tocca **Variabili** e scegli il nome per aprire il valore completo.
+
+L'immagine viene preparata sul dispositivo. I progetti molto estesi possono superare il limite di un singolo PNG: in quel caso l'app spiega il problema, senza tagliare i dati o renderli minuscoli. Puoi leggere e copiare le singole variabili oppure esportare il solo diagramma in SVG.
 
 ## Aprire un progetto dal sito
 
