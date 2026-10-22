@@ -14,6 +14,7 @@ Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, cos
 - **Organizzare il flusso:** trascina i blocchi, inseriscili nei collegamenti e riordina il diagramma.
 - **Gestire le decisioni:** collega separatamente i rami Sì e No e personalizzane etichette e colori.
 - **Creare cicli:** collega un'uscita anche alla stessa casella. Su Android trascina il `+` sul corpo del blocco, oppure scegli **Questo blocco** nel menu degli arrivi.
+- **Passare al pseudocodice:** converti il diagramma in testo oppure scrivi il codice e crea un nuovo flowchart, senza collegarti a servizi esterni.
 - **Provare la logica:** verifica il diagramma, inserisci i valori richiesti e segui l'esecuzione fino al risultato.
 - **Imparare facendo:** esplora lezioni guidate ed esempi, con esercizi e dimostrazioni sul diagramma.
 - **Riprendere il lavoro:** salva i progetti in formato `.frociart` e riaprili quando vuoi.
@@ -73,6 +74,29 @@ Su Windows sono disponibili le scorciatoie per lavorare con i blocchi:
 | `Canc` | Elimina i blocchi selezionati. |
 
 Durante la modifica di un campo di testo, le scorciatoie di copia e incolla agiscono sul testo.
+
+## Flowchart e pseudocodice
+
+Su Windows apri **Altro → Pseudocodice ↔ diagramma**. Su Android trovi la stessa voce nel menu **⋯** dell'editor e in **Esporta**.
+
+- **Dal diagramma** trascrive il progetto aperto.
+- Scrivi o incolla il testo, oppure usa **Apri testo** per un file UTF-8. **Crea diagramma** genera un nuovo progetto disposto sul foglio.
+- **Copia** e **Salva testo** conservano il pseudocodice. **Sintassi** mostra comandi ed esempi. Su PC puoi creare il diagramma anche con `Ctrl+Invio`.
+
+```text
+INIZIO
+LEGGI numero
+SE numero >= 0 ALLORA
+    SCRIVI "Positivo o zero"
+ALTRIMENTI
+    SCRIVI "Negativo"
+FINE SE
+FINE
+```
+
+Sono supportati assegnazioni, lettura e scrittura, `SE/ALTRIMENTI`, `MENTRE` e `RIPETI/FINCHÉ`, anche con le parole chiave equivalenti in inglese. Nei grafi complessi, etichette e `VAI A` mantengono esplicite le destinazioni. `SCOLLEGATO` rappresenta un'uscita libera. Gli errori di sintassi indicano la riga da correggere e lasciano il testo nell'editor.
+
+La conversione ricrea la logica; posizioni, colori e nomi personalizzati dei rami si conservano nel formato `.frociart`. Le espressioni usano lo stesso motore del simulatore: funzioni personali e liste non sono supportate. Il limite è di 256 Ki caratteri, 5.000 righe, 48 livelli annidati e 500 blocchi. Dopo la conversione usa **Verifica** ed **Esegui** per controllare il programma con i tuoi dati.
 
 ## Aprire un progetto dal sito
 
