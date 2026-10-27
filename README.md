@@ -28,17 +28,19 @@ L'app funziona offline e non richiede un account.
 
 | Piattaforma | Versione | Pacchetto | Utilizzo |
 | --- | --- | --- | --- |
-| Windows | v1 | [EXE portatile](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) | Avvia direttamente l'app. |
-| Android | v1 | [APK](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk) | Installa l'app sul telefono. |
+| Windows x64 | v1 · 1.82 | [Autonomo](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) | Runtime incluso. |
+| Windows AnyCPU | v1 · 1.82 | [Classico](https://mamt104.github.io/Frociart/download/Frociart_v1_Classico.exe) | Richiede .NET Framework 4.8. |
+| Windows x64 | v1 · 1.82 | [Setup](https://mamt104.github.io/Frociart/download/Frociart_v1_Setup.exe) | Installazione per utente. |
+| Android | v1 · build 100 | [APK](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk) | Installa l'app sul telefono. |
 
-**Requisiti:** Windows 10/11 con .NET Framework 4.8, oppure Android 8.0 e successivi. La connessione serve per scaricare i pacchetti e visitare il sito del progetto.
+**Requisiti:** Windows autonomo e setup per x64; il primo include .NET 10, il secondo può scaricare componenti Microsoft mancanti. La variante classica AnyCPU richiede .NET Framework 4.8. Android richiede API 26 (8.0) o successivo. Consulta il rapporto di collaudo per gli ambienti effettivamente provati. La connessione serve per scaricare i pacchetti e visitare il sito del progetto.
 
 ## Installazione
 
 ### Windows
 
 1. Scarica e apri **Frociart_v1.exe**: l'app si avvia direttamente.
-2. Per icona e doppio clic sui progetti, chiudi eventuali altre copie dell'app e scegli **Altro → Attiva icona e doppio clic dei progetti**. La configurazione vale per il tuo utente.
+2. Per icona e doppio clic sui progetti, chiudi eventuali altre copie dell'app e scegli **Progetto → Impostazioni del progetto e dei file → Attiva icona e doppio clic dei progetti**. La configurazione vale per il tuo utente.
 3. Apri i file `.frociart` dall'app oppure con doppio clic dopo la configurazione.
 
 Se Windows usa già un'altra applicazione per questi file, scegli **Apri con → Frociart**.
@@ -179,3 +181,7 @@ Questo repository ospita la pagina del progetto, la documentazione e i pacchetti
 **Frociart è un progetto di mamt104.** Copyright © 2026 mamt104. Tutti i diritti riservati.
 
 L’uso delle versioni ufficiali è gratuito. Non è consentito rimuovere l’attribuzione o ripubblicare l’app presentandola come un proprio prodotto. I diagrammi creati restano dell’utente. Consulta le [condizioni complete](LICENSE.txt). Per condividere Frociart, usa il collegamento a questo progetto.
+
+## Integrità e conservazione dei progetti
+
+Gli hash dei quattro pacchetti sono in [SHA256SUMS_v1.txt](docs/download/SHA256SUMS_v1.txt). I termini dei componenti sono conservati in [download/Licenze](docs/download/Licenze/). Il salvataggio browser dei file riconosciuti mantiene byte e metadati originali. I formati più recenti vengono segnalati: aprili direttamente nell’app aggiornata.

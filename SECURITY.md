@@ -16,7 +16,7 @@ Su Windows il comando di apertura dal browser trasferisce soltanto i dati del di
 
 ## Installazione e integrità
 
-L'installazione Windows riguarda l'utente corrente e rispetta le associazioni dei file già scelte. Il download Windows è un EXE portatile; non viene distribuito un installer separato.
+L'installazione Windows riguarda l'utente corrente e rispetta le associazioni dei file già scelte. Sono disponibili Windows autonomo x64 con runtime incluso, Windows classico AnyCPU e setup x64 per utente. Il setup indica i componenti Microsoft mancanti prima dell’eventuale download. I pacchetti non modificano UserChoice né sostituiscono silenziosamente le associazioni di altre applicazioni.
 
 Gli EXE Windows non hanno una firma Authenticode; l'APK Android è firmato. Gli [hash SHA256](docs/download/SHA256SUMS_v1.txt) consentono di confrontare i file scaricati con quelli distribuiti. Un hash verifica l'integrità del file e non sostituisce una firma dell'editore.
 
@@ -25,3 +25,7 @@ Gli EXE Windows non hanno una firma Authenticode; l'APK Android è firmato. Gli 
 Nelle segnalazioni pubbliche includi versione, piattaforma e un esempio riproducibile senza informazioni personali. Non allegare credenziali o progetti riservati. Conserva una copia dei documenti importanti e mantieni aggiornato il sistema operativo.
 
 Una firma o un hash non garantiscono l’assenza di segnalazioni antivirus. Non disattivare le protezioni per aprire un pacchetto segnalato: conserva il nome del rilevamento e l’hash per la verifica.
+
+## Compatibilità e sito
+
+Le verifiche riguardano i casi e gli ambienti registrati, non tutte le versioni di ogni sistema operativo. Hash e firme non certificano universalmente compatibilità o sicurezza. La pagina browser supporta il formato iniziale: preserva byte e metadati dei file riconosciuti e indirizza i formati più recenti all’app aggiornata. Gli aggiornamenti dei due siti (GitHub Pages e Cloudflare Pages) vanno verificati separatamente.

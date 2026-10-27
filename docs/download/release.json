@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "windowsTechnicalVersion": "1.82.0.0",
+  "androidVersionCode": 100,
+  "productVersion": "v1",
+  "sourceRepository": "https://github.com/mamt104/Frociart",
+  "packages": [
+    {
+      "file": "Frociart_v1.exe",
+      "bytes": 76647465,
+      "sha256": "0571ad6283aecf93f426da3ac9f619f47706acc8e8d72ec2bc11a333e6d60340",
+      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1.exe"
+    },
+    {
+      "file": "Frociart_v1_Classico.exe",
+      "bytes": 2665984,
+      "sha256": "8008a6993ced9e1119c3066dfca8cd35ddcb6065ef51c5edd9e8fa9fb4eb980d",
+      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Classico.exe"
+    },
+    {
+      "file": "Frociart_v1_Setup.exe",
+      "bytes": 4293632,
+      "sha256": "722b2d0e3174abeaf60dd9a39a73ec83a4798f26ed9a438df7c03bee3104fdcc",
+      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Setup.exe"
+    },
+    {
+      "file": "Frociart_v1_Android.apk",
+      "bytes": 964239,
+      "sha256": "a29c485ce33507c7da1a7c7a6c69825aab3d382bb404326ed2153dc216068511",
+      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk"
+    }
+  ],
+  "licenses": [
+    {
+      "file": "Licenze/Android-LICENSE.txt",
+      "bytes": 1070,
+      "sha256": "fd04cf3d82d3e369964bce8926e26a9bc2a0c15d15080525cb5d7416a5a30a9f",
+      "url": "https://mamt104.github.io/Frociart/download/Licenze/Android-LICENSE.txt"
+    },
+    {
+      "file": "Licenze/dotnet-LICENSE.txt",
+      "bytes": 9519,
+      "sha256": "7f6839a61ce892b79c6549e2dc5a81fdbd240a0b260f8881216b45b7fda8b45d",
+      "url": "https://mamt104.github.io/Frociart/download/Licenze/dotnet-LICENSE.txt"
+    },
+    {
+      "file": "Licenze/dotnet-ThirdPartyNotices.txt",
+      "bytes": 78887,
+      "sha256": "deb4427a295e1ed474b0d81c5a0d972c1b550b9a715cda939cdfa9236b1b418f",
+      "url": "https://mamt104.github.io/Frociart/download/Licenze/dotnet-ThirdPartyNotices.txt"
+    },
+    {
+      "file": "Licenze/Inno-Setup-LICENSE.txt",
+      "bytes": 1521,
+      "sha256": "2e5346868c2a18434489824e11d65c3031620f792fefc415d05f19cd441abf5c",
+      "url": "https://mamt104.github.io/Frociart/download/Licenze/Inno-Setup-LICENSE.txt"
+    }
+  ]
+}
