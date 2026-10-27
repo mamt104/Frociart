@@ -7,26 +7,26 @@
   "packages": [
     {
       "file": "Frociart_v1.exe",
-      "bytes": 76647465,
-      "sha256": "0571ad6283aecf93f426da3ac9f619f47706acc8e8d72ec2bc11a333e6d60340",
+      "bytes": 76648358,
+      "sha256": "821e09e8046fb2c3f484b543746df967d056f4aba6b48581d4626bfc47f1ff5f",
       "url": "https://mamt104.github.io/Frociart/download/Frociart_v1.exe"
     },
     {
       "file": "Frociart_v1_Classico.exe",
-      "bytes": 2665984,
-      "sha256": "8008a6993ced9e1119c3066dfca8cd35ddcb6065ef51c5edd9e8fa9fb4eb980d",
+      "bytes": 2668032,
+      "sha256": "1461d57c399c2c0090ed523944c79afb78296c2b5b84135641466814c4d8bb72",
       "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Classico.exe"
     },
     {
       "file": "Frociart_v1_Setup.exe",
-      "bytes": 4293632,
-      "sha256": "722b2d0e3174abeaf60dd9a39a73ec83a4798f26ed9a438df7c03bee3104fdcc",
+      "bytes": 4294656,
+      "sha256": "182b587a055328f6893a6e50cd2fa817e085654e2a3a7fbbe1573f469a579327",
       "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Setup.exe"
     },
     {
       "file": "Frociart_v1_Android.apk",
       "bytes": 964239,
-      "sha256": "a29c485ce33507c7da1a7c7a6c69825aab3d382bb404326ed2153dc216068511",
+      "sha256": "69b169d0d7340e847bc150a303ae616cb0c3f11810e859290b2c9ea53baf67fd",
       "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk"
     }
   ],

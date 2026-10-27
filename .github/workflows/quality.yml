@@ -20,3 +20,5 @@ jobs:
           node tests/project-metadata.cjs
           node tests/project-original-bytes.cjs
           node tests/release-integrity.cjs
+          node tests/security-bounds.cjs
+          node tests/native-link-boundary.cjs

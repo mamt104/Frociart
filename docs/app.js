@@ -5,10 +5,42 @@
   function object(value){return value!==null&&typeof value==='object'&&!Array.isArray(value);}
   function text(value,max,required){if(value==null&&!required)return null;if(typeof value!=='string'||value.length>max||(required&&!value.trim()))invalid('Il progetto contiene testo o identificatori non validi.');return value;}
   function color(value){if(value!=null&&(typeof value!=='string'||!/^#[0-9a-fA-F]{6}$/.test(value)))invalid('Il progetto contiene un colore non valido.');return value==null?null:value;}
+
+  const MAX_JSON_DEPTH=128,MAX_JSON_VALUES=100000;
+  function complex(){invalid('Il progetto contiene metadati troppo complessi per l’anteprima. Il file originale non viene modificato; verifica la compatibilità prima di aprirlo nell’app.');}
+  function checkJsonText(raw){
+    let depth=0,quoted=false,escaped=false;
+    for(let i=0;i<raw.length;i++){
+      const c=raw[i];
+      if(quoted){if(escaped)escaped=false;else if(c==='\\')escaped=true;else if(c==='"')quoted=false;}
+      else if(c==='"')quoted=true;
+      else if(c==='{'||c==='['){if(++depth>MAX_JSON_DEPTH)complex();}
+      else if(c==='}'||c===']')depth--;
+    }
+  }
+  function checkJsonValue(root){
+    const pending=[[root,1]],seen=new Set();let values=1;
+    while(pending.length){
+      const [value,depth]=pending.pop();if(depth>MAX_JSON_DEPTH)complex();
+      if(value===null||typeof value!=='object')continue;
+      if(seen.has(value))complex();seen.add(value);
+      if(Array.isArray(value)){
+        values+=value.length;if(values>MAX_JSON_VALUES)complex();
+        for(let i=0;i<value.length;i++)if(value[i]!==null&&typeof value[i]==='object')pending.push([value[i],depth+1]);
+      }else{
+        for(const key in value)if(Object.prototype.hasOwnProperty.call(value,key)){
+          if(++values>MAX_JSON_VALUES)complex();const child=value[key];
+          if(child!==null&&typeof child==='object')pending.push([child,depth+1]);
+        }
+      }
+    }
+  }
+
   function validate(value){
     if(object(value)&&Number.isInteger(value.Version)&&value.Version>1)invalid('Questo formato richiede l’app Frociart aggiornata. Apri direttamente il file originale nell’app: qui non viene convertito.');
     if(!object(value)||value.Version!==1||!Array.isArray(value.Nodes)||!Array.isArray(value.Edges))invalid('Questo file non è un progetto Frociart versione 1.');
     if(value.Nodes.length>500||value.Edges.length>1500)invalid('Il progetto supera il limite di 500 blocchi o 1.500 collegamenti.');
+    checkJsonValue(value);
     const ids=new Set(),edgeIds=new Set();
     const nodes=value.Nodes.map(n=>{
       if(!object(n))invalid('Un blocco non è valido.');const id=text(n.Id,128,true);if(ids.has(id))invalid('Il progetto contiene identificatori duplicati.');ids.add(id);
@@ -22,8 +54,32 @@
     // their interpretation. Downloads below retain the original file bytes.
     return value;
   }
-  function encodeLink(document){const bytes=new TextEncoder().encode(JSON.stringify(document));if(bytes.length>MAX_BYTES)invalid('Il progetto supera il limite di 4 MB.');if(Math.ceil(bytes.length/3)*4+PREFIX.length>MAX_LINK)return null;let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return PREFIX+btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-  const api={validate:validate,encodeLink:encodeLink,MAX_BYTES:MAX_BYTES};
+
+  // Native JSON reader has tighter quotas than the browser preview. Fail closed
+  // for handoff only; never strip extension data or rewrite the original file.
+  function nativeLinkWarning(root){
+    const pending=[[root,1]];let values=1;
+    const message='Collegamento all’app non disponibile: alcuni metadati superano i limiti di compatibilità del lettore PC. Anteprima e file originale restano disponibili; verifica il file prima di aprirlo nell’app.';
+    function wellFormed(s){for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);if(c>=0xd800&&c<=0xdbff){const next=s.charCodeAt(++i);if(!(next>=0xdc00&&next<=0xdfff))return false;}else if(c>=0xdc00&&c<=0xdfff)return false;}return true;}
+    while(pending.length){
+      const [value,depth]=pending.pop();if(value!==null&&typeof value==='object'&&depth>30)return message;
+      if(typeof value==='string'&&!wellFormed(value))return message;
+      if(value===null||typeof value!=='object')continue;
+      if(Array.isArray(value)){
+        values+=value.length;if(values>40000)return message;
+        for(let i=0;i<value.length;i++)pending.push([value[i],depth+1]);
+      }else{
+        for(const key in value)if(Object.prototype.hasOwnProperty.call(value,key)){
+          if(++values>40000||key==='__type'||!wellFormed(key))return message;
+          pending.push([value[key],depth+1]);
+        }
+      }
+    }
+    return null;
+  }
+
+  function encodeLink(document){checkJsonValue(document);if(nativeLinkWarning(document))return null;const bytes=new TextEncoder().encode(JSON.stringify(document));if(bytes.length>MAX_BYTES)invalid('Il progetto supera il limite di 4 MB.');if(Math.ceil(bytes.length/3)*4+PREFIX.length>MAX_LINK)return null;let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return PREFIX+btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+  const api={nativeLinkWarning:nativeLinkWarning,validate:validate,encodeLink:encodeLink,MAX_BYTES:MAX_BYTES};
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(!root.document)return;
   const $=id=>root.document.getElementById(id),input=$('project-file'),status=$('file-status'),result=$('project-result'),open=$('open-app'),save=$('save-project'),zone=$('drop-zone');let generation=0,blobUrl=null;
@@ -34,11 +90,13 @@
     try{
       const buffer=await file.arrayBuffer();if(current!==generation)return;if(buffer.byteLength>MAX_BYTES)invalid('Il file supera il limite di 4 MB.');
       const raw=new TextDecoder('utf-8',{fatal:true}).decode(buffer);
+      checkJsonText(raw);
       const doc=validate(JSON.parse(raw.replace(/^\uFEFF/,'')));const link=encodeLink(doc);
-      if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(new Blob([buffer],{type:'application/x-frociart'}));
+      const nextBlob=URL.createObjectURL(new Blob([buffer],{type:'application/x-frociart'}));
+      if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=nextBlob;
       save.href=blobUrl;save.download='Progetto.frociart';$('project-title').textContent=doc.Title||'Il tuo progetto';$('project-details').textContent=doc.Nodes.length+' blocchi · '+doc.Edges.length+' collegamenti';
       open.setAttribute('aria-disabled',link?'false':'true');if(link){open.href=link;open.tabIndex=0;}else{open.removeAttribute('href');open.tabIndex=-1;}
-      result.hidden=false;status.textContent=link?'Pronto. Premi Apri in Frociart e conferma la richiesta del browser. Se l’app non è installata, usa il download qui sotto.':'Il progetto è grande: salva il file originale e aprilo direttamente in Frociart con Progetto → Apri.';
+      result.hidden=false;status.textContent=link?'Pronto. Premi Apri in Frociart e conferma la richiesta del browser. Se l’app non è installata, usa il download qui sotto.':(nativeLinkWarning(doc)||'Il collegamento supera il limite di dimensione. Salva il file originale; verifica la compatibilità prima di aprirlo nell’app.');
     }catch(error){if(current!==generation)return;status.className='error';status.textContent=(error instanceof SyntaxError||error instanceof TypeError?'Non riesco a leggere questo progetto. Scegli un file .frociart valido.':error.message)+(!result.hidden?' Il progetto già caricato resta disponibile.':'');}
   }
   input.addEventListener('change',()=>read(input.files[0]));
