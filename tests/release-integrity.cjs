@@ -13,5 +13,5 @@ for(const p of [...m.packages,...m.licenses]){
   checks++;
 }
 assert.equal(m.licenses.length,4);assert.equal(sums.size,4);
-assert.equal(m.windowsTechnicalVersion,'1.82.0.0');assert.equal(m.androidVersionCode,101);
+assert.equal(m.windowsTechnicalVersion,'1.82.0.0');assert.equal(m.androidVersionCode,102);
 console.log(JSON.stringify({status:'PASS',artifactsAndNotices:checks,scope:'Exact four release packages, notices, version metadata and checksums; no OS execution claim.'}));
