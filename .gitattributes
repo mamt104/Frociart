@@ -1,0 +1,3 @@
+* text=auto eol=lf
+/docs/download/** -text
+/docs/assets/*.png -text
