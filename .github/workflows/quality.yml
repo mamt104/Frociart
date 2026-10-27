@@ -22,3 +22,4 @@ jobs:
           node tests/release-integrity.cjs
           node tests/security-bounds.cjs
           node tests/native-link-boundary.cjs
+          node tests/seo-metadata.cjs

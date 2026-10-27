@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "windowsTechnicalVersion": "1.82.0.0",
-  "androidVersionCode": 100,
+  "androidVersionCode": 101,
   "productVersion": "v1",
   "sourceRepository": "https://github.com/mamt104/Frociart",
   "packages": [
@@ -26,7 +26,7 @@
     {
       "file": "Frociart_v1_Android.apk",
       "bytes": 964239,
-      "sha256": "69b169d0d7340e847bc150a303ae616cb0c3f11810e859290b2c9ea53baf67fd",
+      "sha256": "a00998bd7fc16d1d092f23b695760f0cd494d1db87ea874d6833f803b85a893b",
       "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk"
     }
   ],

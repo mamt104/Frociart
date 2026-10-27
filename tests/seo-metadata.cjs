@@ -1,0 +1,13 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const page=fs.readFileSync(path.join(__dirname,'../docs/index.html'),'utf8');
+const tags=[...page.matchAll(/<(meta|link)\b([^>]+)>/gi)].map(x=>({tag:x[1].toLowerCase(),attrs:Object.fromEntries([...x[2].matchAll(/([\w:-]+)\s*=\s*"([^"]*)"/g)].map(y=>[y[1].toLowerCase(),y[2]]))}));
+const meta=n=>tags.filter(x=>x.tag==='meta'&&x.attrs.name===n).map(x=>x.attrs.content);
+assert.match(page,/<html\b[^>]*lang="it"/i);
+assert.equal([...page.matchAll(/<title>/gi)].length,1);assert.match(page,/<title>[^<]*flowchart[^<]*<\/title>/i);
+assert.equal(meta('description').length,1);assert(meta('description')[0].length>=70);
+assert(!meta('robots').some(v=>v.toLowerCase().includes('noindex')));
+assert.deepEqual(tags.filter(x=>x.tag==='link'&&x.attrs.rel==='canonical').map(x=>x.attrs.href),['https://mamt104.github.io/Frociart/']);
+assert.equal([...page.matchAll(/<h1\b/gi)].length,1);
+assert.match(page,/<a\b[^>]*href="https:\/\/frociart\.pages\.dev\/"[^>]*>Sito principale e demo<\/a>/);
+assert(!page.includes('aggregateRating'));assert.equal(meta('google-site-verification').length,0);
+console.log(JSON.stringify({status:'PASS',scope:'Indexable, distinct download landing with truthful metadata and a link to the main site; no ranking guarantee.'}));
