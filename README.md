@@ -28,10 +28,10 @@ L'app funziona offline e non richiede un account.
 
 | Piattaforma | Versione | Pacchetto | Utilizzo |
 | --- | --- | --- | --- |
-| Windows x64 | v1 · 1.82 | [Autonomo](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) | Runtime incluso. |
-| Windows AnyCPU | v1 · 1.82 | [Classico](https://mamt104.github.io/Frociart/download/Frociart_v1_Classico.exe) | Richiede .NET Framework 4.8. |
-| Windows x64 | v1 · 1.82 | [Setup](https://mamt104.github.io/Frociart/download/Frociart_v1_Setup.exe) | Installazione per utente. |
-| Android | v1 · build 104 | [APK](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk) | Installa l'app sul telefono. |
+| Windows x64 | v1 · 1.83 | [Autonomo](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) | Runtime incluso. |
+| Windows AnyCPU | v1 · 1.83 | [Classico](https://mamt104.github.io/Frociart/download/Frociart_v1_Classico.exe) | Richiede .NET Framework 4.8. |
+| Windows x64 | v1 · 1.83 | [Setup](https://mamt104.github.io/Frociart/download/Frociart_v1_Setup.exe) | Installazione per utente. |
+| Android | v1 · build 105 | [APK](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk) | Installa l'app sul telefono. |
 
 **Requisiti:** Windows autonomo e setup per x64; il primo include .NET 10, il secondo può scaricare componenti Microsoft mancanti. La variante classica AnyCPU richiede .NET Framework 4.8. Android richiede API 26 (8.0) o successivo. Consulta il rapporto di collaudo per gli ambienti effettivamente provati. La connessione serve per scaricare i pacchetti e visitare il sito del progetto.
 
@@ -57,7 +57,7 @@ Scarica l'APK sul telefono, aprilo e segui la procedura di installazione di Andr
 4. Verifica il diagramma e avvia l'esecuzione. Fornisci i valori richiesti e osserva il percorso e il risultato.
 5. Salva il progetto per continuare in seguito.
 
-La sezione Impara è sospesa in questa versione; i progetti precedenti restano conservati.
+La sezione Impara include lezioni ed esercizi guidati. I progetti precedenti restano conservati.
 
 ### Comandi utili
 
