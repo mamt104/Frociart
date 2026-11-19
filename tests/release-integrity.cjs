@@ -13,5 +13,12 @@ for(const p of [...m.packages,...m.licenses]){
   checks++;
 }
 assert.equal(m.licenses.length,4);assert.equal(sums.size,4);
-assert.equal(m.windowsTechnicalVersion,'1.83.0.0');assert.equal(m.androidVersionCode,105);
+assert.equal(m.windowsTechnicalVersion, '1.86.0.0');
+assert.equal(m.windowsClassicTechnicalVersion, '1.83.0.0');
+assert.equal(m.windowsSetupTechnicalVersion, '1.83.0.0');
+assert.equal(m.androidVersionCode, 105);
+for (const item of m.packages) {
+  if (item.file.endsWith('.apk')) assert.equal(item.androidVersionCode, m.androidVersionCode);
+  else assert.equal(item.windowsFileVersion, item.file === 'Frociart_v1.exe' ? '1.86.0.0' : '1.83.0.0');
+}
 console.log(JSON.stringify({status:'PASS',artifactsAndNotices:checks,scope:'Exact four release packages, notices, version metadata and checksums; no OS execution claim.'}));

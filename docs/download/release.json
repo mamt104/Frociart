@@ -1,33 +1,37 @@
 {
   "schemaVersion": 1,
-  "windowsTechnicalVersion": "1.83.0.0",
+  "windowsTechnicalVersion": "1.86.0.0",
   "androidVersionCode": 105,
   "productVersion": "v1",
   "sourceRepository": "https://github.com/mamt104/Frociart",
   "packages": [
     {
       "file": "Frociart_v1.exe",
-      "bytes": 76655092,
-      "sha256": "eed0e8ab163eb7118c701a39d205663af3ab10495076623ff764f7b8a2454e3b",
-      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1.exe"
+      "bytes": 76671181,
+      "sha256": "9b8d526dddbb6af2ec07c5b37e90ff253fefe67af35ec36fd1806a62c6ac4c0b",
+      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1.exe",
+      "windowsFileVersion": "1.86.0.0"
     },
     {
       "file": "Frociart_v1_Classico.exe",
       "bytes": 2682368,
       "sha256": "ed8b4e2ecd73b78e96330f3063ebf8430f2b0efbc5d065235bf1181beba6d679",
-      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Classico.exe"
+      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Classico.exe",
+      "windowsFileVersion": "1.83.0.0"
     },
     {
       "file": "Frociart_v1_Setup.exe",
       "bytes": 4300800,
       "sha256": "2f8b19618db264bc74c1d6efba9a4bf2e8a70f7c63b4187feb904184694c019e",
-      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Setup.exe"
+      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Setup.exe",
+      "windowsFileVersion": "1.83.0.0"
     },
     {
       "file": "Frociart_v1_Android.apk",
       "bytes": 988815,
       "sha256": "bb709f7379c80684e81e5c4faad6b0b5e038ba1034d87091c362b4c792084783",
-      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk"
+      "url": "https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk",
+      "androidVersionCode": 105
     }
   ],
   "licenses": [
@@ -55,5 +59,7 @@
       "sha256": "2e5346868c2a18434489824e11d65c3031620f792fefc415d05f19cd441abf5c",
       "url": "https://mamt104.github.io/Frociart/download/Licenze/Inno-Setup-LICENSE.txt"
     }
-  ]
+  ],
+  "windowsClassicTechnicalVersion": "1.83.0.0",
+  "windowsSetupTechnicalVersion": "1.83.0.0"
 }

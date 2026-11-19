@@ -8,6 +8,12 @@ Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, cos
 
 [Sito del progetto](https://mamt104.github.io/Frociart/) · [Scarica per Windows](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) · [Scarica per Android](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk)
 
+## Il Mentalista
+
+Pensa a un numero da 1 a 1000. Il diagramma lo indovina in dieci domande o meno. Gioca nel browser oppure scarica il progetto per vedere come si restringe l’intervallo, un blocco alla volta. [Gioca al Mentalista](https://mamt104.github.io/Frociart/il-mentalista/)
+
+Su Windows autonomo 1.86 il diagramma ti fa le domande in una chat centrale. Quando apri un progetto trascinandolo sulla finestra, blocchi e frecce compaiono in sequenza.
+
 ## Cosa puoi fare
 
 - **Costruire diagrammi:** usa blocchi di inizio, fine, lettura, scrittura, operazione e decisione.
@@ -28,7 +34,7 @@ L'app funziona offline e non richiede un account.
 
 | Piattaforma | Versione | Pacchetto | Utilizzo |
 | --- | --- | --- | --- |
-| Windows x64 | v1 · 1.83 | [Autonomo](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) | Runtime incluso. |
+| Windows x64 | v1 · 1.86 | [Autonomo](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) | Runtime incluso. |
 | Windows AnyCPU | v1 · 1.83 | [Classico](https://mamt104.github.io/Frociart/download/Frociart_v1_Classico.exe) | Richiede .NET Framework 4.8. |
 | Windows x64 | v1 · 1.83 | [Setup](https://mamt104.github.io/Frociart/download/Frociart_v1_Setup.exe) | Installazione per utente. |
 | Android | v1 · build 105 | [APK](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk) | Installa l'app sul telefono. |

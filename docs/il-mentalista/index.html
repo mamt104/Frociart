@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Il Mentalista di Frociart · Gioca con un diagramma di flusso</title>
+  <meta name="description" content="Pensa a un numero da 1 a 1000. Gioca nel browser e scopri come un diagramma di flusso lo indovina in dieci domande. Poi apri il progetto in Frociart.">
+  <link rel="canonical" href="https://mamt104.github.io/Frociart/il-mentalista/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:site_name" content="Frociart">
+  <meta property="og:title" content="Il Mentalista di Frociart · Pensa a un numero">
+  <meta property="og:description" content="Un numero fra 1 e 1000, al massimo dieci domande. Gioca e apri il diagramma per vedere come ci riesce.">
+  <meta property="og:url" content="https://mamt104.github.io/Frociart/il-mentalista/">
+  <meta property="og:image" content="https://mamt104.github.io/Frociart/il-mentalista/anteprima.png">
+  <meta property="og:image:alt" content="Il Mentalista di Frociart propone il numero 500 come prima domanda.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#17181c">
+  <link rel="icon" href="../assets/app.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="gioco.css">
+  <script type="module" src="gioco.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#partita">Vai alla partita</a>
+  <header>
+    <a class="brand" href="https://frociart.pages.dev/"><img src="../assets/app.svg" width="36" height="36" alt="">Frociart</a>
+    <a class="header-link" href="../#download">Scarica l’app <span aria-hidden="true">↗</span></a>
+  </header>
+  <main>
+    <section class="board" aria-labelledby="titolo">
+      <div class="intro">
+        <h1 id="titolo">Il<br><span>Mentalista.</span></h1>
+        <p class="lead">Pensa a un numero da <strong>1 a 1000.</strong> Questo diagramma lo indovina in dieci domande o meno.</p>
+        <a class="project" href="Il_Mentalista.frociart" download>Scarica il diagramma <span aria-hidden="true">↓</span></a>
+        <details>
+          <summary>Come fa a indovinarlo?</summary>
+          <p>Ogni risposta elimina metà dei numeri ancora possibili. È la ricerca binaria. Apri il progetto in Frociart per Windows o Android e usa il passo singolo per seguirla blocco per blocco.</p>
+        </details>
+      </div>
+      <div class="game" id="partita" tabindex="-1" aria-label="Partita del Mentalista">
+        <div id="live" aria-live="polite" aria-atomic="true">
+          <p class="counter" id="turn">Domanda 1 di 10</p>
+          <p class="prompt" id="prompt">Il tuo numero è…</p>
+          <p class="number" id="guess">500</p>
+          <p class="range" id="interval">Numeri possibili da 1 a 1000</p>
+        </div>
+        <div class="meter" aria-hidden="true"><progress id="progress" max="10" value="1"></progress></div>
+        <div class="controls" id="answers" role="group" aria-label="Il mio numero" hidden>
+          <button type="button" data-answer="lower">Più piccolo <span aria-hidden="true">↓</span></button>
+          <button type="button" data-answer="equal" class="correct">Indovinato!</button>
+          <button type="button" data-answer="higher">Più grande <span aria-hidden="true">↑</span></button>
+        </div>
+        <button type="button" id="restart" class="restart" hidden>Gioca ancora <span aria-hidden="true">↻</span></button>
+        <noscript><p>Per giocare qui attiva JavaScript, oppure <a href="Il_Mentalista.frociart" download>scarica il progetto</a> e aprilo in Frociart.</p></noscript>
+      </div>
+    </section>
+    <section class="app-note" aria-labelledby="apri">
+      <h2 id="apri">Il gioco dentro l’app</h2>
+      <p>Apri il diagramma scaricato e premi <strong>Esegui</strong>. Quando il programma propone un numero, scrivi <strong>0</strong> se ha indovinato, <strong>1</strong> se il tuo è più grande o <strong>2</strong> se è più piccolo. Puoi modificare ogni blocco e riprovare.</p>
+    </section>
+  </main>
+  <footer><a href="https://frociart.pages.dev/">Sito di Frociart</a><a href="https://github.com/mamt104/Frociart">Progetto su GitHub ↗</a></footer>
+</body>
+</html>
