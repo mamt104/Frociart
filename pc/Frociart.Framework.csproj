@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+
+    <ProjectGuid>{139CF9C1-A0BC-4C9F-BA24-E542B1898397}</ProjectGuid>
+
+    <OutputType>WinExe</OutputType><RootNamespace>Frociart</RootNamespace><AssemblyName>Frociart</AssemblyName>
+
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion><AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects><GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+
+    <ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Frociart.ico</ApplicationIcon>
+
+    <OutputPath>bin\framework\$(Configuration)\</OutputPath><Optimize>true</Optimize><PlatformTarget>AnyCPU</PlatformTarget>
+
+  </PropertyGroup>
+
+  <ItemGroup><Reference Include="System"/><Reference Include="Accessibility"/><Reference Include="System.Core"/><Reference Include="System.Numerics"/><Reference Include="System.Drawing"/><Reference Include="System.Windows.Forms"/><Reference Include="System.Runtime.Serialization"/><Reference Include="System.Xml"/><Reference Include="System.IO.Compression"/><Reference Include="WindowsBase"/><Reference Include="PresentationCore"/><Reference Include="System.Xaml"/></ItemGroup>
+
+  <ItemGroup>
+
+    <Compile Include="BrandArtwork.cs" /><Compile Include="Program.cs"/><Compile Include="StartupDiagnostics.cs"/><Compile Include="Theme.cs"/><Compile Include="ChromeControls.cs"/><Compile Include="NativeTheme.cs"/><Compile Include="GridSnap.cs"/><Compile Include="Learning.cs"/><Compile Include="TutorVariables.cs"/><Compile Include="Tutor.cs"/><Compile Include="TutorDiagnostics.cs"/><Compile Include="TutorStore.cs"/><Compile Include="TutorDialog.cs"/><Compile Include="TutorDesktop.cs"/><Compile Include="TutorFeedbackControls.cs"/>
+
+    <Compile Include="FlowMotion.cs" />
+
+    <Compile Include="WorkspaceLayouts.cs" />
+
+    <Compile Include="FunctionTransfer.cs" />
+
+    <Compile Include="LoopEditor.cs" /><Compile Include="FlowCycleView.cs" /><Compile Include="FlowCycleFold.cs" /><Compile Include="CanvasCycleFolding.cs" /><Compile Include="CycleOverview.cs" />
+
+    <Compile Include="FlowLoopBuilder.cs" /><Compile Include="FlowCycle.cs" />
+
+    <Compile Include="FlowMenus.cs" />
+
+    <Compile Include="FlowTextSpacing.cs" /><Compile Include="FlowSizing.cs" /><Compile Include="FlowClipboard.cs" /><Compile Include="DocumentLaunch.cs" /><Compile Include="DocumentDropPresentation.cs" /><Compile Include="CanvasDocumentEntrance.cs" /><Compile Include="FileRegistration.cs" /><Compile Include="InstallIntegration.cs" />
+
+    <Compile Include="FlowText.cs" />
+
+    <Compile Include="FlowRecovery.cs" />
+
+    <Compile Include="FlowLayout.cs"/><Compile Include="CanvasExperience.cs" /><Compile Include="FlowInsertion.cs" /><Compile Include="CanvasInsertion.cs" /><Compile Include="FlowPlacement.cs" /><Compile Include="FlowGroupPlacement.cs" /><Compile Include="CanvasGroupManipulation.cs" /><Compile Include="CanvasDirectManipulation.cs" />
+
+    <Compile Include="DesktopReview.cs"/><Compile Include="FlowTransitions.cs" />
+
+    <Compile Include="RuntimeDeck.cs" /><Compile Include="RuntimeInputChat.cs" /><Compile Include="RuntimeInputChatDialog.cs" /><Compile Include="ExecutionSnapshot.cs" /><Compile Include="LearningDialog.cs"/><Compile Include="HomeScreen.cs" /><Compile Include="MainForm.cs"/><Compile Include="Dialogs.cs"/><Compile Include="BranchStyleDialog.cs"/><Compile Include="FlowOutput.cs"/><Compile Include="OutputControls.cs"/><Compile Include="FlowgorithmImport.cs"/><Compile Include="FlowgorithmExport.cs"/><Compile Include="FlowgorithmExportDialog.cs"/><Compile Include="FlowPseudocode.cs"/><Compile Include="PseudocodeDialog.cs"/><Compile Include="FlowExpressionLibrary.cs" /><Compile Include="FunctionLibraryDialog.cs"/><Compile Include="FunctionLibraryData.cs"/><Compile Include="FlowFunctions.cs"/><Compile Include="FunctionEditing.cs"/><Compile Include="FunctionNavigation.cs"/><Compile Include="DeclarationEditor.cs"/><Compile Include="FileBlocks.cs"/><Compile Include="FlowDeclaration.cs"/><Compile Include="FlowTextFiles.cs"/><Compile Include="FlowTurtle.cs"/><Compile Include="TurtleEditorDialog.cs"/><Compile Include="TurtleView.cs"/><Compile Include="FlowFileRecovery.cs"/><Compile Include="FileRuntimeControls.cs"/><Compile Include="FlowRuntime.cs"/><Compile Include="FlowDebugger.cs"/><Compile Include="DebuggerControls.cs"/><Compile Include="FlowCodeView.cs"/><Compile Include="SourceRuntimeControls.cs" /><Compile Include="SourceCodeDialog.cs"/><Compile Include="FlowPython.cs"/><Compile Include="FlowJava.cs"/><Compile Include="FlowGroovy.cs"/><Compile Include="FlowCSharp.cs"/><Compile Include="FlowVisualBasic.cs"/><Compile Include="FlowJavaScript.cs"/>
+
+    <Compile Include="FlowCodeTemplate.cs" />
+
+    <Compile Include="FlowFpgtSyntax.cs" />
+
+    <Compile Include="FlowFpgtTypes.cs" />
+
+    <Compile Include="FlowFpgtStorage.cs" />
+
+    <Compile Include="FlowFpgtPen.cs" />
+
+    <Compile Include="FlowFpgtReturn.cs" />
+
+    <Compile Include="FlowFpgt.cs" />
+
+    <Compile Include="FlowFpgtExpressions.cs" />
+
+    <Compile Include="FlowTemplateData.cs" />
+
+    <Compile Include="FlowTemplateStore.cs" />
+
+    <Compile Include="FlowTemplateDraft.cs" />
+
+    <Compile Include="CodeTemplateEditor.cs" />
+
+    <Compile Include="CodeTemplateLibrary.cs" />
+
+    <Compile Include="CodeTemplateControls.cs" /><Compile Include="FlowSourceTarget.cs"/><Compile Include="FlowSource.cs"/><Compile Include="FlowSourceText.cs"/><Compile Include="FlowSourcePlan.cs"/><Compile Include="Core.cs"/><Compile Include="FlowAnnotations.cs"/><Compile Include="FlowConsoleLog.cs"/><Compile Include="FlowConsoleWindow.cs"/><Compile Include="ConsoleControls.cs"/><Compile Include="Examples.cs"/><Compile Include="CanvasEdgeCut.cs"/><Compile Include="FlowBranchRouting.cs"/><Compile Include="CanvasBranchRouting.cs"/><Compile Include="CanvasAccessibility.cs"/><Compile Include="FlowCanvas.cs"/><Compile Include="BlockPicker.cs"/>
+
+    <Compile Include="FlowAppearance.cs" /><Compile Include="FlowDesign.cs" /><Compile Include="DiagramDesignDialog.cs" /><Compile Include="FlowSearch.cs" /><Compile Include="FlowVariableRename.cs" /><Compile Include="VariableRenameDialog.cs" /><Compile Include="CommandPalette.cs" /><Compile Include="ProjectSearchDialog.cs" />
+
+    <Compile Include="DiagramPrint.cs" />
+
+    <Compile Include="DiagramExport.cs"/><Compile Include="ExportDialog.cs"/>
+
+    <EmbeddedResource Include="Learning\lessons.json"><LogicalName>Frociart.Learning.lessons.json</LogicalName></EmbeddedResource>
+
+    <EmbeddedResource Include="Tutor\curriculum.json"><LogicalName>Frociart.Tutor.curriculum.json</LogicalName></EmbeddedResource>
+
+<EmbeddedResource Include="Tutor\guide.json"><LogicalName>Frociart.Tutor.guide.json</LogicalName></EmbeddedResource>
+
+<EmbeddedResource Include="Guide.txt"><LogicalName>Frociart.Guide.txt</LogicalName></EmbeddedResource>
+
+    <None Include="app.manifest"/><None Include="Frociart.ico"/><None Include="build.cmd"/>
+
+  </ItemGroup>
+
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+  <ItemGroup><EmbeddedResource Include="Icons\expand.png"><LogicalName>Frociart.Icons.expand.png</LogicalName></EmbeddedResource><EmbeddedResource Include="Icons\collapse.png"><LogicalName>Frociart.Icons.collapse.png</LogicalName></EmbeddedResource></ItemGroup>
+
+<ItemGroup><EmbeddedResource Include="Frociart.Document.ico"><LogicalName>Frociart.Document.ico</LogicalName></EmbeddedResource></ItemGroup><ItemGroup><EmbeddedResource Include="Source\PythonRuntime.py"><LogicalName>Frociart.Source.PythonRuntime.py</LogicalName></EmbeddedResource></ItemGroup><ItemGroup><EmbeddedResource Include="Source\JavaRuntime.txt"><LogicalName>Frociart.Source.JavaRuntime.txt</LogicalName></EmbeddedResource><EmbeddedResource Include="Source\CSharpRuntime.txt"><LogicalName>Frociart.Source.CSharpRuntime.txt</LogicalName></EmbeddedResource><EmbeddedResource Include="Source\VisualBasicRuntime.txt"><LogicalName>Frociart.Source.VisualBasicRuntime.txt</LogicalName></EmbeddedResource><EmbeddedResource Include="Source\TypeScriptRuntime.cts"><LogicalName>Frociart.Source.TypeScriptRuntime.cts</LogicalName></EmbeddedResource><EmbeddedResource Include="Source\JavaScriptRuntime.cjs"><LogicalName>Frociart.Source.JavaScriptRuntime.cjs</LogicalName></EmbeddedResource></ItemGroup>  <ItemGroup><EmbeddedResource Include="CodeTemplateGuide.txt"><LogicalName>Frociart.CodeTemplateGuide.txt</LogicalName></EmbeddedResource></ItemGroup>
+
+<ItemGroup><Compile Include="FlowCpp.cs"/><EmbeddedResource Include="Source\CppRuntime.txt"><LogicalName>Frociart.Source.CppRuntime.txt</LogicalName></EmbeddedResource></ItemGroup>
+
+<ItemGroup><Compile Include="FlowInspectExpression.cs"/><Compile Include="FlowWatchExpressions.cs"/><Compile Include="FlowWatchWindow.cs"/><Compile Include="FlowEvaluateDialog.cs"/><Compile Include="FlowVariableInspection.cs"/><Compile Include="FlowVariableWindow.cs"/><Compile Include="FlowVariableLayout.cs"/><Compile Include="VariableControls.cs"/></ItemGroup>
+
+<ItemGroup><Compile Include="FlowKotlin.cs"/><EmbeddedResource Include="Source\KotlinRuntime.kt"><LogicalName>Frociart.Source.KotlinRuntime.kt</LogicalName></EmbeddedResource></ItemGroup>
+
+<ItemGroup><Compile Include="FlowRuby.cs"/><Compile Include="FlowPowerShell.cs"/><EmbeddedResource Include="Source\RubyRuntime.rb"><LogicalName>Frociart.Source.RubyRuntime.rb</LogicalName></EmbeddedResource></ItemGroup>
+
+<ItemGroup><Compile Include="FlowPhp.cs"/><EmbeddedResource Include="Source\PhpRuntime.php"><LogicalName>Frociart.Source.PhpRuntime.php</LogicalName></EmbeddedResource></ItemGroup>
+</Project>
+
+
+

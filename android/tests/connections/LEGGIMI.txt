@@ -1,0 +1,94 @@
+FROCIART ANDROID 1.2.1 — VERIFICA DEI COLLEGAMENTI
+
+Questa cartella contiene due harness Android nativi separati dall'app personale.
+Non accedono a progetti, preferenze o file dell'app Frociart. Usano un proprio
+package, it.frociart.connectionchecks, e documenti costruiti appositamente.
+
+1. RIPRODUZIONE SULLA VERSIONE CONSEGNATA
+
+ConnectionBaselineProbe viene compilato con FlowCanvasView.java e FlowModel.java
+estratti dalla ZIP originale 1.2.0, senza modifiche. Verifica realmente su Android:
+- Inizio mostra il + in Sposta, ma lo perde attivando Seleziona.
+- Toccare + invoca il vecchio comando Collega.
+- Trascinare + su un'altra destinazione sostituisce immediatamente una uscita
+  occupata, senza passare da una scelta dell'Activity.
+
+Il risultato atteso è "BASELINE DEFECTS REPRODUCED: 3". Questi sono difetti
+riprodotti, non controlli di correttezza della nuova app.
+
+2. REGRESSIONI SULLA VERSIONE CORRETTA
+
+ConnectionProbe compila i sorgenti Canvas/Model correnti. Prima esegue tutti i
+118 controlli storici di tests/canvas/FlowCanvasChecks.java, conservati invariati.
+Poi verifica:
+- + visibile e toccabile su Inizio e sugli altri blocchi con una sola selezione,
+  anche in Seleziona; Fine e selezioni multiple non hanno un'uscita ambigua.
+- Tap + distinto dal comando Collega; target fisico di 48 dp.
+- Drag magnetico su forme vere entro 20 dp, mantenuti anche variando lo zoom.
+- Rilascio sul target dell'ultimo MOVE; niente false creazioni su UP distante,
+  ACTION_CANCEL o pinch; niente modifica di coordinate o cronologia in hover.
+- Decisioni, rami, drop sul vuoto, rifiuto esplicito di Inizio e auto-collegamenti.
+- La sostituzione è rinviata all'Activity; il commit esplicito non rientra nel
+  callback di richiesta e non crea ricorsione o doppie voci di Annulla.
+- Tap sulle frecce e sulle etichette personalizzate per gestire il collegamento;
+  blocchi e + hanno priorità; trascinare da una linea continua a spostare il foglio.
+- Azioni TalkBack separate per Aggiungi/Collega e gestione diretta delle frecce.
+- Modalità di sola lettura e animazioni ridotte; pulsazione di Inizio in Seleziona
+  su una superficie realmente collegata a una finestra. Prima del gate della
+  pulsazione, il probe asserisce esplicitamente finestra visibile e con focus,
+  View abilitata e animazioni di sistema attive. Un dialogo di sistema sovrapposto
+  fallisce la precondizione; non viene descritto come un bug della pulsazione.
+
+I gesti sono MotionEvent eseguiti dalla View Android reale, su Canvas reale.
+La prova non misura FPS e non sostituisce i percorsi completi MainActivity:
+quelli appartengono alla suite dell'interfaccia.
+
+3. COMPILAZIONE
+
+Da un ambiente con Android SDK 35 e JDK 17:
+
+  python3 tests/connections/build_connection_checks.py --sdk /percorso/sdk \
+    --output /tmp/Frociart-connections-checks.apk --signing-dir /percorso/firma-test
+
+Per riprodurre i difetti sulla versione originale, aggiungere:
+
+  --baseline-zip /percorso/Frociart_Android_1.2.0_Sorgenti.zip
+
+Usare una chiave di test in un ambiente di collaudo. Lo script delega la firma al
+builder, non legge né stampa password. Non controlla ADB e non avvia emulatori.
+build.log e provenance.json restano nella cartella temporanea di compilazione.
+
+4. ESECUZIONE SU DISPOSITIVO DI COLLAUDO GIÀ AVVIATO
+
+Installare il relativo APK test e usare una delle due strumentazioni:
+
+  adb shell am instrument -w \
+    it.frociart.connectionchecks/it.frociart.app.ConnectionBaselineProbe
+
+  adb shell am instrument -w \
+    it.frociart.connectionchecks/it.frociart.app.ConnectionProbe
+
+Se i controlli funzionali sono già passati e resta da risolvere soltanto una
+precondizione della finestra per la pulsazione, si può eseguire la fase mirata:
+
+  adb shell am instrument -w -e phase pulse \
+    it.frociart.connectionchecks/it.frociart.app.ConnectionProbe
+
+Questa fase salva report-pulse.txt e include diagnostica completa dello stato
+grafico. Non dichiara nuovamente passati i controlli che non riesegue. Conservare
+il log del primo tentativo e riportare l'hash del Canvas per collegare le prove.
+
+I due APK condividono il package di test: eseguire e raccogliere le evidenze della
+baseline prima di installare l'harness aggiornato. Terminato il collaudo, fermare
+il package di test. I report e le immagini prodotte dal Canvas sono nelle proprie
+cartelle interne files/connections-baseline e files/connections-1.2.1, accessibili
+con run-as del package di test debuggable. Non dipendono da memoria esterna montata.
+
+  adb exec-out run-as it.frociart.connectionchecks \
+    cat files/connections-1.2.1/report.txt
+
+Le immagini di questa suite mostrano la superficie Canvas isolata: non sono
+mockup e non vengono presentate come schermate dell'intera MainActivity.
+
+Per i risultati effettivamente eseguiti, consultare i file in results e il report
+VERIFICA.txt della consegna; il solo elenco dei test non prova che siano passati.

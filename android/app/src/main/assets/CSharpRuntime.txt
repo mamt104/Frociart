@@ -1,0 +1,664 @@
+// Supporto autonomo: valori, limiti, file e grafica SVG. Nessun interprete di diagrammi.
+
+    public static class ValueFormatter
+    {
+        // Round the exact binary64 value to 15 significant digits, midpoint away from zero.
+        // Do not delegate to G15: its midpoint policy changed across .NET generations.
+        private static string FormatNumber(double value)
+        {
+            if(value==0)return "0";
+            if(Double.IsNaN(value)||Double.IsInfinity(value))return value.ToString(CultureInfo.InvariantCulture);
+            if(Math.Abs(value)<1e15&&value==Math.Truncate(value))return value.ToString("0",CultureInfo.InvariantCulture);
+            bool negative=value<0;long bits=BitConverter.DoubleToInt64Bits(Math.Abs(value));int power=(int)((bits>>52)&2047);
+            ulong mantissa=(ulong)(bits&4503599627370495L);if(power!=0)mantissa|=4503599627370496UL;
+            int shift=(power==0?-1022:power-1023)-52,scale=0;BigInteger coefficient=new BigInteger(mantissa);
+            if(shift>=0)coefficient<<=shift;else{scale=-shift;coefficient*=BigInteger.Pow(new BigInteger(5),scale);}
+            string digits=coefficient.ToString(CultureInfo.InvariantCulture);int exponent=digits.Length-scale-1;
+            if(digits.Length>15){ulong head=UInt64.Parse(digits.Substring(0,15),CultureInfo.InvariantCulture);if(digits[15]>='5')head++;digits=head.ToString(CultureInfo.InvariantCulture);if(digits.Length>15){exponent++;digits=digits.Substring(0,15);}}
+            digits=digits.TrimEnd('0');string body;
+            if(exponent>=15||exponent< -4)body=digits.Substring(0,1)+(digits.Length>1?"."+digits.Substring(1):"")+"E"+(exponent>=0?"+":"-")+Math.Abs(exponent).ToString("D2",CultureInfo.InvariantCulture);
+            else{int at=exponent+1;body=at<=0?"0."+new String('0',-at)+digits:at>=digits.Length?digits+new String('0',at-digits.Length):digits.Substring(0,at)+"."+digits.Substring(at);}
+            return(negative?"-":"")+body;
+        }
+        public static string Format(object value)
+        {
+            if (value == null) return "";
+            if (value is VectorValue) return ((VectorValue)value).Format();
+            if (value is bool) return (bool)value ? "vero" : "falso";
+            if (value is double)
+            {
+                double number = (double)value;
+                if (number == 0) return "0";
+                return FormatNumber(number);
+            }
+            return Convert.ToString(value, CultureInfo.InvariantCulture);
+        }
+    }
+
+
+    internal sealed class FlowException : Exception
+    {
+        public FlowException(string message) : base(message) { }
+    }
+
+    // Immutable values preserve assignment-by-value and transactional block execution.
+    public sealed class VectorValue
+    {
+        public const int MaxLength=1024;
+        private readonly object[] items;
+        public int Count {get{return items.Length;}}
+        internal VectorValue(IEnumerable<object> values){items=values.ToArray();if(items.Length>MaxLength)throw new FlowException("Un vettore può contenere al massimo 1024 elementi.");int kind=-1,total=2;foreach(object value in items){int type=value is bool?1:value is string?2:Values.Numeric(value)?0:-1;if(type<0)throw new FlowException("I vettori contengono numeri, testi o valori logici; i vettori annidati non sono supportati.");if(kind<0)kind=type;else if(kind!=type)throw new FlowException("Tutti gli elementi del vettore devono avere lo stesso tipo.");if(type==0)Values.Number(value);total+=Element(value).Length+2;if(total>Values.MaxStringLength)throw new FlowException("Il contenuto del vettore supera 32768 caratteri.");}}
+        private static string Element(object value){return value is string?"\""+((string)value).Replace("\\","\\\\").Replace("\"","\\\"").Replace("\n","\\n").Replace("\r","\\r").Replace("\t","\\t")+"\"":ValueFormatter.Format(value);}
+        public string Format(){return "["+String.Join(", ",items.Select(Element))+ "]";}
+        internal static int Integer(object value,string label){double n=Values.Number(value);if(n<0||n>Int32.MaxValue||n!=Math.Floor(n))throw new FlowException(label+" deve essere un intero maggiore o uguale a 0.");return(int)n;}
+        internal int Index(object index){int i=Integer(index,"L’indice");if(i>=Count)throw new FlowException(Count==0?"Il vettore è vuoto: non contiene elementi.":"Indice "+i+" fuori dal vettore. Usa un indice da 0 a "+(Count-1)+".");return i;}
+        public object At(int index){return items[Index((double)index)];}
+        internal static int ScalarKind(object value){int kind=value is bool?1:value is string?2:Values.Numeric(value)?0:-1;if(kind<0)throw new FlowException("Il valore iniziale deve essere un numero, un testo o un valore logico.");if(kind==0)Values.Number(value);return kind;}
+        internal VectorValue Set(int index,object value){Index((double)index);if(ScalarKind(items[index])!=ScalarKind(value))throw new FlowException("Il nuovo valore deve avere lo stesso tipo degli elementi del vettore.");object[] next=(object[])items.Clone();next[index]=value;return new VectorValue(next);}
+        internal static VectorValue Require(object value){var vector=value as VectorValue;if(vector==null)throw new FlowException("Serve un vettore, per esempio valori = [10, 20, 30].");return vector;}
+        public override bool Equals(object value){var other=value as VectorValue;return other!=null&&items.SequenceEqual(other.items);}
+        public override int GetHashCode(){int hash=17;foreach(object item in items)hash=unchecked(hash*31+item.GetHashCode());return hash;}
+        public override string ToString(){return Format();}
+    }
+
+    internal static class Values
+    {
+        public const int MaxStringLength = 32768;
+
+        public static double Number(object value)
+        {
+            if (value is double) return Finite((double)value);
+            if (value is int || value is long || value is float || value is decimal)
+                return Finite(Convert.ToDouble(value, CultureInfo.InvariantCulture));
+            throw new FlowException("Serve un numero, ma il valore è «" + Short(value) + "».");
+        }
+
+        public static bool Truth(object value)
+        {
+            if (value is bool) return (bool)value;
+            if (value is double || value is int || value is long || value is float || value is decimal)
+                return Number(value) != 0;
+            throw new FlowException("La condizione deve restituire vero/falso o un numero, non un testo.");
+        }
+
+        public static double Finite(double value)
+        {
+            if (Double.IsNaN(value) || Double.IsInfinity(value))
+                throw new FlowException("Il risultato non è un numero finito: controlla dominio e grandezza dei valori.");
+            return value;
+        }
+
+        public static string String(string value)
+        {
+            if (value.Length > MaxStringLength)
+                throw new FlowException("Il testo supera il limite di " + MaxStringLength + " caratteri.");
+            return value;
+        }
+
+        public static string Short(object value)
+        {
+            string text = ValueFormatter.Format(value);
+            return text.Length <= 60 ? text : text.Substring(0, 57) + "...";
+        }
+
+        public static object Input(string raw)
+        {
+            if (raw == null) raw = "";
+            if (raw.Length > MaxStringLength) throw new FlowException("Il valore inserito è troppo lungo.");
+            string trimmed = raw.Trim();
+            double n;
+            if (Double.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out n) ||
+                Double.TryParse(trimmed, NumberStyles.Float, CultureInfo.GetCultureInfo("it-IT"), out n))
+            {
+                if((Double.IsNaN(n)||Double.IsInfinity(n))&&(trimmed.IndexOf('\0')>=0||trimmed.Equals("+NaN",StringComparison.OrdinalIgnoreCase)||trimmed.Equals("-NaN",StringComparison.OrdinalIgnoreCase)))return raw;
+                return Finite(n);
+            }
+            if (LooksNumeric(trimmed))
+                throw new FlowException("Il numero inserito è troppo grande. Usa un numero finito più piccolo.");
+            if (trimmed.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Equals("vero", StringComparison.OrdinalIgnoreCase)) return true;
+            if (trimmed.Equals("false", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Equals("falso", StringComparison.OrdinalIgnoreCase)) return false;
+            if (trimmed.Equals("NaN", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Equals("Infinity", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Equals("+Infinity", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Equals("-Infinity", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Equals("infinito", StringComparison.OrdinalIgnoreCase))
+                throw new FlowException("Inserisci un numero finito.");
+            return raw;
+        }
+
+        private static bool LooksNumeric(string text)
+        {
+            int i = 0, digits = 0;
+            if (i < text.Length && (text[i] == '+' || text[i] == '-')) i++;
+            while (i < text.Length && text[i] >= '0' && text[i] <= '9') { i++; digits++; }
+            if (i < text.Length && (text[i] == '.' || text[i] == ','))
+            {
+                i++;
+                while (i < text.Length && text[i] >= '0' && text[i] <= '9') { i++; digits++; }
+            }
+            if (digits == 0) return false;
+            if (i < text.Length && (text[i] == 'e' || text[i] == 'E'))
+            {
+                i++;
+                if (i < text.Length && (text[i] == '+' || text[i] == '-')) i++;
+                int exponentStart = i;
+                while (i < text.Length && text[i] >= '0' && text[i] <= '9') i++;
+                if (i == exponentStart) return false;
+            }
+            return i == text.Length;
+        }
+
+        public static bool Numeric(object value)
+        {
+            return value is double || value is int || value is long || value is float || value is decimal;
+        }
+    }
+
+
+    internal static class IntrinsicOperations
+    {
+        // Framework's x87 trigonometry loses range reduction (and returns x for huge inputs).
+        // Windows 10/11 already includes UCRT. Restrict native resolution to System32;
+        // modern .NET and non-Windows hosts retain their platform Math implementation.
+        private static readonly bool UseSystemTrigonometry = System.Environment.OSVersion.Platform == System.PlatformID.Win32NT && typeof(object).Assembly.GetName().Name == "mscorlib";
+        [System.Runtime.InteropServices.DllImport("ucrtbase.dll", EntryPoint="sin", ExactSpelling=true, CallingConvention=System.Runtime.InteropServices.CallingConvention.Cdecl)]
+        [System.Runtime.InteropServices.DefaultDllImportSearchPaths(System.Runtime.InteropServices.DllImportSearchPath.System32)]
+        private static extern double SystemSin(double value);
+        [System.Runtime.InteropServices.DllImport("ucrtbase.dll", EntryPoint="cos", ExactSpelling=true, CallingConvention=System.Runtime.InteropServices.CallingConvention.Cdecl)]
+        [System.Runtime.InteropServices.DefaultDllImportSearchPaths(System.Runtime.InteropServices.DllImportSearchPath.System32)]
+        private static extern double SystemCos(double value);
+        [System.Runtime.InteropServices.DllImport("ucrtbase.dll", EntryPoint="tan", ExactSpelling=true, CallingConvention=System.Runtime.InteropServices.CallingConvention.Cdecl)]
+        [System.Runtime.InteropServices.DefaultDllImportSearchPaths(System.Runtime.InteropServices.DllImportSearchPath.System32)]
+        private static extern double SystemTan(double value);
+        internal static double Sin(double value) { return UseSystemTrigonometry ? SystemSin(value) : Math.Sin(value); }
+        internal static double Cos(double value) { return UseSystemTrigonometry ? SystemCos(value) : Math.Cos(value); }
+        internal static double Tan(double value) { return UseSystemTrigonometry ? SystemTan(value) : Math.Tan(value); }
+        private static readonly Random RandomSource = new Random();
+        private static readonly HashSet<string> Names = new HashSet<string>(new[]{"sin","cos","tan","arcsin","arccos","arctan","int","ln","log","log10","sgn","random","size","char","tochar","tocode","tofixed","tointeger","toreal","tostring"});
+        internal static bool Handles(string name)
+        {
+            return Names.Contains(name);
+        }
+        private static string Text(object value)
+        {if(!(value is string))throw new FlowException("Questa funzione richiede un testo tra virgolette o una variabile di testo.");return(string)value;}
+        internal static List<string> Characters(string text)
+        {
+            var result=new List<string>();
+            for(int i=0;i<text.Length;i++)
+            {
+                if(Char.IsHighSurrogate(text[i]))
+                {if(i+1>=text.Length||!Char.IsLowSurrogate(text[i+1]))throw new FlowException("Il testo contiene un carattere Unicode incompleto.");result.Add(text.Substring(i++,2));}
+                else {if(Char.IsLowSurrogate(text[i]))throw new FlowException("Il testo contiene un carattere Unicode incompleto.");result.Add(text[i].ToString());}
+            }
+            return result;
+        }
+        internal static int CharacterCount(string text)
+        {
+            int count=0;for(int i=0;i<text.Length;i++,count++)
+            {if(Char.IsHighSurrogate(text[i])){if(i+1>=text.Length||!Char.IsLowSurrogate(text[i+1]))throw new FlowException("Il testo contiene un carattere Unicode incompleto.");i++;}else if(Char.IsLowSurrogate(text[i]))throw new FlowException("Il testo contiene un carattere Unicode incompleto.");}
+            return count;
+        }
+        private static int Integer(object value,int minimum,int maximum,string label)
+        {
+            double n=Values.Number(value);
+            if(n<minimum||n>maximum||n!=Math.Truncate(n))throw new FlowException(label+" deve essere un intero da "+minimum+" a "+maximum+".");
+            return(int)n;
+        }
+        // Framework's Double.ToString("F") keeps only 15 significant digits.
+        // Format the already rounded binary value exactly, matching Android's
+        // BigDecimal(double) without losing large integer or requested fractional digits.
+        private static string Fixed(double number,int digits)
+        {
+            double rounded=Math.Round(number,digits,MidpointRounding.AwayFromZero);
+            long bits=BitConverter.DoubleToInt64Bits(Math.Abs(rounded));
+            int exponent=(int)((bits>>52)&0x7ff);
+            long mantissa=bits&0xfffffffffffffL;
+            if(exponent!=0)mantissa|=1L<<52;
+            int shift=(exponent==0?-1022:exponent-1023)-52;
+            BigInteger scaled=new BigInteger(mantissa)*BigInteger.Pow(10,digits);
+            if(shift>=0)scaled<<=shift;
+            else
+            {
+                BigInteger denominator=BigInteger.One<<-shift,remainder;
+                scaled=BigInteger.DivRem(scaled,denominator,out remainder);
+                if(remainder*2>=denominator)scaled+=BigInteger.One;
+            }
+            string text=scaled.ToString(CultureInfo.InvariantCulture);
+            if(digits>0){text=text.PadLeft(digits+1,'0');text=text.Insert(text.Length-digits,".");}
+            return rounded<0&&!scaled.IsZero?"-"+text:text;
+        }
+        internal static object Evaluate(string name,object[] args)
+        {
+            object first=args[0];
+            if(name=="size")return(double)VectorValue.Require(first).Count;
+            if(name=="char")
+            {
+                var chars=Characters(Text(first));int index=Integer(args[1],0,Int32.MaxValue,"L’indice");
+                if(index>=chars.Count)throw new FlowException(chars.Count==0?"Il testo è vuoto: non contiene caratteri.":"Indice fuori dal testo. Usa un indice da 0 a "+(chars.Count-1)+".");
+                return chars[index];
+            }
+            if(name=="tocode")
+            {
+                var chars=Characters(Text(first));if(chars.Count!=1)throw new FlowException("tocode richiede esattamente un carattere.");
+                return(double)Char.ConvertToUtf32(chars[0],0);
+            }
+            // The optional mode validates generated FOR steps without reserving a
+            // new function name that could conflict with an existing user project.
+            if(name=="int" && args.Length==2) {
+                if(!(args[1] is string)||!String.Equals((string)args[1],"passo",StringComparison.OrdinalIgnoreCase))throw new FlowException("Il secondo argomento di int deve essere \"passo\" per controllare il passo di un ciclo.");
+                if(!(first is double||first is int||first is long||first is float||first is decimal))throw new FlowException("Il passo del ciclo deve essere un numero intero diverso da zero.");
+                double step=Values.Number(first);if(step==0||step!=Math.Truncate(step)||step<Int32.MinValue||step>Int32.MaxValue)throw new FlowException("Il passo del ciclo deve essere un intero diverso da zero, da -2147483648 a 2147483647.");return step;
+            }
+            if(name=="tointeger"||name=="toreal")
+            {
+                string text=Text(first).Trim();double value;
+                string pattern=name=="tointeger"?@"^[+-]?[0-9]+$":@"^[+-]?(?:[0-9]+(?:[.,][0-9]*)?|[.,][0-9]+)(?:[eE][+-]?[0-9]+)?$";
+                if(!System.Text.RegularExpressions.Regex.IsMatch(text,pattern)||!Double.TryParse(text.Replace(',','.'),NumberStyles.Float,CultureInfo.InvariantCulture,out value))
+                    throw new FlowException(name=="tointeger"?"Scrivi un testo che contenga un numero intero, per esempio \"42\".":"Scrivi un testo che contenga un numero, per esempio \"12.5\".");
+                value=Values.Finite(value);
+                if(name=="tointeger"&&(value<Int32.MinValue||value>Int32.MaxValue))throw new FlowException("tointeger accetta valori da -2147483648 a 2147483647.");
+                return value;
+            }
+            double n=Values.Number(first);
+            switch(name)
+            {
+                case "sin":return Values.Finite(Sin(n));
+                case "cos":return Values.Finite(Cos(n));
+                case "tan":return Values.Finite(Tan(n));
+                case "arcsin":case "arccos":
+                    if(n < -1||n > 1)throw new FlowException(name+" richiede un numero tra -1 e 1.");
+                    return name=="arcsin"?Math.Asin(n):Math.Acos(n);
+                case "arctan":return Math.Atan(n);
+                case "int":return Math.Truncate(n);
+                case "sgn":return(double)Math.Sign(n);
+                case "ln":case "log":case "log10":
+                    if(n<=0)throw new FlowException("Il logaritmo richiede un numero maggiore di 0.");
+                    return name=="log10"?Math.Log10(n):Math.Log(n);
+                case "random":
+                    int bound=Integer(first,1,Int32.MaxValue,"Il limite di random");
+                    lock(RandomSource)return(double)RandomSource.Next(bound);
+                case "tochar":
+                    int code=Integer(first,0,0x10FFFF,"Il codice Unicode");
+                    if(code>=0xD800&&code<=0xDFFF)throw new FlowException("Il codice non rappresenta un carattere Unicode completo.");
+                    return Char.ConvertFromUtf32(code);
+                case "tostring":return ValueFormatter.Format(n);
+                case "tofixed":
+                    int digits=Integer(args[1],0,15,"Le cifre decimali");
+                    return Fixed(n,digits);
+                default:throw new FlowException("Funzione sconosciuta.");
+            }
+        }
+    }
+
+
+    static object PrimitiveBinary(string op,object a,object b) {
+            if (op == "&" || (op == "+" && (a is string || b is string)))
+            {
+                string first = ValueFormatter.Format(a), second = ValueFormatter.Format(b);
+                if (first.Length + second.Length > Values.MaxStringLength)
+                    throw new FlowException("Il testo prodotto supera il limite di " + Values.MaxStringLength + " caratteri.");
+                return first + second;
+            }
+            if (op == "=" || op == "==" || op == "!=" || op == "<>")
+            {
+                bool same;
+                if (Values.Numeric(a) && Values.Numeric(b)) same = Values.Number(a) == Values.Number(b);
+                else same = Object.Equals(a, b);
+                return op == "!=" || op == "<>" ? !same : same;
+            }
+            if (op == "<" || op == "<=" || op == ">" || op == ">=")
+            {
+                int comparison;
+                if (a is string && b is string)
+                    comparison = System.String.CompareOrdinal((string)a, (string)b);
+                else comparison = Values.Number(a).CompareTo(Values.Number(b));
+                switch (op)
+                {
+                    case "<": return comparison < 0;
+                    case "<=": return comparison <= 0;
+                    case ">": return comparison > 0;
+                    default: return comparison >= 0;
+                }
+            }
+            double x = Values.Number(a), y = Values.Number(b);
+            switch (op)
+            {
+                case "+": return Values.Finite(x + y);
+                case "-": return Values.Finite(x - y);
+                case "*": return Values.Finite(x * y);
+                case "/":
+                    if (y == 0) throw new FlowException("Divisione per zero: il divisore deve essere diverso da 0.");
+                    return Values.Finite(x / y);
+                case "%":
+                    if (y == 0) throw new FlowException("Resto con divisore zero: usa un divisore diverso da 0.");
+                    return Values.Finite(x % y);
+                case "^": return Values.Finite(Math.Pow(x, y));
+                default: throw new FlowException("Operatore non riconosciuto.");
+            }
+    }
+
+    static object PrimitiveCall(string name,object[] args) {
+            object first = args[0];
+            if(name=="array"||name=="vettore"){int length=VectorValue.Integer(first,"La dimensione");if(length>VectorValue.MaxLength)throw new FlowException("Un vettore può contenere al massimo 1024 elementi.");object initial=args.Length==2?args[1]:0.0;VectorValue.ScalarKind(initial);return new VectorValue(Enumerable.Repeat(initial,length));}
+            if(name=="len"){if(first is VectorValue)return(double)((VectorValue)first).Count;if(first is string)return(double)IntrinsicOperations.CharacterCount((string)first);throw new FlowException("len richiede un testo o un vettore.");}
+            if(IntrinsicOperations.Handles(name))return IntrinsicOperations.Evaluate(name,args.Length==1?new[]{first}:new[]{first,args[1]});
+            if(name=="sum"||name=="somma"||(name=="min"||name=="max")&&args.Length==1){var vector=VectorValue.Require(first);if(vector.Count==0&&name!="sum"&&name!="somma")throw new FlowException("Il vettore è vuoto: min e max richiedono almeno un elemento.");double result=0;for(int i=0;i<vector.Count;i++){double n=Values.Number(vector.At(i));result=name=="min"?(i==0?n:Math.Min(result,n)):name=="max"?(i==0?n:Math.Max(result,n)):Values.Finite(result+n);}return result;}
+            double number = Values.Number(first);
+            switch (name)
+            {
+                case "abs": return Math.Abs(number);
+                case "sqrt":
+                    if (number < 0) throw new FlowException("La radice quadrata richiede un numero maggiore o uguale a 0.");
+                    return Math.Sqrt(number);
+                case "floor": return Math.Floor(number);
+                case "round":
+                    int digits = 0;
+                    if (args.Length == 2)
+                    {
+                        double places = Values.Number(args[1]);
+                        if (places < 0 || places > 15 || places != Math.Floor(places))
+                            throw new FlowException("Le cifre decimali di round devono essere un intero tra 0 e 15.");
+                        digits = (int)places;
+                    }
+                    return Math.Round(number, digits, MidpointRounding.AwayFromZero);
+                case "min": case "max":
+                    for (int i = 1; i < args.Length; i++)
+                    {
+                        double next = Values.Number(args[i]);
+                        number = name == "min" ? Math.Min(number, next) : Math.Max(number, next);
+                    }
+                    return number;
+                default: throw new FlowException("Funzione sconosciuta.");
+            }
+    }
+
+    public enum FlowFileRequestKind { Read, Save }
+
+    // A request is a capability for one suspended block, never an arbitrary filesystem path.
+    public sealed class FlowFileRequest
+    {
+        public FlowFileRequestKind Kind { get; private set; }
+        public string Name { get; private set; }
+        public string Text { get; private set; }
+        internal FlowFileRequest(FlowFileRequestKind kind,string name,string text=null){Kind=kind;Name=name;Text=text;}
+    }
+
+    /// <summary>Two program-wide channels. Output remains a recoverable draft until the host confirms a save.</summary>
+    public sealed class FlowTextFiles
+    {
+        public interface IJournal { string Id {get;}void Append(string text);void Close();bool Saved(); }
+        public string ActiveJournalId {get{return journal==null?null:journal.Id;}}
+        public Func<string,IJournal> JournalFactory {get;set;}
+        private IJournal journal;
+        public bool RecoveryCopyRemains {get;private set;}
+        public void CloseJournal(){if(journal!=null){journal.Close();journal=null;}}
+        public const int MaxBytes=4194304, MaxCharacters=2097152, MaxLine=32768;
+        private string input;
+        private int position;
+        private StringBuilder output;
+        private int outputBytes;
+        public string ReadName {get;private set;}
+        public string WriteName {get;private set;}
+        public bool HasRead {get{return input!=null;}}
+        public bool HasWrite {get{return output!=null;}}
+        public string OutputDraft {get{return output==null?null:output.ToString();}}
+        private static readonly UTF8Encoding Utf8=new UTF8Encoding(false,true);
+
+        public bool Eof(){RequireRead();return position>=input.Length;}
+        private void RequireRead(){if(!HasRead)throw new FlowException("Apri prima un file in lettura. EOF() controlla quel file.");}
+        internal static string Name(object value)
+        {
+            var name=value as string;
+            if(String.IsNullOrWhiteSpace(name)||name.Length>256)throw new FlowException("Il nome del file deve essere un testo da 1 a 256 caratteri.");
+            foreach(char c in name)if(Char.IsControl(c))throw new FlowException("Il nome del file non può contenere righe nuove o caratteri di controllo.");
+            ValidateText(name);
+            return name;
+        }
+        internal void OpenRead(string name,string text)
+        {
+            if(HasRead)throw new FlowException("Un file è già aperto in lettura. Chiudilo prima di aprirne un altro.");
+            ValidateText(text);input=text;position=0;ReadName=name;
+        }
+        internal void OpenWrite(string name)
+        {
+            if(HasWrite)throw new FlowException("Un file è già aperto in scrittura. Chiudilo e salvalo prima di aprirne un altro.");
+            try{journal=JournalFactory==null?null:JournalFactory(name);}catch(IOException){throw new FlowException("Non riesco a preparare la bozza locale. Controlla lo spazio disponibile e la bozza di recupero indicata, poi riprova.");}catch(UnauthorizedAccessException){throw new FlowException("Non riesco a creare la bozza locale. Controlla l'accesso alla cartella di destinazione.");}
+            RecoveryCopyRemains=false;
+            output=new StringBuilder();outputBytes=0;WriteName=name;
+        }
+        public string PeekLine()
+        {
+            RequireRead();if(Eof())throw new FlowException("Il file è terminato. Usa non EOF() nella condizione del ciclo prima di leggere.");
+            int end=position;while(end<input.Length&&input[end]!='\r'&&input[end]!='\n'){if(end-position>=MaxLine)throw new FlowException("Una riga del file supera 32768 caratteri.");end++;}
+            return input.Substring(position,end-position);
+        }
+        internal void CommitRead()
+        {
+            string line=PeekLine();position+=line.Length;
+            if(position<input.Length&&input[position]=='\r'){position++;if(position<input.Length&&input[position]=='\n')position++;}
+            else if(position<input.Length&&input[position]=='\n')position++;
+        }
+        internal void Write(string text,bool newline)
+        {
+            if(!HasWrite)throw new FlowException("Apri prima un file in scrittura.");
+            text=(text??"")+(newline?"\n":"");int bytes;
+            try{bytes=Utf8.GetByteCount(text);}catch(EncoderFallbackException){throw new FlowException("Il file contiene caratteri Unicode non validi.");}
+            if(output.Length+(long)text.Length>MaxCharacters||outputBytes+(long)bytes>MaxBytes)throw new FlowException("Il file generato supera il limite di 4 MiB o 2 milioni di caratteri.");
+            try{if(journal!=null)journal.Append(text);}catch(IOException){throw new FlowException("Scrittura interrotta: non riesco a conservare la bozza locale. Il testo precedente resta in la bozza di recupero indicata.");}catch(UnauthorizedAccessException){throw new FlowException("Non riesco ad aggiornare la bozza locale. Il testo precedente resta in la bozza di recupero indicata.");}
+            output.Append(text);outputBytes+=bytes;
+        }
+        internal void CloseRead(){RequireRead();input=null;position=0;ReadName=null;}
+        internal void Saved(){if(journal!=null){RecoveryCopyRemains=!journal.Saved();journal=null;}output=null;outputBytes=0;WriteName=null;}
+        internal void Reset(){CloseJournal();input=null;position=0;ReadName=null;output=null;outputBytes=0;WriteName=null;RecoveryCopyRemains=false;}
+        private static void ValidateText(string text)
+        {
+            if(text==null)throw new FlowException("Il file di testo non è disponibile.");
+            if(text.Length>MaxCharacters)throw new FlowException("Il file supera 2 milioni di caratteri.");
+            try{if(Utf8.GetByteCount(text)>MaxBytes)throw new FlowException("Il file supera 4 MiB.");}
+            catch(EncoderFallbackException){throw new FlowException("Il file contiene caratteri Unicode non validi.");}
+        }
+        // The caller owns the stream and grants access through its native file picker.
+        public static string ReadText(Stream stream)
+        {
+            if(stream==null)throw new ArgumentNullException("stream");
+            using(var bytes=new MemoryStream())
+            {
+                byte[] buffer=new byte[8192];int count;
+                while((count=stream.Read(buffer,0,buffer.Length))>0){if(bytes.Length+count>MaxBytes)throw new FlowException("Il file supera 4 MiB.");bytes.Write(buffer,0,count);}
+                byte[] data=bytes.ToArray();int start=0;Encoding encoding=Utf8;
+                if(data.Length>=3&&data[0]==239&&data[1]==187&&data[2]==191)start=3;
+                else if(data.Length>=2&&data[0]==255&&data[1]==254){start=2;encoding=new UnicodeEncoding(false,false,true);}
+                else if(data.Length>=2&&data[0]==254&&data[1]==255){start=2;encoding=new UnicodeEncoding(true,false,true);}
+                try{string text=encoding.GetString(data,start,data.Length-start);ValidateText(text);return text;}
+                catch(DecoderFallbackException){throw new FlowException("Il file non è un testo UTF-8 o UTF-16 valido. Salvalo come UTF-8 e riprova.");}
+            }
+        }
+        public static void WriteText(Stream stream,string text)
+        {
+            ValidateText(text);byte[] bytes=Utf8.GetBytes(text);stream.Write(bytes,0,bytes.Length);stream.Flush();
+        }
+    }
+
+    public sealed class FlowTurtle {
+  public const int MaxSegments=10000;public const double MaxCoordinate=1000000;
+  public sealed class Segment {
+   public double X1{get;private set;}public double Y1{get;private set;}public double X2{get;private set;}public double Y2{get;private set;}public string Color{get;private set;}
+   internal Segment(double x1,double y1,double x2,double y2,string color){X1=x1;Y1=y1;X2=x2;Y2=y2;Color=color;}
+  }
+  public sealed class Snapshot {
+   public double X{get;private set;}public double Y{get;private set;}public double Heading{get;private set;}public string Color{get;private set;}public long Revision{get;private set;}public IList<Segment> Segments{get;private set;}
+   internal Snapshot(FlowTurtle owner){X=owner.X;Y=owner.Y;Heading=owner.Heading;Color=owner.Color;Revision=owner.Revision;Segments=Array.AsReadOnly(owner.lines.ToArray());}
+  }
+  internal static string Svg(Snapshot snapshot){
+   double minX=Math.Min(0,snapshot.X),maxX=Math.Max(0,snapshot.X),minY=Math.Min(0,snapshot.Y),maxY=Math.Max(0,snapshot.Y);foreach(var line in snapshot.Segments){minX=Math.Min(minX,Math.Min(line.X1,line.X2));maxX=Math.Max(maxX,Math.Max(line.X1,line.X2));minY=Math.Min(minY,Math.Min(line.Y1,line.Y2));maxY=Math.Max(maxY,Math.Max(line.Y1,line.Y2));}
+   double margin=Math.Max(10,Math.Max(maxX-minX,maxY-minY)*.05),width=Math.Max(1,maxX-minX)+2*margin,height=Math.Max(1,maxY-minY)+2*margin;
+   Func<double,string> n=v=>v.ToString("R",System.Globalization.CultureInfo.InvariantCulture);var b=new System.Text.StringBuilder();b.Append("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"").Append(n(minX-margin)).Append(' ').Append(n(-maxY-margin)).Append(' ').Append(n(width)).Append(' ').Append(n(height)).Append("\"><title>Disegno tartaruga — Frociart</title><rect x=\"").Append(n(minX-margin)).Append("\" y=\"").Append(n(-maxY-margin)).Append("\" width=\"").Append(n(width)).Append("\" height=\"").Append(n(height)).Append("\" fill=\"white\"/>");
+   foreach(var line in snapshot.Segments)b.Append("<line x1=\"").Append(n(line.X1)).Append("\" y1=\"").Append(n(-line.Y1)).Append("\" x2=\"").Append(n(line.X2)).Append("\" y2=\"").Append(n(-line.Y2)).Append("\" stroke=\"").Append(line.Color).Append("\" stroke-width=\"2\" stroke-linecap=\"round\" vector-effect=\"non-scaling-stroke\"/>");return b.Append("</svg>").ToString();
+  }
+  readonly List<Segment> lines=new List<Segment>();readonly ReadOnlyCollection<Segment> view;
+  public double X{get;private set;}public double Y{get;private set;}public double Heading{get;private set;}public string Color{get;private set;}public long Revision{get;private set;}
+  public IList<Segment> Segments{get{return view;}}public bool Used{get;private set;}
+  public FlowTurtle(){view=lines.AsReadOnly();Reset();}
+  public Snapshot Capture(){return new Snapshot(this);}
+  internal void Reset(){lines.Clear();X=Y=0;Heading=90;Color="#000000";Used=false;Revision++;}
+  internal void Apply(int kind,object value,bool flag){
+   switch(kind){
+    case 12:
+     double distance=Number(value),radians=Heading*Math.PI/180;
+     double cos=Heading==90||Heading==270?0:Heading==0?1:Heading==180?-1:IntrinsicOperations.Cos(radians);
+     double sin=Heading==0||Heading==180?0:Heading==90?1:Heading==270?-1:IntrinsicOperations.Sin(radians);
+     double nx=X+distance*cos,ny=Y+distance*sin;Coordinate(nx);Coordinate(ny);
+     bool line=flag&&(nx!=X||ny!=Y);if(line&&lines.Count>=MaxSegments)throw new FlowException("Il disegno supera 10000 tratti. Controlla il ciclo o usa Pulisci disegno.");
+     if(line)lines.Add(new Segment(X,Y,nx,ny,Color));X=nx;Y=ny;break;
+    case 13:double angle=Number(value)%360;Heading=((Heading+(flag?angle:-angle))%360+360)%360;break;
+    case 14:X=Y=0;Heading=90;break;
+    case 15:lines.Clear();X=Y=0;Heading=90;break;
+    case 16:Color=ParseColor(value);break;
+    default:throw new FlowException("Comando tartaruga non riconosciuto.");
+   }Used=true;Revision++;
+  }
+  static double Number(object value){if(!Values.Numeric(value))throw new FlowException("La distanza e l'angolo richiedono un numero.");double n=Values.Number(value);if(Double.IsNaN(n)||Double.IsInfinity(n))throw new FlowException("Il valore della tartaruga deve essere finito.");return n;}
+  static void Coordinate(double value){if(Double.IsNaN(value)||Double.IsInfinity(value)||Math.Abs(value)>MaxCoordinate)throw new FlowException("Il disegno supera lo spazio disponibile: coordinate tra -1000000 e 1000000.");}
+  internal static readonly string[][] Colors={
+   new[]{"nero","black","#000000"},new[]{"bianco","white","#FFFFFF"},new[]{"grigio","gray","#808080"},new[]{"rosso","red","#FF0000"},new[]{"arancione","orange","#FF8C00"},new[]{"giallo","yellow","#FFFF00"},new[]{"verde","green","#008000"},new[]{"lime","lime","#00FF00"},new[]{"turchese","teal","#008080"},new[]{"ciano","cyan","#00FFFF"},new[]{"blu","blue","#0000FF"},new[]{"azzurro","skyblue","#00BFFF"},new[]{"viola","purple","#800080"},new[]{"magenta","magenta","#FF00FF"},new[]{"rosa","pink","#FF69B4"},new[]{"marrone","brown","#A52A2A"}
+  };
+  internal static string ParseColor(object value){string text=value as string;if(text==null)throw new FlowException("Il colore richiede un testo, per esempio \"blu\" o \"#3366FF\".");text=text.Trim();foreach(var item in Colors)if(text.Equals(item[0],StringComparison.OrdinalIgnoreCase)||text.Equals(item[1],StringComparison.OrdinalIgnoreCase))return item[2];if(text.Equals("grey",StringComparison.OrdinalIgnoreCase))return "#808080";if(Regex.IsMatch(text,@"\A#[0-9a-fA-F]{6}\z"))return text.ToUpperInvariant();if(Regex.IsMatch(text,@"\A#[0-9a-fA-F]{3}\z"))return ("#"+text[1]+text[1]+text[2]+text[2]+text[3]+text[3]).ToUpperInvariant();throw new FlowException("Colore non riconosciuto. Usa un nome, per esempio \"rosso\", oppure #RRGGBB fra virgolette.");}
+ }
+// Standalone controller: emitted methods execute the program; no diagram or expression parser.
+sealed class Value {
+    internal readonly object raw;internal Value(object raw){this.raw=raw;}
+    internal static Value number(double n){return new Value(Values.Finite(n));}
+    internal static Value text(string text){return new Value(Values.String(text??""));}
+    internal static Value logical(bool value){return new Value(value);}
+    internal static Value vector(IEnumerable<Value> items){return new Value(new VectorValue(items.Select(v=>v.raw)));}
+    internal bool isVector(){return raw is VectorValue;}internal bool isNumber(){return Values.Numeric(raw);}
+    internal bool isText(){return raw is string;}internal bool isBoolean(){return raw is bool;}
+    internal double asNumber(){return Values.Number(raw);}internal bool asBoolean(){return Values.Truth(raw);}
+    internal int vectorSize(){return VectorValue.Require(raw).Count;}internal Value element(int i){return new Value(VectorValue.Require(raw).At(i));}
+    internal string format(){return ValueFormatter.Format(raw);}
+}
+sealed class Variables:Dictionary<string,Value> {
+    internal Variables():base(StringComparer.OrdinalIgnoreCase){}internal Variables(Variables source):base(source,StringComparer.OrdinalIgnoreCase){}
+    internal Value find(string name){Value value;return TryGetValue(name,out value)?value:null;}
+}
+sealed class TypeSpec {internal readonly int kind,length;internal readonly bool array;internal TypeSpec(int kind,bool array,int length){this.kind=kind;this.array=array;this.length=length;}}
+sealed class ArrayCell {internal Value value;internal int kind;internal ArrayCell(Value value,int kind){this.value=value;this.kind=kind;}}
+sealed class ArrayArgument {internal readonly ArrayCell cell;internal readonly Value snapshot;internal ArrayArgument(ArrayCell cell){this.cell=cell;this.snapshot=cell.value;}}
+static FlowException problem(string text){return new FlowException(text);}
+static class Intrinsics {internal static int integer(Value value,int min,int max,string label){double n=value.asNumber();if(n<min||n>max||n!=Math.Truncate(n))throw problem(label+" deve essere un intero da "+min+" a "+max+".");return(int)n;}}
+sealed class _fc_Runtime {
+    internal readonly Func<string,string> reader;internal readonly Action<string> writer;
+    internal Func<string,string> fileReader;internal Func<string,string,bool> fileSaver;
+    internal readonly FlowTextFiles files=new FlowTextFiles();internal readonly FlowTurtle drawing=new FlowTurtle();
+    internal readonly List<string> output=new List<string>();internal readonly List<bool> outputNewlines=new List<bool>();
+    internal readonly List<Frame> frames=new List<Frame>();internal Variables lastVariables=new Variables(),errorVariables;
+    internal int steps,outputSize,maxSteps=10000;internal bool references;internal string recoveryPath;
+    internal sealed class Frame {
+        internal readonly string scope;internal Variables variables=new Variables(),transaction;
+        internal readonly Dictionary<int,List<Value>> retained=new Dictionary<int,List<Value>>();internal Value assignment;
+        internal readonly Dictionary<string,ArrayCell> bindings=new Dictionary<string,ArrayCell>(StringComparer.OrdinalIgnoreCase),newArrays=new Dictionary<string,ArrayCell>(StringComparer.OrdinalIgnoreCase);
+        internal readonly Dictionary<ArrayCell,ArrayCell> overlays=new Dictionary<ArrayCell,ArrayCell>();
+        internal readonly HashSet<string> wholeWrites=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        internal Frame(string scope){this.scope=scope;}
+    }
+    internal _fc_Runtime():this(null,null,null,null){}
+    internal _fc_Runtime(Func<string,string> reader,Action<string> writer,Func<string,string> fileReader,Func<string,string,bool> fileSaver){
+        this.reader=reader??consoleRead;this.writer=writer;this.fileReader=fileReader??readPath;this.fileSaver=fileSaver??savePath;
+        if(fileSaver==null)files.JournalFactory=journal;
+    }
+    string consoleRead(string prompt){Console.Write(prompt);Console.Out.Flush();string text=Console.ReadLine();if(text==null)throw problem("Input terminato prima di ricevere un valore valido.");return text;}
+    internal void guard(){if(steps>=maxSteps)throw problem("Limite di esecuzione raggiunto. Controlla la condizione del ciclo.");}
+    internal void step(){guard();steps++;}internal bool test(Func<Value> expression){step();return expression().asBoolean();}
+    internal void guardCall(){if(frames.Count>=128)throw problem("Troppe chiamate annidate: massimo 128 livelli.");}
+    internal void enter(string scope,string[] names,Value[] values,bool references=false){guardCall();this.references|=references;var f=new Frame(scope);for(int i=0;i<names.Length;i++){Value value=values[i];var address=value==null?null:value.raw as ArrayArgument;if(address!=null){f.bindings[names[i]]=address.cell;value=address.cell.value;}f.variables[names[i]]=value;}frames.Add(f);}
+    Frame frame(){return frames[frames.Count-1];}
+    internal void captureError(){if(errorVariables==null&&frames.Count>0)errorVariables=new Variables(frame().variables);}
+    internal void leave(){var f=frame();if(f.scope==null)lastVariables=new Variables(f.variables);frames.RemoveAt(frames.Count-1);}
+    internal Value value(Value value,string name){if(value!=null)return value;if(name.Equals("pi",StringComparison.OrdinalIgnoreCase)||name=="π")return Value.number(Math.PI);throw problem("La variabile «"+name+"» non ha ancora un valore.");}
+    internal Value lookup(string name){var f=frame();return value((f.transaction??f.variables).find(name),name);}
+    internal Value reference(string name,TypeSpec declaration,TypeSpec parameter){
+        var f=frame();Value v=lookup(name);VectorValue.Require(v.raw);var spec=declaration??parameter;int kind=spec==null?0:spec.kind;ArrayCell cell;
+        if(f.transaction!=null&&(f.wholeWrites.Contains(name)||!f.variables.ContainsKey(name))){if(!f.newArrays.TryGetValue(name,out cell)){cell=new ArrayCell(v,kind);f.newArrays[name]=cell;}return new Value(new ArrayArgument(cell));}
+        if(!f.bindings.TryGetValue(name,out cell)){Value original=f.variables.find(name);VectorValue.Require(original.raw);cell=new ArrayCell(original,kind);f.bindings[name]=cell;}
+        if(f.transaction!=null){ArrayCell staged;if(f.overlays.TryGetValue(cell,out staged))return new Value(new ArrayArgument(staged));if(v!=cell.value)return new Value(new ArrayArgument(overlay(f,cell,v)));}
+        return new Value(new ArrayArgument(cell));
+    }
+    internal Value checkReference(Value argument,int kind){
+        var address=argument==null?null:argument.raw as ArrayArgument;if(address==null)throw problem("Parametro per riferimento non valido.");
+        checkType(address.snapshot,kind,true);var cell=address.cell;if(cell.kind!=0&&kind!=0&&cell.kind!=kind)throw problem("Il tipo del vettore per riferimento deve coincidere con quello originale.");
+        checkType(cell.value,kind,true);if(cell.kind==0&&kind!=0)cell.kind=kind;return cell.value;
+    }
+    ArrayCell overlay(Frame f,ArrayCell cell,Value value){ArrayCell staged;if(!f.overlays.TryGetValue(cell,out staged)){staged=new ArrayCell(value,cell.kind);f.overlays[cell]=staged;}return staged;}
+    void propagate(ArrayCell cell){foreach(var f in frames){
+        foreach(var pair in f.bindings)if(pair.Value==cell){string name=pair.Key;f.variables[name]=cell.value;if(f.transaction!=null&&!f.wholeWrites.Contains(name)){ArrayCell staged;f.transaction[name]=f.overlays.TryGetValue(cell,out staged)?staged.value:cell.value;}}
+        if(f.transaction!=null){foreach(var pair in f.newArrays)if(pair.Value==cell)f.transaction[pair.Key]=cell.value;foreach(var pair in f.overlays)if(pair.Value==cell)foreach(var alias in f.bindings)if(alias.Value==pair.Key&&!f.wholeWrites.Contains(alias.Key))f.transaction[alias.Key]=cell.value;}
+    }}
+    void checkCell(ArrayCell cell,Value value){if(value.vectorSize()!=cell.value.vectorSize())throw problem("Un vettore per riferimento conserva la dimensione originale.");checkType(value,cell.kind,true);}
+    long valueSize(Value v){if(v==null)return 8;var address=v.raw as ArrayArgument;if(address!=null)return valueSize(address.snapshot);if(v.isText())return v.format().Length;if(v.isVector()){long n=v.vectorSize()*8L;for(int i=0;i<v.vectorSize();i++){var item=v.element(i);if(item.isText())n+=item.format().Length;}return n;}return 8;}
+    internal void checkMemory(){long size=outputSize,slots=0;foreach(var f in frames){foreach(var values in new[]{f.variables,f.transaction})if(values!=null){slots+=values.Count;foreach(var v in values.Values)size+=valueSize(v);}foreach(var list in f.retained.Values)foreach(var v in list)size+=valueSize(v);if(f.assignment!=null)size+=valueSize(f.assignment);if(size>2097152||slots>16384)throw problem("La memoria dei valori supera il limite di esecuzione.");}}
+    internal void begin(){var f=frame();f.transaction=new Variables(f.variables);if(references){f.overlays.Clear();f.newArrays.Clear();f.wholeWrites.Clear();}}
+    internal Value stage(string name,Value value,bool check=true,bool indexed=false){
+        var f=frame();ArrayCell cell;if(!references)f.transaction[name]=value;
+        else if(!indexed){f.transaction[name]=value;f.wholeWrites.Add(name);f.newArrays.Remove(name);}
+        else if(f.wholeWrites.Contains(name)&&f.newArrays.TryGetValue(name,out cell)){checkCell(cell,value);cell.value=value;propagate(cell);}
+        else if(!f.wholeWrites.Contains(name)&&f.bindings.TryGetValue(name,out cell)){var staged=overlay(f,cell,f.transaction.find(name));checkCell(staged,value);staged.value=value;propagate(staged);}
+        else f.transaction[name]=value;if(check)checkMemory();return value;
+    }
+    internal Value staged(string name){return frame().transaction.find(name);}internal Value variable(string name){return frame().variables.find(name);}
+    internal void commit(bool check=false){
+        if(check)checkMemory();var f=frame();if(references){foreach(var pair in f.overlays)checkCell(pair.Key,pair.Value.value);foreach(var cell in f.newArrays.Values)checkCell(cell,cell.value);foreach(var name in f.wholeWrites)f.bindings.Remove(name);foreach(var pair in f.overlays){pair.Key.value=pair.Value.value;propagate(pair.Key);}foreach(var pair in f.newArrays)f.bindings[pair.Key]=pair.Value;}
+        f.variables=f.transaction;f.transaction=null;f.overlays.Clear();f.newArrays.Clear();f.wholeWrites.Clear();
+    }
+    void acceptInput(string name,Value value,bool indexed){begin();try{stage(name,value,true,indexed);commit();}finally{frame().transaction=null;}}
+    internal Value hold(int key,Value value){List<Value> values;if(!frame().retained.TryGetValue(key,out values)){values=new List<Value>();frame().retained[key]=values;}values.Add(value);return value;}
+    internal Value release(int key,Value value){frame().retained.Remove(key);return value;}
+    internal Value call(int key,Func<Value> invocation){Value value=invocation();release(key,value);hold(-1,value);try{checkMemory();}finally{release(-1,value);}return value;}
+    internal Value unary(string op,Value value){return op=="not"?Value.logical(!value.asBoolean()):Value.number(op=="-"?-value.asNumber():value.asNumber());}
+    internal Value binary(string op,Value a,Value b){return new Value(PrimitiveBinary(op,a.raw,b.raw));}
+    internal Value at(Value target,Func<Value> index){var v=VectorValue.Require(target.raw);return new Value(v.At(v.Index(index().raw)));}
+    internal Value atName(string name,Func<Value> index){VectorValue.Require(lookup(name).raw);Value i=index();var v=VectorValue.Require(lookup(name).raw);return new Value(v.At(v.Index(i.raw)));}
+    internal Value setAfter(Value value,Value target,Func<Value> index){frame().assignment=value;try{var v=VectorValue.Require(target.raw);return new Value(v.Set(v.Index(index().raw),value.raw));}finally{frame().assignment=null;}}
+    internal Value setAfterName(Value value,string name,Func<Value> index){VectorValue.Require(lookup(name).raw);frame().assignment=value;try{Value i=index();var v=VectorValue.Require(lookup(name).raw);return new Value(v.Set(v.Index(i.raw),value.raw));}finally{frame().assignment=null;}}
+    internal Value checkType(Value v,int kind,bool array){if(array){if(v==null||!v.isVector())throw problem("Serve un vettore.");for(int i=0;i<v.vectorSize();i++)checkType(v.element(i),kind,false);return v;}bool valid=v!=null&&!v.isVector();if(kind==1)valid=v!=null&&v.isNumber()&&v.asNumber()==Math.Truncate(v.asNumber());else if(kind==2)valid=v!=null&&v.isNumber();else if(kind==3)valid=v!=null&&v.isText();else if(kind==4)valid=v!=null&&v.isBoolean();else if(kind==5)valid=false;if(!valid)throw problem("Il valore non corrisponde al tipo dichiarato.");return v;}
+    Value convertScalar(Value v,int kind){return kind==1&&v!=null&&v.isNumber()?Value.number(Math.Truncate(v.asNumber())):checkType(v,kind,false);}
+    internal Value convert(Value v,TypeSpec declaration,TypeSpec parameter){if(declaration!=null){if(declaration.array){if(!v.isVector()||v.vectorSize()!=declaration.length)throw problem("La dimensione del vettore dichiarato non può cambiare.");v=Value.vector(Enumerable.Range(0,v.vectorSize()).Select(i=>convertScalar(v.element(i),declaration.kind)));}else v=convertScalar(v,declaration.kind);}if(parameter!=null)v=checkType(v,parameter.kind,parameter.array);return v;}
+    internal Value initial(int kind,bool array,int length){Value v=kind==3?Value.text(""):kind==4?Value.logical(false):Value.number(0);return array?Value.vector(Enumerable.Repeat(v,length)):v;}
+    bool wantsText(TypeSpec d,TypeSpec p,bool indexed){var s=d??p;return s!=null&&s.kind==3&&(indexed||!s.array);}
+    internal Value read(string name,string prompt,TypeSpec declaration,TypeSpec parameter,Value vector,Func<Value> indexExpression){
+        guard();string display=name;int? index=null;if(indexExpression!=null){var v=VectorValue.Require(vector.raw);Value i=indexExpression();if(references)v=VectorValue.Require(lookup(name).raw);index=v.Index(i.raw);display+="["+index+"]";}guard();if(String.IsNullOrWhiteSpace(prompt)||prompt=="Inserisci un valore per x")prompt="Inserisci un valore per "+display;
+        while(true){string raw=reader(prompt+": ");if(raw==null)throw problem("Input terminato prima di ricevere un valore valido.");try{Value v=wantsText(declaration,parameter,index!=null)?Value.text(raw):new Value(Values.Input(raw));if(index!=null)v=new Value(VectorValue.Require((references?lookup(name):vector).raw).Set(index.Value,v.raw));v=convert(v,declaration,parameter);acceptInput(name,v,index!=null);return v;}catch(FlowException error){Console.Error.WriteLine(error.Message);}}
+    }
+    internal void emit(Value value,bool newline=true){string text=value==null?"":value.format();if(outputSize+(long)text.Length>262144)throw problem("Il risultato supera 256 KiB.");output.Add(text);outputNewlines.Add(newline);outputSize+=text.Length;if(writer==null){Console.Write(text);if(newline)Console.WriteLine();Console.Out.Flush();}else writer(text);}
+    internal Value intrinsic(string name,params Value[] args){if(name=="eof")return Value.logical(files.Eof());return new Value(PrimitiveCall(name,args.Select(v=>v.raw).ToArray()));}
+    internal void requireClosed(bool reading){if(reading?files.HasRead:files.HasWrite)throw problem("Chiudi il file precedente prima di aprirne un altro.");}
+    internal void requireWrite(){if(!files.HasWrite)throw problem("Apri prima un file in scrittura.");}
+    internal void openFile(bool reading,Value name){requireClosed(reading);string path=FlowTextFiles.Name(name.raw);if(reading)files.OpenRead(path,fileReader(path));else files.OpenWrite(path);}
+    internal Value readFile(string name,TypeSpec declaration,TypeSpec parameter,Value vector,Func<Value> indexExpression){
+        int? index=null;if(indexExpression!=null){var v=VectorValue.Require(vector.raw);Value i=indexExpression();if(references)v=VectorValue.Require(lookup(name).raw);index=v.Index(i.raw);}string raw=files.PeekLine();Value value=wantsText(declaration,parameter,index!=null)?Value.text(raw):new Value(Values.Input(raw));if(index!=null)value=new Value(VectorValue.Require((references?lookup(name):vector).raw).Set(index.Value,value.raw));value=convert(value,declaration,parameter);acceptInput(name,value,index!=null);files.CommitRead();return value;
+    }
+    internal void writeFile(Value value,bool newline){files.Write(value.format(),newline);}
+    internal void closeFile(bool reading){if(reading){files.CloseRead();return;}requireWrite();if(!fileSaver(files.WriteName,files.OutputDraft))throw problem("Salvataggio annullato: la bozza resta disponibile.");files.Saved();}
+    internal void finishFiles(){if(files.HasWrite)closeFile(false);if(files.HasRead)files.CloseRead();}
+    string readPath(string name){try{using(var stream=File.OpenRead(name))return FlowTextFiles.ReadText(stream);}catch(IOException){throw problem("Non riesco a leggere il file «"+name+"».");}catch(UnauthorizedAccessException){throw problem("Accesso al file negato.");}}
+    sealed class Journal:FlowTextFiles.IJournal {
+        readonly string path;readonly FileStream stream;internal Journal(string path){this.path=path;stream=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.Read);}
+        public string Id{get{return path;}}public void Append(string text){byte[] bytes=new UTF8Encoding(false,true).GetBytes(text);stream.Write(bytes,0,bytes.Length);stream.Flush(true);}public void Close(){stream.Dispose();}
+        public bool Saved(){stream.Dispose();try{if(File.Exists(path))File.Delete(path);return true;}catch(IOException){return false;}catch(UnauthorizedAccessException){return false;}}
+    }
+    FlowTextFiles.IJournal journal(string name){string target=Path.GetFullPath(name),parent=Path.GetDirectoryName(target);if(!Directory.Exists(parent))throw new IOException("Cartella non disponibile.");string draft=Path.Combine(parent,".frociart-recovery-"+Guid.NewGuid().ToString("N")+".txt");var created=new Journal(draft);recoveryPath=draft;return created;}
+    bool savePath(string name,string text){
+        try{files.CloseJournal();string target=Path.GetFullPath(name);if(File.Exists(target)){string answer=reader("Il file «"+name+"» esiste. Sostituirlo? [s/N] ");if(answer==null||!answer.Trim().Equals("s",StringComparison.OrdinalIgnoreCase))return false;File.Replace(recoveryPath,target,null);}else File.Move(recoveryPath,target);recoveryPath=null;return true;}
+        catch(IOException){throw problem("File non salvato. La bozza è conservata in "+recoveryPath+".");}catch(UnauthorizedAccessException){throw problem("Accesso negato. La bozza è conservata in "+recoveryPath+".");}
+    }
+    internal void turtle(int kind,Value value,bool flag){drawing.Apply(kind,value==null?null:value.raw,flag);}
+    internal string drawingSvg(){return FlowTurtle.Svg(drawing.Capture());}
+    void showDrawing(){if(!drawing.Used)return;string path=Path.GetFullPath("Frociart_disegno_"+Guid.NewGuid().ToString("N")+".svg");using(var stream=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.Read)){byte[] data=new UTF8Encoding(false,true).GetBytes(drawingSvg());stream.Write(data,0,data.Length);stream.Flush(true);}Console.Error.WriteLine("Disegno SVG salvato: "+path);}
+    internal bool run(Func<Value> main,bool show){
+        // The generated call stack must accommodate all 128 supported function frames,
+        // including their bounded expression helpers. The process's default stack varies.
+        bool success=false;var worker=new System.Threading.Thread(()=>{try{main();if(show)showDrawing();success=true;}catch(Exception error){Console.Error.WriteLine(error.Message);}finally{try{files.CloseJournal();}catch(IOException){Console.Error.WriteLine("Non riesco a chiudere la bozza.");}if(recoveryPath!=null)Console.Error.WriteLine("Bozza recuperabile: "+recoveryPath);}},16*1024*1024);
+        worker.Start();worker.Join();return success;
+    }
+}

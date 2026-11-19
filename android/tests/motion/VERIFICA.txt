@@ -1,0 +1,94 @@
+Frociart Android 1.2.0 — canvas mobile e animazioni
+
+Sorgenti di prova
+  MotionChecksActivity.java: vista Android reale, collegata a una finestra.
+  MotionProbe.java: instrumentation nativa; esegue anche FlowCanvasChecks.java
+  mantenuto invariato (118 controlli storici).
+  FlowCanvasChecks.java: copia identica del file canonico in tests/canvas,
+  fornita qui per preparare l'APK di prova senza dipendere da directory temporanee.
+  AndroidManifest.xml: manifest del solo harness, con la sua instrumentation.
+  Per compilare selezionare questa copia oppure quella in tests/canvas, non entrambe.
+  Aggiungere alla compilazione soltanto FlowModel.java e FlowCanvasView.java
+  dai sorgenti dell'app; nessun sorgente MainActivity/Ui serve al probe.
+
+Il probe usa Canvas, MotionEvent, PathMeasure e ValueAnimator di Android.
+Non simula il renderer in un browser e non produce misure di FPS.
+Le verifiche temporali aspettano soltanto avanzamento o arresto degli animatori.
+
+Copertura aggiunta
+  - trascinamento dal + verso vuoto e blocco esistente;
+  - ramo decisionale scelto dopo il rilascio, creazione e sostituzione atomiche;
+  - CANCEL, pinch e dito residuo senza creazioni; coordinate dell'ultimo MOVE;
+  - tap del + e area tattile fissa di 48 dp;
+  - callback di movimento manuale singola, indipendente dal drag del +;
+  - apertura mobile a zoom 1.05 su 320 dp, minimo manuale 0.8, massimo 3;
+  - Inizio allineato sotto i comandi superiori, pan limitato ai contenuti;
+  - zoom scelto a 1.2 conservato mentre il Run segue il percorso;
+  - layout interpolato solo nelle geometrie di visualizzazione;
+  - identità SVG, bounds e pixel PNG/PDF durante l'animazione;
+  - copia delle coordinate prima/dopo, nessun frame scritto nel modello o Undo;
+  - diagramma da 500 nodi / 1.500 frecce: dissolvenza finita con geometrie,
+    Path e array delle frecce conservati fra i frame;
+  - percorso Run corretto con rami aventi la stessa destinazione e colori diversi;
+  - stop/reset, interruzione della camera con il dito, nessuna rincorsa successiva;
+  - pulso soltanto con connettore idoneo, stop su sola lettura/selezione/nascondi;
+  - impostazione dell'app e animator_duration_scale reale di Android;
+  - arresto degli animatori e rimozione ContentObserver al distacco della vista.
+
+Contratto pubblico aggiunto al canvas
+  setMotionEnabled(boolean), isMotionEnabled()
+  setMobileViewport(boolean)
+  focusNodeAnimated(String)
+  animateRunStep(String fromId, String toId, String branch, long durationMs)
+  clearRunAnimation()
+  animateLayout(Map<String,float[]> before, Map<String,float[]> after, long durationMs)
+  completeConnectionDrop(String sourceId, String branch, String targetId, float x, float y)
+  Listener.onConnectionDropRequested(...) e Listener.onManualNodeMove(): default.
+
+Decisioni di implementazione
+  Le coordinate passate ad animateLayout descrivono un modello già aggiornato.
+  Esportazione e salvataggio vedono sempre le coordinate definitive.
+  Oltre 150 nodi o 400 frecce il cambiamento usa una dissolvenza di massimo 160 ms
+  per evitare di ricalcolare tutte le frecce a ogni fotogramma.
+  Run conserva lo zoom scelto; la camera automatica modifica soltanto il pan.
+  Le animazioni si arrestano su distacco, invisibilità o riduzione delle animazioni.
+  La perdita di focus della finestra arresta il pulso del +.
+
+Esecuzione
+  Il test è un APK separato con package it.frociart.canvaschecks e instrumentation
+  it.frociart.app.MotionProbe. Non è incluso nell'APK destinato all'utente.
+  Android API 35: am instrument -w it.frociart.canvaschecks/it.frociart.app.MotionProbe
+  Il probe adotta temporaneamente solo WRITE_SECURE_SETTINGS, salva il valore
+  animator_duration_scale e lo ripristina nel finally, anche dopo un errore.
+  Report e PNG nativi: external-files/motion-1.2.0/ nel package di prova.
+
+Esito della nuova esecuzione
+  18 ottobre 2026, Android 35, densità 1.125, unico emulatore condiviso:
+  MOTION CHECKS PASSED: 95
+  CANVAS CHECKS PASSED: 118
+  Nessun fallimento nel log definitivo.
+  Compilazione API 35, firma APK v2/v3, allineamento e installazione completati.
+  Cinque PNG nativi ispezionati: layout intermedio, ramo vero, ramo falso,
+  pulso del + e filo con anteprima del nuovo blocco.
+
+  Sorgente FlowCanvasView.java verificato:
+  aedbd761c84d16f3ce737d860aedb8754ce68a91826aadacb12436ac6f10a10e
+  APK del solo harness verificato:
+  9b848b4f0403bd3a6619d4a66bcc3119a574d5c70b16206fa361f2408422844b
+
+Evidenze incluse in results/
+  motion-instrumentation.log e report.txt: esito completo dei controlli.
+  01-layout-intermediate.png, 02-run-true.png, 03-run-false.png,
+  04-connector-pulse.png, 05-connector-drag-ghost.png: render Android nativi.
+  source-sha256.json, apk-sha256.json e provenance.json: versioni esatte
+  dei sorgenti, hash APK, ambiente, provenienza e hash delle evidenze.
+  install.log e signature.log: installazione e firma.
+  I log animator-scale documentano anche il ripristino finale dell'assenza
+  originale della preferenza di sistema (valore effettivo predefinito 1).
+
+Limiti della verifica
+  Il runtime è Android 35 su emulatore software. Il tempo necessario sul computer
+  ospite non misura FPS, frequenza di aggiornamento o reattività di un telefono.
+  Le regressioni di input usano MotionEvent sul canvas Android; l'iniezione reale
+  tramite il sistema e i pannelli dell'app sono coperti dal probe UI separato.
+  La compilazione mantiene minSdk 26; questa prova di runtime riguarda API 35.

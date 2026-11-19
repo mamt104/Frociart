@@ -1,0 +1,11 @@
+Frociart — Condizioni d’uso
+Copyright © 2026 mamt104. Tutti i diritti riservati.
+
+Frociart è un progetto di mamt104.
+È consentito scaricare e utilizzare gratuitamente le versioni ufficiali per uso personale, didattico e professionale. I diagrammi e gli elaborati creati dall’utente restano dell’utente.
+
+Senza autorizzazione scritta dell’autore non è consentito rimuovere o alterare l’attribuzione, rivendere il software, distribuirne versioni modificate o ripubblicarlo presentandolo come un proprio prodotto. Per condividere l’app, usa il collegamento al progetto ufficiale: https://github.com/mamt104/Frociart
+
+Non viene concessa una licenza sul codice sorgente. Restano salvi i diritti inderogabili previsti dalla legge e quelli espressamente concessi dai termini delle piattaforme che ospitano il progetto. I componenti di terzi mantengono i propri titolari e le rispettive condizioni.
+
+Il software è fornito senza garanzie, nei limiti consentiti dalla legge. Conserva copie dei tuoi progetti e verifica i risultati con dati di prova.

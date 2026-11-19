@@ -1,0 +1,27 @@
+using System;using System.IO;using System.Linq;using System.Text;using System.Collections.Generic;using Frociart;
+public static class FpgtArrayCopyGuardTests {
+ static int checks;static void Check(bool yes,string why){checks++;if(!yes)throw new Exception(why);}static string B(string v){return Convert.ToBase64String(Encoding.UTF8.GetBytes(v));}
+ public static int Main(string[] args){try{string root=args[0];Directory.CreateDirectory(Path.Combine(root,"guard-documents"));var rows=new List<string>();var alternatives=new List<string>();
+  var cases=new Dictionary<string,string>{
+   {"inferred",File.ReadAllText(Path.Combine(root,"guard-cases/inferred.txt"))},
+   {"dynamic-separate",File.ReadAllText(Path.Combine(root,"guard-cases/dynamic-separate.txt"))},
+   {"different-lengths","DICHIARA a: INTERO[1]\nDICHIARA b: INTERO[2]\nb=a"},
+   {"incompatible-elements","DICHIARA a: TESTO[1]\nDICHIARA b: INTERO[1]\na[0]=\"2\"\nb=a"},
+   {"scalar-target","DICHIARA a: INTERO[1]\nDICHIARA b: INTERO\nb=a"},
+   {"scalar-source","DICHIARA a: INTERO[1]\na=2"},
+   {"redeclared","DICHIARA a,b: INTERO[1]\nDICHIARA a: INTERO[1]\na[0]=3\nb=a\nb[0]=8\nSTAMPA a[0]"},
+   {"cycle","DICHIARA a: INTERO[size(b)]\nDICHIARA b: INTERO[size(a)]\nb=a"},
+   {"parameter-unknown","FUNZIONE f(q: RIF INTERO[]) -> INTERO r\nDICHIARA a: INTERO[2]\na=q\na[0]=8\nr=q[0]\nFINE FUNZIONE\nDICHIARA v: INTERO[2]\nv[0]=3\nSTAMPA f(v)\nSTAMPA v[0]"},
+  };
+  var valid=new HashSet<string>{"inferred","dynamic-separate","parameter-unknown"};
+  foreach(var item in cases){var doc=FlowPseudocode.Decode(item.Value);byte[] before=DiagramIO.EncodeDocument(doc);File.WriteAllBytes(Path.Combine(root,"guard-documents",item.Key+".frociart"),before);var program=FlowSource.Compile(doc);if(item.Key=="redeclared"||item.Key=="cycle"){Check(!program.CanGenerate&&program.Diagnostics.Any(d=>d.Error),"Existing source compiler rejects invalid declarations before any backend");Check(before.SequenceEqual(DiagramIO.EncodeDocument(doc)),"Duplicate declaration precheck preserves input");rows.Add(item.Key+"\tPRECHECK");continue;}Check(program.CanGenerate,item.Key+" source model");var runtime=new Interpreter(doc);for(int step=0;step<3000&&runtime.State!=RuntimeState.Completed&&runtime.State!=RuntimeState.Error;step++)runtime.Step();Check(runtime.State==(valid.Contains(item.Key)?RuntimeState.Completed:RuntimeState.Error),item.Key+" runtime classification: "+runtime.State+" "+runtime.Error);
+   foreach(string target in new[]{"OwnCSharp","OwnPython","OwnJava"}){var model=FlowFpgtSyntax.Parse(File.ReadAllText(Path.Combine(root,"portable-models",target+".fpgt")));try{FlowFpgt.Generate(model,program);throw new Exception("Unsafe copy was exported: "+item.Key);}catch(FlowFpgt.GenerationError e){Check(e.NodeId!=null&&FunctionEditing.Graphs(doc).Any(g=>g.Nodes.Any(n=>n.Id==e.NodeId&&n.Kind==NodeKind.Process)),item.Key+" diagnostic links to original assignment");Check(e.Message.Contains("generatore integrato")||e.Message.Contains("tipi di elementi compatibili"),item.Key+" actionable diagnostic");rows.Add(item.Key+"\t"+target+"\t"+B(e.Message)+"\t"+(e.FunctionId??"")+"\t"+e.NodeId);}
+    Check(before.SequenceEqual(DiagramIO.EncodeDocument(doc)),item.Key+" original unchanged");
+   }
+   if(valid.Contains(item.Key)){string expected=runtime.OutputText.Replace("\r\n","\n")+(runtime.OutputText.Length>0?"\n":"");foreach(var target in FlowSourceTarget.All){string folder=Path.Combine(root,"native-alternatives",item.Key,target.Id);Directory.CreateDirectory(folder);var code=target.Generate(program);File.WriteAllText(Path.Combine(folder,"Programma."+target.Extension),code.Text,new UTF8Encoding(false));alternatives.Add(item.Key+"\t"+target.Id+"\t"+B(expected));Check(before.SequenceEqual(DiagramIO.EncodeDocument(doc)),"Native alternative preserves "+item.Key);}}
+  }
+  string original=File.ReadAllText(Path.Combine(root,"portable-models/OwnPython.fpgt")).Replace("\r\n","\n");string assign="Text = {Variable} = {Expression}";Check(original.Contains(assign),"Known independent model assignment");string flags=original.Replace(assign,"Text = {Variable} = {Expression} # FIRST | first, ~last\n = {Variable} = {Expression} # MIDDLE | ~first, ~last\n = {Variable} = {Expression} # LAST | ~first, last\n = {Variable} = {Expression} # ONLY | first, last").Replace("Text = while {Condition}:","Text = while {Condition}: # MORE | ~last\n = while {Condition}: # END | last");
+  var flagDoc=FlowPseudocode.Decode("DICHIARA a,b: INTERO[1]\na[0]=1\nb=a; a[0]=2");File.WriteAllBytes(Path.Combine(root,"guard-documents/flags.frociart"),DiagramIO.EncodeDocument(flagDoc));File.WriteAllText(Path.Combine(root,"flags.fpgt"),flags,new UTF8Encoding(false));var flagged=FlowFpgt.Generate(FlowFpgtSyntax.Parse(flags),FlowSource.Compile(flagDoc));Check(flagged.Text.Contains("# MORE")&&!flagged.Text.Contains("# END")&&flagged.Text.Contains("a[0] = 2 # LAST"),"Whole-copy loop is not last when another write follows in the same block");rows.Add("flags\tOwnPython\t"+B(flagged.Text));
+  File.WriteAllLines(Path.Combine(root,"guard-csharp.tsv"),rows,new UTF8Encoding(false));File.WriteAllLines(Path.Combine(root,"native-alternatives.tsv"),alternatives,new UTF8Encoding(false));Console.WriteLine("ARRAY_COPY_GUARDS_PC PASS checks="+checks+" outcomes="+rows.Count+" native_alternatives="+alternatives.Count);return 0;
+ }catch(Exception error){Console.WriteLine(error);return 1;}}
+}

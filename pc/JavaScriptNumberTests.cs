@@ -1,0 +1,4 @@
+using System;using System.IO;using System.Text;using System.Collections.Generic;using Frociart;
+internal static class JavaScriptNumberTests {
+ static int Main(string[] args){try{var values=new List<double>{Double.Epsilon,-Double.Epsilon,Double.MaxValue,Double.MinValue,0d,-0d,1e-4,1e-5,1e14,1e15,1.234567890123455,1.234567890123445,9.999999999999995,999999999999999.5};ulong bits=0x9e3779b97f4a7c15UL;for(int i=0;i<8192;i++){bits^=bits<<13;bits^=bits>>7;bits^=bits<<17;double value=BitConverter.Int64BitsToDouble(unchecked((long)bits));if(!Double.IsNaN(value)&&!Double.IsInfinity(value))values.Add(value);}var lines=new List<string>();foreach(double value in values)lines.Add(BitConverter.DoubleToInt64Bits(value).ToString("x16")+"\t"+ValueFormatter.Format(value));File.WriteAllLines(Path.Combine(args[0],"numbers.tsv"),lines,new UTF8Encoding(false));Console.WriteLine("NATIVE_NUMBERS PASS values="+lines.Count);return 0;}catch(Exception e){Console.WriteLine(e);return 1;}}
+}

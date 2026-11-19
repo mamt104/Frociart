@@ -1,0 +1,6 @@
+﻿RIDIMENSIONAMENTO AUTOMATICO DEI BLOCCHI
+La misura predefinita rimane il minimo. Il contenuto fa crescere prima la larghezza; raggiunta una larghezza leggibile, il testo va a capo e aumenta l’altezza. Anche gli a capo espliciti vengono rispettati. Accorciando il testo il blocco torna verso la misura minima.
+Durante la scrittura appare l’anteprima animata: il contenuto applicato e la bozza rimangono distinti. Su Android l’editor include anche un’anteprima del blocco.
+Con Applica, i vicini coinvolti ricevono spazio con un riordino locale. Il testo e le posizioni si annullano insieme. Non vengono modificati i collegamenti e le parti lontane restano ferme.
+Le dimensioni sono ricavate dal contenuto, senza cambiare il formato .frociart. Un file esistente mantiene le sue coordinate; Riordina usa le nuove dimensioni quando vuoi ridisporre il diagramma.
+Le animazioni rispettano la preferenza di movimento ridotto. Nessuna nuova libreria di produzione.

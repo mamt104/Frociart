@@ -180,7 +180,7 @@ Gli [hash SHA256](docs/download/SHA256SUMS_v1.txt) permettono di verificare l'in
 
 Per segnalare un problema, [apri una issue](https://github.com/mamt104/Frociart/issues) indicando versione dell'app, sistema operativo, passaggi per riprodurlo e comportamento atteso. Allega, se utile, un esempio privo di dati personali.
 
-Questo repository ospita la pagina del progetto, la documentazione e i pacchetti di distribuzione.
+Questo repository ospita anche i sorgenti Android e Windows e le verifiche automatiche. Per ricompilare dal checkout e conoscere l'ambito dei test, consulta [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Autore e condizioni d’uso
 

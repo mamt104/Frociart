@@ -1,0 +1,325 @@
+FROCIART ANDROID — PERCORSI DA UTILIZZATORE
+Audit iniziale: 18 ottobre 2026. Base esaminata: 1.2.0.
+
+SCOPO E PROVENIENZA
+Questa checklist deriva dalla lettura delle funzioni raggiungibili in
+MainActivity, FlowCanvasView, FlowStudy, Ui, FlowStore e FlowExporter.
+È un inventario operativo, non un verbale di prove native già eseguite.
+Lo stato iniziale di ogni scenario è NOT_RUN. Un risultato PASS richiede
+il riferimento al log/screenshot della build effettivamente provata.
+Le vecchie suite UI contengono anche fixture e chiamate dirette ai metodi:
+non equivalgono, da sole, a tutti i percorsi completi elencati qui.
+
+MATRICE MINIMA
+- Ritratto normale; ritratto 320 dp con caratteri 1,3x.
+- Temi chiaro e scuro; animazioni attive e ridotte.
+- Rotazione nei campi di testo, nel picker e durante l'input di Prova.
+- Stessa firma e installazione come aggiornamento: progetti preesistenti.
+- Tocchi e trascinamenti nativi per i percorsi principali. Le ispezioni
+  del modello verificano gli effetti; non sostituiscono i gesti iniziali.
+- Usare progetti QA isolati. Il chooser di condivisione si apre e si
+  annulla: non inviare file a persone o servizi esterni.
+
+Per ogni esecuzione registrare: build/APK SHA-256, scenario/dispositivo,
+stato PASS/FAIL/BLOCKED, passi realmente svolti, evidenza e difetti residui.
+Una variante non eseguita resta NOT_RUN; non inferirla dal tema opposto.
+
+PRIMO ACCESSO E NUOVO DIAGRAMMA
+
+J01 | NOT_RUN | Home e accesso al laboratorio
+Passi: avvia l'app, raggiungi Impara e Modalità libera, apri laboratorio,
+torna Home e riapri laboratorio.
+Atteso: azioni leggibili, ultimo progetto conservato, nessun blocco perso.
+
+J02 | NOT_RUN | Primo + su Inizio
+Passi: I miei progetti → Nuovo diagramma; osserva e tocca Inizio e il +.
+Atteso: + visibile e utilizzabile; il tap apre la scelta del nuovo passo.
+La comparsa del picker non deve richiedere un secondo tocco nel vuoto.
+
+J03 | NOT_RUN | Nuovo dopo selezione di gruppo
+Passi: nel vecchio progetto attiva Seleziona/Gruppo; crea un nuovo progetto
+dalla UI; tocca il + di Inizio.
+Atteso: il vecchio modo gruppo non nasconde il + del nuovo Inizio.
+
+J04 | NOT_RUN | Crea un flusso completo senza fixture
+Passi: dal solo Inizio aggiungi con i + Input(numero), Operazione
+(totale = numero + 1), Output(totale), Fine; Applica nei rispettivi editor.
+Atteso: cinque blocchi collegati in ordine; Verifica senza errori;
+Prova con input 4 produce 5. Nessun passaggio creato fuori schermo.
+
+COLLEGAMENTI E INSERIMENTI
+
+J05 | NOT_RUN | Inserisci fra due passi
+Passi: prepara A→B→Fine; + di A → Operazione C → Applica.
+Atteso: A→C→B→Fine; B e la sua continuazione restano raggiungibili.
+Annulla e Ripeti devono ripristinare coerentemente nodi e frecce.
+
+J06 | NOT_RUN | Inserimento su uno dei due rami
+Passi: Decisione D con due destinazioni distinte; aggiungi un passo
+all'uscita vera, poi all'uscita falsa.
+Atteso: ogni nuova aggiunta conserva la destinazione precedente del ramo
+scelto e non modifica l'altro ramo, nome o colore.
+
+J07 | NOT_RUN | Inserisci una Decisione in un percorso esistente
+Passi: A→B; aggiungi Decisione D dopo A e scegli il ramo che continuerà B.
+Atteso: destinazione B preservata sul ramo scelto; l'altro ramo resta
+chiaramente da completare. Annullare il picker non modifica il flusso.
+
+J08 | NOT_RUN | Aggiungi Fine su un'uscita già occupata
+Passi: A→B→C; scegli Fine dal + di A; valuta le opzioni mostrate.
+Atteso: conseguenza sulla continuazione B chiaramente visibile prima di
+applicarla; annullamento senza modifiche; Undo recupera l'intero percorso.
+
+J09 | NOT_RUN | Collega due blocchi già presenti
+Passi: seleziona A, Collega, scegli uscita se necessaria, tocca B.
+Atteso: destinazione richiesta esplicitamente, feedback su A e su B,
+nessun nuovo blocco creato per errore; una sola freccia per uscita.
+
+J10 | NOT_RUN | Cambia destinazione e ripeti lo stesso collegamento
+Passi: A→B; Collega A a C, poi ancora a C.
+Atteso: stato precedente e sostituzione chiari; secondo collegamento
+identico non crea duplicati o una modifica Undo inutile.
+
+J11 | NOT_RUN | Scollega una sola uscita
+Passi: apri gestione collegamenti del blocco e rimuovi una freccia.
+Atteso: restano entrambi i blocchi; un eventuale altro ramo resta intatto;
+Undo ripristina la freccia. Se l'azione manca, registrare FAIL funzionale.
+
+J12 | NOT_RUN | Trascina + nel vuoto
+Passi: seleziona A; tieni il + e trascinalo in uno spazio libero; rilascia;
+scegli un tipo e applica.
+Atteso: anteprima durante drag, picker dopo rilascio, nuovo passo collegato
+e leggibile; se A aveva un'uscita, continuazione conservata.
+
+J13 | NOT_RUN | Trascina + su un blocco esistente
+Passi: trascina + di A verso B; ripeti dalla Decisione scegliendo il ramo.
+Atteso: bersaglio evidenziato; nessun duplicato; scelta ramo comprensibile;
+nomi e colori personalizzati mantenuti.
+
+J14 | NOT_RUN | Arrivo non valido, annulla e multitocco
+Passi: tenta freccia verso Inizio; rilascia sul blocco sorgente; annulla con
+Back/X; durante un drag aggiungi il secondo dito e interrompi il gesto.
+Atteso: spiegazione per l'arrivo vietato; nessuna creazione accidentale,
+nessuna modalità collegamento bloccata e nessuna voce Undo fantasma.
+
+J15 | NOT_RUN | Nomi dei rami lunghi e simili
+Passi: usa due diciture di 60 caratteri con prefisso uguale e differenza
+finale; colori uguali e poi diversi; apri tutti i picker delle uscite.
+Atteso: testi distinguibili anche su 320 dp / 1,3x; semantica vero-falso
+ancora leggibile; selezione associata al ramo corretto.
+
+J16 | NOT_RUN | Collegamenti che rientrano e si ricongiungono
+Passi: costruisci un ciclo verso un blocco precedente e due rami che
+convergono sul medesimo blocco; esegui entrambi i risultati.
+Atteso: frecce/etichette leggibili; animazione sul ramo realmente eseguito;
+nessun arco omesso perché sorgente e destinazione sono condivise.
+
+SELEZIONE, NAVIGAZIONE E DISPOSIZIONE
+
+J17 | NOT_RUN | Pan, zoom e selezione singola
+Passi: scorri, pizzica, usa meno/centra/più, tocca un blocco e deseleziona.
+Atteso: nessun salto alla selezione, canvas non si restringe, blocco e +
+restano raggiungibili senza attraversare sovrapposizioni dei pannelli.
+
+J18 | NOT_RUN | Gruppo con riquadro, pressione lunga e tocchi
+Passi: seleziona più blocchi con ciascun gesto, rimuovine uno, sposta gruppo.
+Atteso: insieme corretto, trascinamento senza movimento tardivo al rilascio,
+una sola modifica per trascinamento; uscita dal modo gruppo evidente.
+
+J19 | NOT_RUN | Duplica ed elimina selezione
+Passi: seleziona due blocchi collegati; Duplica; Elimina copia; Undo/Redo.
+Atteso: copie con ID propri e archi interni corretti; originali intatti;
+nessun arco verso nodi eliminati. Segnalare la duplicazione di Inizio.
+
+J20 | NOT_RUN | Ordina e disposizione manuale
+Passi: attiva Ordina, aggiungi una ramificazione, sposta un blocco a mano,
+annulla/ripeti e riapri il progetto.
+Atteso: spazi regolari, modalità manuale dopo drag, preferenza coerente;
+Undo non lascia disegno e toggle con significati contraddittori.
+
+J21 | NOT_RUN | Progetto grande e fuori viewport
+Passi: apri un progetto QA di almeno 150 nodi; naviga al primo e ultimo,
+riordina, aggiungi e collega un passo, esporta durante/fine transizione.
+Atteso: interazione recuperabile, contenuto mai perso; file con coordinate
+definitive. Non trasformare un test emulatore in una promessa di FPS reali.
+
+EDITOR E BOZZE
+
+J22 | NOT_RUN | Editor dei sei tipi
+Passi: modifica Inizio/Fine, Input+domanda, Operazione multilinea,
+Decisione+rami e Output; Applica.
+Atteso: campo adatto al tipo, tastiera non copre Applica, dati riletti uguali.
+
+J23 | NOT_RUN | Bozza, ripresa e scarto
+Passi: cambia testo, chiudi X, riapri stesso blocco; poi Scarta questa
+modifica, riapri; ripeti applicando.
+Atteso: X conserva, Scarta elimina solo la bozza e Applica aggiorna solo
+il blocco previsto; messaggio di recupero coerente.
+
+J24 | NOT_RUN | Bozza attraverso due progetti
+Passi: cambia un campo nel progetto A, chiudi X, apri B, ritorna A e riapri
+il blocco; poi termina e riavvia l'app.
+Atteso: bozza A ancora disponibile; nessuna bozza applicata al progetto B.
+
+J25 | NOT_RUN | Due bozze nello stesso progetto
+Passi: prepara bozza in A1 e chiudi; prepara bozza diversa in A2 e chiudi;
+riapri A1 poi A2; applica/scarta una delle due.
+Atteso: bozze indipendenti; l'azione su una non elimina l'altra.
+
+J26 | NOT_RUN | Rotazione, cambio tema e ricreazione dell'editor
+Passi: scrivi testo, domanda, nomi/colori dei rami; ruota, cambia tema dove
+raggiungibile, ricrea l'Activity; riapri l'editor.
+Atteso: campi e scelte conservati, niente applicazione silenziosa.
+
+J27 | NOT_RUN | Campo vuoto, sintassi errata e limiti
+Passi: prova campo obbligatorio vuoto, nome ramo vuoto, espressione malformata
+e testo al limite ammesso; correggi seguendo Verifica.
+Atteso: errore nel contesto adatto, nessun crash, testo correggibile e
+salvataggio coerente; contenuto oltre limite gestito senza bloccare la UI.
+
+PROGETTI E FILE
+
+J28 | NOT_RUN | Elenco progetti, rinomina e riapertura
+Passi: crea due progetti distinti, rinomina uno, alternali dall'elenco,
+torna Home e riavvia.
+Atteso: titoli/dati corretti, elenco aggiornato, ultimo progetto coerente,
+cronologia Undo separata per progetto.
+
+J29 | NOT_RUN | Elimina altro progetto e annulla eliminazione
+Passi: elimina progetto non corrente; ripeti con Tieni il progetto.
+Atteso: solo file scelto rimosso; annullamento senza effetti; fallimento
+del filesystem non presentato come successo.
+
+J30 | NOT_RUN | Elimina progetto corrente da lezione
+Passi: entra in pratica da una lezione, attiva Ordina, cancella il corrente,
+apri il progetto sostitutivo, Trucco, poi riavvia.
+Atteso: nuovo ID e preferenze coerenti; nessun riferimento didattico o
+bozza ereditato dal progetto eliminato; toggle stabile dopo riavvio.
+
+J31 | NOT_RUN | Salva e riapri .frociart dal selettore nativo
+Passi: personalizza testi, coordinate, rami/colori; Esporta .frociart;
+scegli cartella/nome nel SAF; apri il file dal SAF.
+Atteso: file reale leggibile; tutti i dati conservati; import non riordina
+silenziosamente le coordinate; originale locale ancora disponibile.
+
+J32 | NOT_RUN | Annulla selettore Salva/Apri
+Passi: avvia esportazione e annulla SAF; poi esporta un altro formato;
+annulla Apertura; torna nell'editor.
+Atteso: nessun blocco permanente 'preparo file', nessuna perdita di progetto
+e nessun riutilizzo del file precedente nella nuova esportazione.
+
+J33 | NOT_RUN | Import non valido
+Passi: prova file vuoto, testo UTF-8 non JSON, JSON incompleto e una versione
+non supportata, poi riapri un progetto valido.
+Atteso: errore chiaro e recuperabile; progetto corrente e archivio intatti.
+
+J34 | NOT_RUN | PDF, PDF A4, PNG e SVG
+Passi: esporta lo stesso diagramma con ramificazioni/colori nei quattro
+formati; apri o analizza ogni file generato.
+Atteso: firma/formato corretti, testo e colori fedeli, disegno non tagliato;
+PDF multipagina leggibile, nessuna selezione/+ o animazione nell'output.
+
+J35 | NOT_RUN | Condivisione progetto e immagine
+Passi: Condividi .frociart e Condividi PNG; apri il chooser e annulla.
+Atteso: MIME/nome/file disponibili in sola lettura, rientro pulito;
+nessun invio a persone durante il collaudo.
+
+J36 | NOT_RUN | Salvataggio automatico e aggiornamento APK
+Passi: modifica, lascia passare autosave, chiudi/riapri; applica aggiornamento
+con stessa firma sopra installazione precedente e riapri i progetti QA.
+Atteso: dati conservati e badge di salvataggio veritiero.
+
+VERIFICA ED ESECUZIONE
+
+J37 | NOT_RUN | Verifica e trova il problema
+Passi: crea ramo mancante, variabile usata prima dell'assegnazione e sintassi
+errata; Verifica, tocca una segnalazione, correggi e ripeti.
+Atteso: segnalazione porta al blocco corretto; esiti aggiornati dopo fix.
+
+J38 | NOT_RUN | Verifica mentre si cambia schermata
+Passi: su diagramma grande premi Verifica e poi Home o Modifica prima del
+risultato; continua nel nuovo contesto.
+Atteso: il vecchio risultato non interrompe una nuova schermata/editor.
+
+J39 | NOT_RUN | Un passo, Esegui, Pausa e Riprova
+Passi: usa l'esempio Somma veloce; avanza un passo, avvia, metti in pausa,
+riprendi, completa, riprova e ricomincia dal pulsante Reset.
+Atteso: stati e numero di passi coerenti; nessun passo dopo Pausa; output
+senza duplicati della precedente esecuzione.
+
+J40 | NOT_RUN | Input numerico, testo e correzione errore
+Passi: raggiungi Input con Un passo e con Esegui; prova vuoto, numero
+negativo/decimale, testo e valore corretto; invia con tasto UI e tastiera.
+Atteso: un solo invio, errore correggibile, pausa/ripresa coerente con il
+modo iniziale; campo e invio raggiungibili sopra la tastiera.
+
+J41 | NOT_RUN | Dettagli, velocità, uscita e rientro
+Passi: apri Dettagli, cambia lenta/normale/rapida, consulta variabili/output,
+chiudi Prova, riapri, modifica un blocco e riprova.
+Atteso: motore segue il documento aggiornato; input e output non si
+mescolano con l'esecuzione precedente; canvas torna modificabile.
+
+J42 | NOT_RUN | Errore runtime e limite del ciclo
+Passi: esegui divisione per zero; Reset/correggi/riprova; poi un ciclo che
+raggiunge il limite dei passi.
+Atteso: arresto spiegato e recuperabile; nessun loop UI o necessità di
+riavviare l'app per modificare il progetto.
+
+J43 | NOT_RUN | Prova, tastiera e ciclo di vita
+Passi: durante input ruota, mostra/nascondi tastiera, manda in background e
+rientra; ripeti durante esecuzione automatica e cambio tema.
+Atteso: nessuna esecuzione invisibile, input conservato dove promesso,
+controlli sempre raggiungibili e rientro senza stato bloccato.
+
+IMPARA E PERSONALIZZAZIONE
+
+J44 | NOT_RUN | Lezione completa e ripasso
+Passi: spiegazione, risposta errata, feedback, Riprova, risposta corretta,
+tre esercizi, completamento; ripeti la stessa lezione.
+Atteso: feedback specifico e progressione guidata; 30 XP una sola volta;
+nessuna possibilità di avanzare senza risposta corretta.
+
+J45 | NOT_RUN | Riprendi lezione e tutte le 24 tappe
+Passi: lascia una domanda risolta/non risolta, torna Home, riapri e riavvia;
+raggiungi ultima lezione scorrendo il percorso.
+Atteso: stato corrente corretto, tutte le lezioni raggiungibili, testo e
+footer leggibili con font grande; nessun percorso chiuso accidentalmente.
+
+J46 | NOT_RUN | Fonti, pratica e progetto finale
+Passi: consulta fonti di una lezione, torna indietro; Prova su un esempio;
+apri Report di misure e usa zero dati, negativi e valori validi.
+Atteso: fonti associate alla lezione, pratica apre una copia; nessuna
+promessa di eseguire pseudocodice non supportato; calcoli coerenti.
+
+J47 | NOT_RUN | Temi e animazioni
+Passi: cambia Chiaro/Scuro/Segui telefono da Home e da editor; visita picker,
+campi, progetti, Verifica, Prova e lezioni; riduci le animazioni.
+Atteso: superfici/testi/barre di sistema coerenti; pulsanti distinguibili;
+animazioni ridotte senza bloccare input o lasciare viste trasparenti.
+
+J48 | NOT_RUN | Indietro e accessibilità essenziale
+Passi: usa Back su tastiera, pannello, collegamento, gruppo, Prova, lezione,
+percorso e Home; esplora nomi delle azioni di canvas/pannelli.
+Atteso: chiusura del contesto più vicino prima di uscire, nessuna bozza persa;
+azioni +, Modifica, Collega, Scollega e toggle con nomi comprensibili.
+
+DIFFETTI CONCRETI OSSERVATI NEL SORGENTE 1.2.0 (NON ESITI NATIVI)
+- J03: setDocument conservava selectionMode e il + veniva soppresso da
+  quella modalità anche nel nuovo progetto con il solo Inizio.
+- J05/J06: addNode eliminava il collegamento precedente senza ricostruire
+  la continuazione dal blocco appena creato.
+- J09: tap + e Collega condividevano lo stesso flusso 'arrivo o vuoto',
+  mescolando aggiunta e collegamento senza scelta iniziale esplicita.
+- J11: mancava un'azione per eliminare una sola freccia.
+- J15: picker uscite in bottoni single-line con altezza fissa, non adatti
+  a distinguere diciture lunghe con prefisso uguale.
+- J24/J25: clearDraft in switchDocument e slot draft_* unico per tutti i
+  progetti/blocchi facevano perdere modifiche promesse come conservate.
+- J30: eliminazione corrente conservava autoArrange/practiceLessonId del
+  progetto cancellato senza creare le corrispondenti nuove preferenze.
+- J38: callback Verifica controllava revisione/documento ma non schermata
+  o editor aperto nel frattempo, potendo interrompere il nuovo contesto.
+
+Le correzioni successive devono essere valutate sulla build finale.
+Questo file conserva intenzionalmente NOT_RUN finché i risultati nativi
+non vengono collegati esplicitamente agli scenari sopra.

@@ -1,0 +1,11 @@
+COMPILARE FROCIART ANDROID105
+
+Servono Python3, un JDK esistente e AndroidSDK con platform35/build-tools35.0.0. Il builder usa gli strumenti ufficiali già installati; non installa dipendenze o runtime nell’app.
+
+python build_apk.py . --sdk PERCORSO_SDK --java-home PERCORSO_JDK --output Frociart_v1_Android.apk --build-dir CARTELLA_BUILD --compile-sdk 35 --target-sdk 35 --min-sdk 26
+
+Senza --signing-dir l’APK è senza firma. Per una propria build firmata aggiungere --signing-dir CARTELLA_FIRMA_PRIVATA, contenente frociart.jks e password.txt, conservati fuori da questi sorgenti e dagli artefatti pubblici. Le chiavi e le password di produzione non sono distribuite.
+
+Un aggiornamento sul posto richiede lo stesso certificato dell’app installata. Una firma di prova differente non qualifica la continuità degli aggiornamenti e non deve sostituire l’app con dati personali. Il pacchetto ufficiale mantiene il package it.frociart.app.continua e versionCode105.
+
+Il risultato della compilazione è distinto dal collaudo. Verificare installazione/aggiornamento, salvataggio/riapertura, input con tastiera, orientamenti/testo grande e output prima di distribuire una propria variante.

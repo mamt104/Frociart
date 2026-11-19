@@ -1,0 +1,80 @@
+FROCIART ANDROID 1.2.1 — AUDIT DOCUMENTAZIONE E CONSEGNA
+18 ottobre 2026. Audit iniziale sola lettura, seguito dalla correzione
+PDF A4 esplicitamente assegnata da root; nessun ADB o materiale di firma.
+
+RISULTATO
+L'audit documentale iniziale non aveva mostrato nuovi difetti critici.
+La successiva analisi di root sui PDF reali ha trovato un bug: A4 tagliava
+nodi Output e testo fra pagine. Corretto isolatamente in FlowExporter e
+nel nuovo FlowPdfPages; prove host, build e I/O Android finale riusciti.
+I tre PDF corretti sono stati renderizzati e tutte le sette pagine
+ispezionate da root: nodi e testo interi nei campioni. Fallback denso
+verificato soltanto tramite invarianti host.
+Questo non equivale a 48 funzioni percorse senza errori. COVERAGE_MAP.txt
+distingue UI reale/controller/componente/host/varianti non eseguite.
+
+PRECISIONI INIZIALI RISOLTE DA ROOT NEI MANUALI FINALI
+1. LEGGIMI/UI_WORKFLOW: specificare modalità Sposta per tap freccia/etichetta.
+   Gruppo esclude deliberatamente edge-hit per selezione multipla.
+2. LEGGIMI: nomi lunghi vanno a capo nei pannelli/picker. Sul canvas
+   etichette lunghe conservano ellissi e layout misurato/cached.
+3. UI_WORKFLOW VERIFICHE: «schermi stretti...sono verificati» senza versione
+   può confondere matrice storica1.1/1.2 con candidata. Qualificare/rimandare
+   ai limiti diVERIFICA corrente.
+4. LEGGIMI INSTALLA1.2.1 è condizionato a consegna realmente firmata.
+   APKQA non è update della releaseoriginale. Se si rimanda1.2.0, esplicitare
+   versione e non attribuirle correzioni1.2.1.
+5. VERIFICA/SOURCE_MANIFEST in radice erano ancora 1.2.0 all'inizio audit.
+   VERIFICA è ora finalizzato; root genera SOURCE_MANIFEST e archivio
+   dopo il congelamento dei report, con hash della candidata finale.
+
+INTEGRITÀ DEL RAPPORTO
+- Upgrade7+6PASS, stessa firmaQA: migrazione1.2.0→1.2.1, non certificato release.
+- Recupero firma originale bloccato auto-review. Nessun tentativo alternativo.
+- Primojourney falliva clearDraft nel testobsoleto. Non cambiare produzione
+  per ricreare metodo richiesto soltanto dall'harness.
+- Journey successivo supera53assert, poi atteso falsoName61caratteri non
+  trova UI: filtro60dell'editor correttamente applicato. Fixture accorciata,
+  nessuna modifica produzione. Conservare il log; non raccontarlo come
+  bugfunzionale né come intero percorso superato.
+- Riprova finale journey: 97 PASS, 0 errori. Non sommare i 53 del tentativo
+  precedente. Bozze: 33 PASS. Cancellazione progetto: 23 PASS con setup
+  della pratica tramite controller, non percorso Impara completo.
+- Pulse mirato: 5 PASS con focus reale e diagnostica positiva. Il primo
+  fallimento sotto System UI ANR rimane nelle evidenze storiche del turno.
+- StateProbe: 17 assert PASS, poi gate focus del dialogo fallisce prima
+  di Back; casi coordinate/unlink Fine/Verifica tardiva conclusi, X PASS.
+  Precondizione di focus fallita, causa non determinata.
+  Nessuna dichiarazione dell'intera suite come superata.
+- Files: 19 righe PASS, 7 FAIL e 1 errore di esecuzione; marker 26/errors=8.
+  Timeout e passaggi DocumentsUI non conclusi. .frociart e due
+  PDF reali recuperati; PNG incompleto, SVG/share/import/cancel non raggiunti.
+  Bug di paginazione A4 distinto dai timeout. Planner nuovo: 6018 assert
+  host su 35 casi PASS, build Android completa PASS, 44 I/O Android PASS
+  e ispezione visiva delle sette pagine PDF PASS nei campioni finali.
+  I/O usa componenti reali isolati; non promuove DocumentsUI a PASS.
+- Pulsazione falliva sotto SystemUIANR: focus mancante invalida gate.
+  Conservare log/screenshot e separare riprova con focusreale.
+- CountCanvas:118storici rieseguiti+64nuovi funzionali+geometria al primo
+  tentativo; non duplicare118 aggregati nella prima rigaPASS.
+- TempiJVM/emulatore non equivalgono a144Hz/FPSdisplayfisico.
+- Fixture/setText/metodi riflessi non sono prove manuali complete.
+
+ISPEZIONE VISIVA DIRETTA
+Visionate40-start-visible-plus.png e41-direct-plus-picker.png candidate.
++Inizio chiaramente visibile, controlli leggibili, picker cinque tipi
+interamente visibile e chiudi raggiungibile. Nessun overlapcritico visto.
+Microtesto storico: «1 blocchi» nel sottotitolo delle catture iniziali.
+Root ha corretto il singolare nella candidata finale; le catture originali
+rimangono come prova della build iniziale, senza modificarle.
+
+BUILD coerente con manifest1.2.1/code4, SDK35/min26, Java nativo e test
+esclusi dall'APKproduzione. Manuali descrivono correttamente collegamenti
+e bozze entro le precisazioni sopra.
+
+CHIUSURA
+VERIFICA e COVERAGE_MAP distinguono candidata iniziale/finale, risultati
+dei componenti e percorsi utente incompleti. La provenienza finale elenca
+23 ingressi di produzione; l'APK QA finale è a3bfecdf629639aac58593b29bd5c191a3e2364e75603faebdca3d0e20fb5502.
+Non sono state eseguite ulteriori prove, accessi ADB o operazioni di firma
+durante questa chiusura documentale.

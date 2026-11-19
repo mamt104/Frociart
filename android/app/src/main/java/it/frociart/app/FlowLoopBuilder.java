@@ -1,0 +1,35 @@
+package it.frociart.app;
+import java.util.*;import java.util.regex.*;import static it.frociart.app.FlowModel.*;
+/** Builds standard editable blocks; existing files and interpreters need no new node type. */
+final class FlowLoopBuilder {
+ static final class Spec {int kind;String variable="i",from="1",to="5",step="1",initialize="i = 0",condition="i < 5",body="STAMPA i";static Spec defaults(int kind){Spec s=new Spec();s.kind=kind;s.body=kind==0?"STAMPA i":"STAMPA i\ni = i + 1";return s;}}
+ static final class Plan {boolean editing;Document project;String functionId,entryId,baseDocument,code;int added;float[] origin;}
+ static String line(String value,String label){value=value==null?"":value.trim();if(value.isEmpty()||value.length()>8192||value.chars().anyMatch(c->Character.isISOControl((char)c)))throw new IllegalArgumentException("Completa «"+label+"» con una sola riga.");return value;}
+ static String source(Spec s){
+  if(s==null||s.kind<0||s.kind>2)throw new IllegalArgumentException("Scegli Per, Mentre o Ripeti.");String body=s.body==null?"":s.body.trim();if(body.isEmpty()||body.length()>32768)throw new IllegalArgumentException("Scrivi le istruzioni del corpo del ciclo (massimo 32768 caratteri).");String code;
+  if(s.kind==0){String variable=line(s.variable,"Variabile");if(!variable.matches(""+FlowEngine.IDENTIFIER_PATTERN+""))throw new IllegalArgumentException("Il contatore deve essere un nome: per esempio i, indice o contatore.");code="PER "+variable+" DA "+line(s.from,"Da")+" A "+line(s.to,"A")+" PASSO "+line(s.step,"Passo")+" FAI\n"+body+"\nFINE PER";}
+  else{String condition=line(s.condition,"Condizione");code=s.kind==1?"MENTRE "+condition+" FAI\n"+body+"\nFINE MENTRE":"RIPETI\n"+body+"\nFINCHÉ non ("+condition+")";if(s.initialize!=null&&!s.initialize.trim().isEmpty())code=line(s.initialize,"Prima del ciclo")+"\n"+code;}
+  return "INIZIO\n"+code+"\nFINE\n";
+ }
+ static List<Document> graphs(Document p){List<Document> result=new ArrayList<>();result.add(p);if(p.functions!=null)for(Function f:p.functions)result.add(f.body);return result;}
+ static Plan prepare(Document project,String functionId,String edgeId,Spec spec){
+  String before=FlowCodec.encode(project);Function owner=FlowFunctionEditing.find(project,functionId);if(functionId!=null&&owner==null)throw new IllegalArgumentException("La funzione non è più disponibile.");Document candidate=project.copy(),graph=FlowFunctionEditing.graph(candidate,functionId);Edge edge=null;for(Edge e:graph.edges)if(e.id.equals(edgeId))edge=e;if(edge==null)throw new IllegalArgumentException("Scegli una freccia per inserire il ciclo.");Node source=graph.find(edge.from),target=graph.find(edge.to);if(source.kind==END||target.kind==START)throw new IllegalArgumentException("Scegli una freccia che continua il percorso.");
+  String code=source(spec);Set<String> names=new HashSet<>();Pattern identifiers=Pattern.compile(FlowEngine.IDENTIFIER_WORD_PATTERN);for(Document g:graphs(project))for(Node n:g.nodes){Matcher m=identifiers.matcher(n.text==null?"":n.text);while(m.find())names.add(m.group().toLowerCase(Locale.ROOT));}if(owner!=null){for(Parameter p:owner.parameters)names.add(p.name);names.add(owner.returnVariable);}
+  Document fragment=FlowPseudocode.decodeFragment(code,project,owner,names);List<Node> starts=new ArrayList<>(),ends=new ArrayList<>();for(Node n:fragment.nodes){if(n.kind==START)starts.add(n);if(n.kind==END)ends.add(n);}if(starts.size()!=1||ends.size()!=1)throw new IllegalArgumentException("Nel corpo usa istruzioni che tornano al ciclo: rimuovi FERMA e i salti fuori dal ciclo.");String start=starts.get(0).id,end=ends.get(0).id;Edge entryEdge=fragment.outgoing(start,"next");String entry=entryEdge.to;
+  List<Node> added=new ArrayList<>();List<Edge> links=new ArrayList<>();for(Node n:fragment.nodes)if(!n.id.equals(start)&&!n.id.equals(end))added.add(n);for(Edge e:fragment.edges)if(!e.from.equals(start)&&!e.from.equals(end))links.add(e);
+  boolean exit=false;for(Edge e:links)exit|=e.to.equals(end);if(added.isEmpty()||!exit)throw new IllegalArgumentException("Il ciclo deve avere una continuazione.");for(Node n:added){boolean next=false,yes=false,no=false;for(Edge e:links)if(e.from.equals(n.id)){next=true;yes|=e.branch.equals("true");no|=e.branch.equals("false");}if(!next||n.kind==DECISION&&(!yes||!no))throw new IllegalArgumentException("Il ciclo contiene un'uscita scollegata. Completa tutti i rami del corpo.");}
+  if(candidate.totalNodes()+added.size()>MAX_NODES||candidate.totalEdges()+links.size()>MAX_EDGES)throw new IllegalArgumentException("Il ciclo supera il limite di 500 blocchi o 1500 collegamenti del progetto.");
+  FlowAutoLayout.apply(fragment);String previous=edge.to;edge.to=entry;for(Edge e:links)if(e.to.equals(end))e.to=previous;place(graph,added,source,target,edge.branch,entry);graph.nodes.addAll(added);graph.edges.addAll(links);FlowCodec.encode(candidate);
+  Plan plan=new Plan();plan.project=candidate;plan.functionId=functionId;plan.entryId=entry;plan.added=added.size();plan.baseDocument=before;plan.code=code;plan.origin=new float[]{source.x,source.y+height(source)};return plan;
+ }
+ static Set<String> reach(Document d,String id,boolean reverse,Set<String> blocked){Set<String> result=new HashSet<>();ArrayDeque<String> q=new ArrayDeque<>();q.add(id);while(!q.isEmpty()){String n=q.remove();if(blocked!=null&&blocked.contains(n)||!result.add(n))continue;for(Edge e:d.edges)if((reverse?e.to:e.from).equals(n))q.add(reverse?e.from:e.to);}return result;}
+ static float[] bounds(List<Node> nodes){float[] b={Float.POSITIVE_INFINITY,Float.POSITIVE_INFINITY,Float.NEGATIVE_INFINITY,Float.NEGATIVE_INFINITY};for(Node n:nodes){b[0]=Math.min(b[0],n.x);b[1]=Math.min(b[1],n.y);b[2]=Math.max(b[2],n.x+width(n));b[3]=Math.max(b[3],n.y+height(n));}return b;}
+ static boolean overlap(float[] b,Node n){return b[0]<n.x+width(n)&&b[2]>n.x&&b[1]<n.y+height(n)&&b[3]>n.y;}
+ static void move(List<Node> nodes,float x,float y){for(Node n:nodes){n.x+=x;n.y+=y;}}
+ static void place(Document d,List<Node> added,Node source,Node target,String branch,String entry){
+  Set<String> protectedIds=reach(d,source.id,true,null),movingIds=reach(d,target.id,false,protectedIds);List<Node> moving=new ArrayList<>(),fixed=new ArrayList<>();for(Node n:d.nodes)(movingIds.contains(n.id)?moving:fixed).add(n);
+  Node first=null;for(Node n:added)if(n.id.equals(entry))first=n;float center=source.x+width(source)/2;if(source.kind==DECISION){float[] b=bounds(added);center+=(branch.equals("true")?-1:1)*(width(source)/2+(b[2]-b[0])/2+88);}move(added,center-first.x-width(first)/2,source.y+height(source)+72-first.y);
+  float[] b=bounds(added);fixed.sort(Comparator.comparingDouble(n->n.x));for(Node n:fixed)if(overlap(b,n)){float dx=n.x+width(n)+88-b[0];move(added,dx,0);b[0]+=dx;b[2]+=dx;}
+  if(!moving.isEmpty()){float[] m=bounds(moving);float dy=Math.max(0,b[3]+72-m[1]);move(moving,0,dy);m[1]+=dy;m[3]+=dy;fixed.sort(Comparator.comparingDouble(n->n.y));for(Node n:fixed)if(overlap(m,n)){dy=n.y+height(n)+72-m[1];move(moving,0,dy);m[1]+=dy;m[3]+=dy;}}
+ }
+}

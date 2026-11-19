@@ -1,0 +1,21 @@
+package it.frociart.app;
+import java.util.*;import java.util.function.BooleanSupplier;
+/** Pure evaluation and bounded presentation of a frozen runtime frame. */
+final class FlowInspectExpression {
+ static final int COPY_LIMIT=262144,PREVIEW_LIMIT=32768;
+ static final class Result {final FlowEngine.Value value;final String preview,copyText,note;Result(FlowEngine.Value v,String p,String c,String n){value=v;preview=p;copyText=c;note=n;}}
+ static final class Context {
+  final String functionName;final int steps;final long frameId;private final Map<String,FlowEngine.Value> variables;private boolean eof;private String eofError;
+  Context(FlowEngine.CallFrameSnapshot frame,int steps,BooleanSupplier readEof){if(frame==null)throw new IllegalArgumentException("Serve una chiamata.");functionName=frame.functionName;frameId=frame.frameId;this.steps=steps;variables=Collections.unmodifiableMap(new LinkedHashMap<>(frame.variables));try{if(readEof==null)throw new IllegalArgumentException("Apri un file in lettura prima di usare EOF().");eof=readEof.getAsBoolean();}catch(IllegalArgumentException ex){eofError=ex.getMessage();}}
+  Result evaluate(String text){FlowEngine.Value value=new FlowEngine.InspectionExpression(text).evaluate(variables,()->{if(eofError!=null)throw new IllegalArgumentException(eofError);return eof;});return present(value);}
+ }
+ static String truncate(String text,int limit){if(text.length()<=limit)return text;int n=limit;if(n>0&&Character.isHighSurrogate(text.charAt(n-1))&&n<text.length()&&Character.isLowSurrogate(text.charAt(n)))n--;return text.substring(0,n)+"…";}
+ private static void append(StringBuilder b,String s,int limit){if(s.length()>limit-b.length())throw new IllegalStateException("presentation-limit");b.append(s);}
+ static String literal(String text,int limit){StringBuilder b=new StringBuilder();append(b,"\"",limit);for(int i=0;i<text.length();i++){char c=text.charAt(i);if(c=='\\')append(b,"\\\\",limit);else if(c=='\"')append(b,"\\\"",limit);else if(c=='\n')append(b,"\\n",limit);else if(c=='\r')append(b,"\\r",limit);else if(c=='\t')append(b,"\\t",limit);else if(Character.isHighSurrogate(c)&&i+1<text.length()&&Character.isLowSurrogate(text.charAt(i+1))){append(b,text.substring(i,i+2),limit);i++;}else if(Character.isISOControl(c)||Character.isSurrogate(c))append(b,String.format(Locale.ROOT,"\\u%04x",(int)c),limit);else append(b,String.valueOf(c),limit);}append(b,"\"",limit);return b.toString();}
+ static String readable(Result result){return result.value.isText()?literal(result.value.format(),COPY_LIMIT*6+2):result.copyText==null?result.preview:result.copyText;}
+ static Result present(FlowEngine.Value value){
+  if(!value.isVector()){String full=value.format(),shown;boolean abbreviated=false;try{shown=value.isText()?literal(full,PREVIEW_LIMIT):full;}catch(IllegalStateException tooLong){shown=literal(truncate(full,160),1024);abbreviated=true;}return new Result(value,truncate(shown,PREVIEW_LIMIT),full.length()<=COPY_LIMIT?full:null,full.length()>COPY_LIMIT?"Risultato troppo lungo da copiare (limite 262.144 caratteri).":abbreviated?"Anteprima abbreviata. Copia conserva il risultato completo.":"");}
+  String copy=null;try{StringBuilder all=new StringBuilder("[");for(int i=0;i<value.vectorSize();i++){if(i>0)append(all,", ",COPY_LIMIT);FlowEngine.Value item=value.element(i);append(all,item.isText()?literal(item.format(),COPY_LIMIT):item.format(),COPY_LIMIT);}append(all,"]",COPY_LIMIT);copy=all.toString();}catch(IllegalStateException tooLong){}
+  StringBuilder preview=new StringBuilder("[");int count=Math.min(64,value.vectorSize());boolean shortItems=false;for(int i=0;i<count;i++){if(i>0)preview.append(", ");FlowEngine.Value item=value.element(i);if(item.isText()){String text=item.format();shortItems|=text.length()>160;preview.append(literal(truncate(text,160),1024));}else preview.append(item.format());}if(count<value.vectorSize())preview.append(", …");preview.append(']');String note=value.vectorSize()+" elementi"+(count<value.vectorSize()?" · anteprima dei primi 64. Usa un indice per leggere un elemento.":shortItems?" · anteprima abbreviata dei testi.":".")+(copy==null?" La copia supera il limite di 262.144 caratteri.":"");return new Result(value,truncate(preview.toString(),PREVIEW_LIMIT),copy,note);
+ }
+}

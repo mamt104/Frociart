@@ -1,0 +1,119 @@
+package it.frociart.app;
+
+import java.util.*;
+import java.util.regex.*;
+import static it.frociart.app.FlowModel.*;
+
+/** Reference stays available during every activity; examples are explicitly examples. */
+public final class FlowTutorGuide {
+    private FlowTutorGuide() {}
+    public static final class Term {
+        public final String id,aliases,title,meaning,example,trap;
+        Term(String id,String aliases,String title,String meaning,String example,String trap){this.id=id;this.aliases=aliases;this.title=title;this.meaning=meaning;this.example=example;this.trap=trap;}
+    }
+    private static Term t(String id,String aliases,String title,String meaning,String example,String trap){return new Term(id,aliases,title,meaning,example,trap);}
+    private static final Term[] TERMS={
+        t("flow","flowchart|diagramma","Il flowchart","È un disegno di istruzioni. Le forme dicono che tipo di azione eseguire; le frecce dicono in quale ordine. Frociart legge il testo dei blocchi con le proprie regole.","Inizio → Output → Fine","Non esiste una sintassi universale accettata da ogni programma per flowchart."),
+        t("terminals","inizio|fine","Inizio e Fine","Inizio indica da dove partire. Fine ferma il percorso. Le loro etichette sono descrizioni: non eseguono calcoli.","Usa un solo Inizio. Puoi far arrivare più rami alla stessa Fine.","Un ciclo non deve tornare in Inizio."),
+        t("arrows","freccia|collegamento","Le frecce","Una freccia collega l'uscita di un blocco all'ingresso del successivo. La distanza sul foglio non cambia l'ordine di esecuzione.","Prima scrivi un valore, poi collegati al blocco che lo usa.","Due blocchi vicini senza freccia non formano un percorso."),
+        t("output","output","Output: mostra","Input e Output usano lo stesso parallelogramma: LEGGI riceve un dato, STAMPA mostra un risultato. Mostra il valore di un'espressione. Puoi scrivere un numero, una variabile già valorizzata o un testo tra virgolette.","\"Ciao\" mostra Ciao. totale mostra il valore conservato in totale.","Puoi scrivere stampa totale. Non usare print(totale)."),
+        t("quotes","\"|'","Le virgolette","Racchiudono un testo fisso. Senza virgolette una parola viene cercata come nome di variabile.","\"nome\" è la parola nome. nome è il contenuto della variabile nome.","Nei campi che chiedono un valore Input scrivi Ada, senza virgolette: lì stai già inserendo un dato."),
+        t("numbers","numero|testo","Numero e testo","5 è un numero; \"5\" è testo. Possono sembrare uguali nell'Output, ma non si comportano allo stesso modo nei calcoli.","5 + 3 dà 8. \"5\" + 3 unisce i testi e dà 53.","Per una somma numerica non mettere i numeri fra virgolette."),
+        t("variable","variabile","Una variabile","È un nome associato a un valore che il programma può conservare e cambiare. Il nome non è il valore: eta può contenere 21, poi 22.","punti = 5 conserva 5 sotto il nome punti.","Un nome da solo non ha automaticamente il valore 0. Prima serve Input o un'assegnazione."),
+        t("identifier","identificatore|nome variabile","Scegliere il nome","Usa al massimo 64 caratteri: comincia con una lettera o _, poi puoi usare lettere, cifre e _. Non usare spazi o trattini. Le parole riservate sono vero, falso, true, false, and, or, not, e, o, non. Per i nomi Frociart non distingue maiuscole e minuscole.","eta, numero_1 e totale sono nomi validi. ETA e eta indicano la stessa variabile.","7nome non comincia con una lettera. primo nome contiene uno spazio. Usa una scrittura coerente per riconoscere sempre lo stesso dato."),
+        t("assign","=|<-","Assegnare un valore","In un'Operazione, il nome a sinistra riceve il risultato a destra. Si calcola prima la parte destra usando i valori già presenti.","punti = punti + 1 legge il vecchio punti e lo aggiorna di uno.","In una Decisione = è un confronto accettato; per rendere chiaro il confronto insegniamo ==."),
+        t("input","input","Input: chiedi e conserva","Input e Output usano lo stesso parallelogramma: LEGGI riceve un dato, STAMPA mostra un risultato. Nel blocco scrivi un solo nome. Durante Prova il programma si ferma, chiede il dato e lo conserva con quel nome.","Nel blocco: eta. Nella domanda: Quanti anni hai? Durante Prova: 21.","Non scrivere eta = 21 nel blocco Input; non scrivere eta nel campo che chiede il valore."),
+        t("plus","+","Somma oppure unisci testi","Con due numeri + somma. Se uno dei valori è testo, + costruisce un testo con i valori affiancati.","2 + 3 vale 5. \"Età: \" + eta costruisce un messaggio.","\"2\" + \"3\" vale il testo 23, non il numero 5."),
+        t("minus","-","Sottrai o indica un negativo","Fra due valori - sottrae; davanti a un valore ne cambia il segno.","10 - 3 vale 7. -2 è un numero minore di zero.","Usa il trattino normale della tastiera. Il meno tipografico − non è l'operatore del motore."),
+        t("times","*","Moltiplica","L'asterisco moltiplica due numeri. Non si usa la lettera x.","prezzo * quantita, con 4 e 3, vale 12.","2x3 non è una moltiplicazione valida; scrivi 2 * 3."),
+        t("divide","/","Dividi","La barra divide il valore a sinistra per quello a destra. Il divisore deve essere diverso da zero.","3 / 2 vale 1.5: il risultato può avere decimali.","Controlla il divisore prima del calcolo, non dopo."),
+        t("decimal","decimale","I decimali","Nelle espressioni usa il punto. Durante l'inserimento di un dato Input puoi usare anche la virgola.","Nel blocco: prezzo = 1.5. Nel campo del valore Input: 1,5 oppure 1.5.","Dentro max(2,3), la virgola separa due argomenti: non è il decimale 2,3."),
+        t("parentheses","(|)","Le parentesi","Raggruppano una parte da calcolare prima. Moltiplicazioni e divisioni precedono somme e sottrazioni quando non usi parentesi.","(2 + 6) / 2 vale 4. 2 + 6 / 2 vale 5.","Ogni ( deve avere una ) corrispondente."),
+        t("boolean","vero|falso|true|false","Vero e falso","Sono i due risultati di una domanda. Una Decisione segue l'uscita vero/Sì oppure falso/No, una sola alla volta.","18 >= 18 è vero. 17 >= 18 è falso.","Il nome scritto su una freccia non cambia la domanda nel blocco."),
+        t("ge",">=|>","Maggiore e almeno","> significa maggiore, escludendo il confine. >= significa maggiore o uguale, includendolo.","eta >= 18 accetta anche 18. eta > 18 lo esclude.","Usa due caratteri >=, non il simbolo tipografico ≥."),
+        t("le","<=|<","Minore e al massimo","< significa minore, escludendo il confine. <= significa minore o uguale, includendolo.","temperatura <= 30 include anche 30.","Per un intervallo devi controllare entrambi i limiti."),
+        t("equal","==","Confrontare due valori","Nelle espressioni di una Decisione o di un Output, == domanda se i due valori sono uguali; non modifica alcuna variabile. Anche = è un confronto accettato in quelle espressioni.","numero == 0 è vero soltanto se numero vale zero.","In un'Operazione punti == 5 non assegna 5: per assegnare usa punti = 5."),
+        t("different","!=|<>","Diverso da","I due caratteri != formano un unico operatore: significa non uguale. <> è un'altra scrittura accettata.","numero != 0 domanda se numero è diverso da zero. Con 0 è falso; con 4 è vero.","!0 è un'altra espressione: contiene la negazione !, non il confronto !=. Non saltare il segno =."),
+        t("and","and|e|&&","Entrambe: and","Il risultato è vero soltanto se sono vere entrambe le domande. Puoi scrivere and, e oppure &&. La parte destra viene valutata soltanto se la prima è vera.","eta >= 18 and eta <= 65 accetta i valori da 18 a 65 inclusi.","Con or basterebbe una parte: eta = 100 passerebbe il primo controllo."),
+        t("or","or|o","Almeno una: or","Il risultato è vero se almeno una domanda è vera, anche se lo sono entrambe. Puoi scrivere or, o oppure ||. La seconda viene valutata soltanto se la prima è falsa.","giorno == 6 or giorno == 7 accetta 6 oppure 7.","Non usare and se le due condizioni devono essere alternative."),
+        t("not","not|non|!","Inverti: not oppure !","Negazione: vero diventa falso e falso diventa vero. Scrivi parentesi attorno alla domanda da invertire.","not (numero == 0) e numero != 0 esprimono la stessa domanda. Il motore tratta 0 come falso: !0 diventa vero.","! non significa diverso da: per confrontare due valori devi scrivere !=. All'inizio preferisci domande esplicite."),
+        t("loop","ciclo","Ripetere un percorso","Un ciclo è fatto di frecce che tornano a un passaggio già attraversato. La Decisione controlla se ripetere o uscire.","i parte da 0; chiedi i < 3; aggiorna i = i + 1; torna alla domanda.","Se il valore di controllo non cambia nella direzione giusta, il ciclo può non finire. Può anche fare zero giri."),
+        t("accumulator","accumulatore","Conserva la somma","Una variabile conserva il lavoro dei giri precedenti. Per una somma si parte da 0; a ogni giro si aggiunge un valore.","somma = somma + i non azzera il lavoro precedente.","Se rimetti somma = 0 dentro il ciclo, perdi quanto hai sommato nei giri precedenti."),
+        t("mod","%","Il resto della divisione","% restituisce il resto. Il divisore deve essere diverso da zero. Non significa percentuale.","7 % 2 vale 1. 8 % 2 vale 0. numero % 2 == 0 domanda se il numero è pari.","Il 20 per cento di prezzo si calcola prezzo * 20 / 100."),
+        t("functions","funzione","Funzioni già disponibili","Una funzione calcola un valore dai dati tra parentesi. I dati, detti argomenti, sono separati da virgole. Non crea un nuovo blocco.","massimo = max(a,b) conserva il più grande fra a e b.","In Frociart non puoi definire funzioni personali, liste o usare comandi come print."),
+        t("max","max|min","Massimo e minimo","max sceglie il più grande; min il più piccolo. Richiedono da 2 a 16 valori numerici.","max(2,7) vale 7. min(2,7) vale 2.","max(2) non ha abbastanza argomenti. 0 non è un buon massimo iniziale se tutti i dati sono negativi."),
+        t("round","round","Arrotonda i decimali","round(numero) arrotonda all'intero; round(numero,cifre) conserva le cifre richieste, da 0 a 15. A metà arrotonda allontanandosi da zero.","round(3.14159,2) vale 3.14. round(2.5) vale 3.","I decimali hanno limiti di precisione. 0.1 + 0.2 == 0.3 può essere falso; per un requisito in centesimi ragiona sull'arrotondamento richiesto."),
+        t("abs","abs","Valore assoluto","Restituisce la distanza da zero, quindi un numero non negativo.","abs(-4) vale 4.","Per confrontare misure con una tolleranza, il limite va scelto in base al problema."),
+        t("sqrt","sqrt","Radice quadrata","Cerca il numero non negativo che, moltiplicato per se stesso, dà il valore ricevuto. Il dato deve essere maggiore o uguale a zero.","sqrt(9) vale 3 perché 3 * 3 vale 9.","sqrt(-1) non è un numero reale accettato dal motore. Prima controlla che il dato sia almeno zero."),
+        t("floor","floor","Intero verso il basso","Restituisce il più grande intero che non supera il numero dato.","floor(2.9) vale 2. floor(-1.2) vale -2.","Non è lo stesso di togliere le cifre decimali quando il numero è negativo."),
+        t("len","len","Lunghezza di un testo","Restituisce il numero di unità del testo letto dal motore. È utile per esempi semplici con lettere ordinarie.","len(\"Ada\") vale 3.","Per emoji e caratteri composti la lunghezza tecnica può non coincidere con i simboli visibili. Un numero non è un testo: len(5) non è valido."),
+        t("power","^","La potenza","Ripete una moltiplicazione. Il valore a sinistra è il fattore ripetuto; l'esponente a destra dice quante volte, negli esempi con interi positivi.","2 ^ 3 vale 8: 2 * 2 * 2. (−2) va scritto (-2) con il meno normale.","Usa ^ e non **. Le parentesi contano: -2 ^ 2 vale -4; (-2) ^ 2 vale 4."),
+        t("expression","espressione","Un'espressione produce un valore","Può essere un numero, una variabile o un calcolo con operatori e funzioni. Output mostra il valore; Decisione lo usa per scegliere; Operazione lo conserva a destra di =.","2 + 3, totale e eta >= 18 sono espressioni.","Il blocco Input non accetta un'espressione: richiede il nome della variabile. Anche il campo del dato Input non esegue 2 + 3: quello diventerebbe testo."),
+        t("sentinel","sentinella","Un dato che significa fermati","È un valore scelto dal problema per terminare una lettura ripetuta. Deve essere riconosciuto prima di trattarlo come dato normale.","Se 0 significa fine, prima chiedi numero != 0 e somma soltanto nel ramo vero.","Non contare la sentinella tra gli elementi e non dimenticare di leggere un nuovo valore nel ciclo."),
+        t("invariant","invariante","Una promessa che resta vera","È una frase che descrive cosa significano le variabili prima e dopo ogni giro del ciclo. Serve a ragionare sulla correttezza.","somma contiene il totale dei numeri già attraversati.","Una frase corretta non sostituisce gli aggiornamenti necessari nel diagramma."),
+        t("lists","lista|funzione personale","Concetti oltre il motore","Liste e funzioni personali compaiono negli approfondimenti come idee di progettazione. Il motore di Frociart non le esegue.","Per fare pratica nel motore usa variabili singole e le funzioni già disponibili.","Non incollare pseudocodice con liste, for o funzioni personali dentro un'Operazione.")
+    };
+    public static Term[] terms(){return TERMS.clone();}
+    public static Term term(String id){for(Term t:TERMS)if(t.id.equals(id))return t;return null;}
+    public static Term token(String symbol){if(symbol.equals("||"))return term("or");for(Term t:TERMS)for(String alias:t.aliases.split("\\|",-1))if(!alias.isEmpty()&&alias.equalsIgnoreCase(symbol))return t;return null;}
+    public static String purpose(int kind){switch(kind){case START:return "Punto di partenza: non legge né cambia variabili.";case END:return "Ferma il percorso: non legge né cambia variabili.";case INPUT:return "Chiede un dato durante Prova e lo conserva nel nome scritto qui.";case PROCESS:return "Calcola la parte destra e la conserva nella variabile a sinistra.";case DECISION:return "Legge i valori e sceglie una sola uscita: vero oppure falso.";case OUTPUT:return "Legge un'espressione e mostra il risultato, senza cambiare le variabili.";default:return "Scegli la forma in base al compito. Input e Output condividono il parallelogramma.";}}
+    public static final class Inspection {
+        public final List<String> reads,writes;public final List<Term> symbols;
+        Inspection(Set<String> r,Set<String> w,Collection<Term> terms){reads=Collections.unmodifiableList(new ArrayList<>(r));writes=Collections.unmodifiableList(new ArrayList<>(w));symbols=Collections.unmodifiableList(new ArrayList<>(terms));}
+    }
+    public static Inspection inspect(Node n){
+        LinkedHashSet<String> reads=new LinkedHashSet<>(),writes=new LinkedHashSet<>();LinkedHashMap<String,Term> symbols=new LinkedHashMap<>();String code=n.text==null?"":n.text;
+        if(n.kind==INPUT){if(FlowEngine.identifier(code.trim()))writes.add(code.trim().toLowerCase(Locale.ROOT));}
+        else if(n.kind==PROCESS){for(String s:statements(code)){Matcher m=Pattern.compile("^\\s*([\\p{L}_][\\p{L}\\p{N}_]*)\\s*(?:<-(?!>)|=(?!=))([\\s\\S]*)$").matcher(s);if(m.matches()){writes.add(m.group(1).toLowerCase(Locale.ROOT));try{reads.addAll(FlowEngine.referencedVariables(m.group(2)));}catch(IllegalArgumentException ignored){/* Incomplete edits have a separate diagnostic. */}}}}
+        else if(n.kind==DECISION||n.kind==OUTPUT)try{reads.addAll(FlowEngine.referencedVariables(code));}catch(IllegalArgumentException ignored){}
+        Matcher matcher=Pattern.compile("!=|==|>=|<=|<>|<-|&&|\\|\\||[+*/%^=><!()-]|[\\p{L}_][\\p{L}\\p{N}_]*").matcher(FlowTutorDiagnostics.withoutStrings(code));while(matcher.find()){Term t=token(matcher.group());if(t!=null){if((n.kind==DECISION||n.kind==OUTPUT)&&t.id.equals("assign"))t=term("equal");symbols.put(t.id,t);}}
+        if(code.contains("\"")||code.contains("'"))symbols.put("quotes",term("quotes"));return new Inspection(reads,writes,symbols.values());
+    }
+    public static String explain(Node n,Map<String,FlowEngine.Value> observed){
+        if(n==null)return "Non c'è una prossima casella da eseguire.";
+        TreeMap<String,FlowEngine.Value> values=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);if(observed!=null)values.putAll(observed);
+        StringBuilder text=new StringBuilder(kindName(n.kind)+". Hai scritto: «"+n.text+"».\n");
+        FlowTutor.Feedback syntax=FlowTutorDiagnostics.before(n);if(syntax!=null)return text+syntax.why+"\n"+syntax.fix;
+        if(n.kind==START)return text+"Avvia il programma e segui la freccia. Non crea ancora dati.";
+        if(n.kind==END)return text+"Il programma si ferma qui. Non esegue altre caselle.";
+        if(n.kind==INPUT)return text+"Il programma chiede un dato"+(n.prompt==null||n.prompt.trim().isEmpty()?".":": «"+n.prompt+"».")+"\nIl dato verrà conservato in "+n.text+". Il nome non è il valore: devi inserire il dato durante Prova.";
+        try{
+            if(n.kind==PROCESS){for(String statement:statements(n.text)){
+                if(statement.trim().isEmpty())continue;Matcher match=Pattern.compile("^\\s*([\\p{L}_][\\p{L}\\p{N}_]*)\\s*(?:<-(?!>)|=(?!=))([\\s\\S]*)$").matcher(statement);
+                if(!match.matches())return text+"La casella deve contenere nome = valore o calcolo.";
+                String name=match.group(1),expression=match.group(2);appendReads(text,expression,values);FlowEngine.Value result=FlowEngine.evaluate(expression,values),previous=values.get(name);
+                text.append("La parte destra produce ").append(result.format()).append(" (").append(FlowTutor.type(result)).append(").\n").append(name).append(previous==null?" riceve ":" passa da "+previous.format()+" a ").append(result.format()).append(".\n");values.put(name.toLowerCase(Locale.ROOT),result);
+            }}else{appendReads(text,n.text,values);FlowEngine.Value result=FlowEngine.evaluate(n.text,values);
+                if(n.kind==OUTPUT)text.append("L'Output mostra «").append(result.format()).append("» (").append(FlowTutor.type(result)).append("). Non cambia le variabili.");
+                else{boolean answer=result.asBoolean();text.append("La domanda vale ").append(answer?"vero":"falso").append(": viene seguita soltanto la freccia ").append(answer?n.trueLabel:n.falseLabel).append(".");}}
+        }catch(IllegalArgumentException error){FlowTutor.Feedback f=FlowTutorDiagnostics.runtime(error.getMessage(),n.id);text.append("\nCon questi dati non posso completare il calcolo: ").append(error.getMessage()).append("\n").append(f.fix);}
+        return text.toString();
+    }
+    private static void appendReads(StringBuilder text,String expression,Map<String,FlowEngine.Value> values){
+        for(String name:FlowEngine.referencedVariables(expression)){FlowEngine.Value value=values.get(name);text.append(value==null?"Per conoscere il risultato serve prima un valore per "+name+".\n":"Legge "+name+" = "+value.format()+" ("+FlowTutor.type(value)+").\n");}
+    }
+    public static String describe(Document d){StringBuilder text=new StringBuilder("Questa lettura descrive le istruzioni e le frecce effettive. L'obiettivo di un problema si controlla anche con dati di prova.\n\n");
+        for(Node n:d.nodes){text.append(kindName(n.kind)).append(" · ").append(n.text).append("\n").append(purpose(n.kind)).append("\n");for(Edge e:d.edges)if(e.from.equals(n.id)){Node next=d.find(e.to);text.append(e.branch.equals("true")?"Se vero":e.branch.equals("false")?"Se falso":"Poi").append(" → ").append(next==null?"destinazione mancante":kindName(next.kind)+" · "+next.text).append("\n");}text.append("\n");}return text.toString();
+    }
+    private static List<String> statements(String text){ArrayList<String> list=new ArrayList<>();int start=0,depth=0;char quote=0;boolean escape=false;for(int i=0;i<text.length();i++){char c=text.charAt(i);if(quote!=0){if(escape)escape=false;else if(c=='\\')escape=true;else if(c==quote)quote=0;continue;}if(c=='\''||c=='"'){quote=c;continue;}if(c=='(')depth++;else if(c==')')depth--;if(depth==0&&(c==';'||c=='\n'||c=='\r')){list.add(text.substring(start,i));start=i+1;}}list.add(text.substring(start));return list;}
+    public static final class Preset {
+        public final String id,title,explanation,text,needs,example;public final int kind;
+        Preset(String id,String title,int kind,String text,String explanation,String needs,String example){this.id=id;this.title=title;this.kind=kind;this.text=text;this.explanation=explanation;this.needs=needs;this.example=example;}
+    }
+    private static final Preset[] PRESETS={
+        new Preset("input-number","Chiedi un numero",INPUT,"numero","L'utente fornisce il valore durante Prova. numero è il nome scelto per conservarlo.","Nessuna variabile precedente.","Scrivendo 7 durante Prova, numero conterrà il numero 7."),
+        new Preset("input-age","Chiedi l'età",INPUT,"eta","eta è il contenitore che verrà letto da una Decisione sull'età.","Nessuna variabile precedente.","Il valore si inserisce durante Prova, per esempio 18."),
+        new Preset("zero","Inizia un conteggio",PROCESS,"contatore = 0","Crea o aggiorna contatore, il numero di elementi già contati.","Nessun valore precedente: qui si parte da 0.","Dopo questo blocco contatore vale 0."),
+        new Preset("increment","Conta un elemento in più",PROCESS,"contatore = contatore + 1","Legge il valore precedente di contatore e lo aumenta di uno.","contatore deve avere già ricevuto un valore, per esempio con Inizia un conteggio.","Esempio: se prima vale 2, dopo vale 3."),
+        new Preset("double","Raddoppia un numero",PROCESS,"doppio = numero * 2","Legge numero, moltiplica per 2 e conserva il risultato in doppio.","numero deve essere un numero già letto con Input o assegnato.","Esempio: numero 4 produce doppio 8."),
+        new Preset("sum","Somma due valori",PROCESS,"totale = a + b","a e b sono i due numeri da sommare; totale conserva la loro somma.","a e b devono avere un valore numerico. Prima aggiungi due Input, chiamati a e b.","Esempio: a 2 e b 3 producono totale 5."),
+        new Preset("accumulate","Aggiungi alla somma",PROCESS,"somma = somma + numero","Legge il lavoro precedente in somma e vi aggiunge il nuovo numero.","Inizializza somma = 0 prima del ciclo e dai un valore a numero.","Esempio: somma 8 e numero 3 producono somma 11."),
+        new Preset("age","Scegli in base all'età",DECISION,"eta >= 18","Legge eta. Sì/vero include 18 e oltre; No/falso copre i valori inferiori.","eta deve avere già un valore numerico. Vanno collegate entrambe le uscite.","17 segue No; 18 segue Sì."),
+        new Preset("nonzero","Controlla che non sia zero",DECISION,"numero != 0","!= significa diverso da. La domanda non cambia numero.","numero deve avere già un valore. Collega il calcolo solo al ramo adatto.","0 segue No; 4 segue Sì. !0 è una negazione, non questo confronto."),
+        new Preset("positive","Numero positivo?",DECISION,"numero > 0","Legge numero e distingue i valori strettamente maggiori di zero.","numero già valorizzato. Zero non è positivo.","-2 e 0 seguono No; 5 segue Sì."),
+        new Preset("output-value","Mostra il valore",OUTPUT,"numero","Mostra ciò che numero contiene quando viene attraversato il blocco.","numero deve avere già ricevuto un valore.","Se numero vale 7, l'Output mostra 7."),
+        new Preset("output-text","Mostra un messaggio",OUTPUT,"\"Ciao!\"","Le virgolette delimitano un testo fisso. Non c'è una variabile chiamata Ciao.","Nessun valore precedente.","L'Output mostra Ciao!, senza le virgolette."),
+        new Preset("end","Termina il percorso",END,"Fine","L'esecuzione si ferma qui. Più percorsi possono arrivare alla stessa Fine.","Nessun valore precedente. Non aggiungere uscite a Fine.","Dopo Fine non vengono eseguiti altri blocchi.")
+    };
+    public static Preset[] presets(){return PRESETS.clone();}
+}

@@ -1,0 +1,235 @@
+FROCIART ANDROID 1.2.0 — VERIFICA DELLA CONSEGNA
+18 ottobre 2026
+
+APK FINALE
+Pacchetto: it.frociart.app — versionName 1.2.0, versionCode 3.
+Dimensione: 168.637 byte.
+SHA-256:
+843682de3b8532fb3398854992cd18b6ac2cf4126dfc40213a4ea9c9ea872afb
+Certificato SHA-256, invariato rispetto alle versioni 1.0.0 e 1.1.0:
+f5d2fd4d1f51a0f74562e81b2949a0299fe46869500b07ddd52b5b013572055f
+
+Compilazione Java 8 con JDK 17, Android SDK 35 e Build Tools 35.0.0.
+Min SDK 26 (Android 8.0), target SDK 35. Firma e allineamento verificati.
+L'APK contiene soltanto l'applicazione di produzione: nessun harness di
+test, libreria nativa legata a un processore o dipendenza da un sito web.
+Package e firma consentono di aggiornare l'app precedente conservando
+l'archivio interno, installando senza prima disinstallarla.
+Il file distribuito è una copia byte per byte dell'APK del collaudo finale.
+Il confezionamento controlla CRC e SHA-256 di APK e archivio sorgenti.
+
+ESPERIENZA MOBILE
+La home propone Impara e Apri laboratorio. Il progetto corrente rimane
+salvato mentre si passa fra studio e costruzione. La UI mantiene il
+workflow già adattato da rinco e aggiunge:
+- Vista vicina al contenuto, con zoom iniziale leggibile e margini finiti.
+- Inizio collocato sotto i comandi superiori, senza grandi vuoti iniziali.
+- Toggle Ordina visibile: distanze predefinite, rami separati e cicli
+  conservati. I nuovi progetti mobile lo attivano; progetti precedenti e
+  importati mantengono le coordinate. Trascinare un blocco lo disattiva.
+- Riordino annullabile in una sola operazione; preferenza per progetto.
+- + pulsante sulla selezione, trascinabile verso il prossimo blocco.
+- Rilascio nel vuoto: scelta animata del tipo; rilascio su un blocco:
+  collegamento. Da una Decisione si sceglie il ramo con nome e colore.
+- Prova mostra la freccia realmente attraversata e l'arrivo sul blocco,
+  seguendo il percorso senza cambiare lo zoom scelto dall'utente.
+- Entrata di schede e pannelli, pressione, progressi, feedback e
+  completamento animati, con impostazione dell'app e rispetto del sistema.
+- Temi chiaro/scuro, comandi contestuali, modifica con bozza, esportazione
+  e menu superiore destro conservati.
+
+La modalità Rapida raggruppa fino a 160 passi con un budget di 4 ms
+controllato fra i passi, poi lascia lavorare la UI. Anima l'ultima freccia utile del gruppo;
+non presenta tutti i passi accelerati come singole animazioni.
+
+PERCORSO IMPARA E RICERCA DELLE FONTI
+6 unità, 24 lezioni, 72 domande e 216 feedback distinti per le opzioni.
+Ogni lezione contiene obiettivo, spiegazione, consiglio, controesempio e
+fonti apribili dal browser. Lezioni e progressi funzionano offline.
+Si parte da sequenze, input/output e variabili; si prosegue con condizioni,
+cicli, debugging, casi limite, invarianti, terminazione, contratti, ricerca
+e complessità. L'ultimo progetto è un report di misure eseguibile.
+
+Le tecniche sono ricondotte a 23 riferimenti primari di Flowgorithm,
+Harvard CS50, MIT e Cornell. Spiegazioni italiane, domande, dati e feedback
+sono originali per Frociart. FONTI_IMPARA.txt e sources-reviewed.tsv
+documentano i riferimenti e il metodo di consultazione: 12 pagine lette
+direttamente e 11 riferimenti ufficiali Flowgorithm consultati tramite
+estratti indicizzati quando il server non rispondeva alla lettura diretta.
+Il controllo del catalogo confronta gli URL effettivamente consultati;
+non è presentato come un nuovo test HTTP di disponibilità di tutte le fonti.
+
+Una risposta errata mostra il proprio feedback e permette Riprova senza
+penalità. Le tre risposte corrette completano la lezione e assegnano 30 XP
+una sola volta. Ripasso e tap ripetuti non duplicano gli XP. Lo stato della
+domanda, della risposta e dell'eventuale errore è salvato prima di avanzare.
+
+Il percorso introduce anche metodi avanzati, ma completarlo non certifica
+una qualifica professionale. Liste e funzioni definite dall'utente sono
+esplicitamente materiale in pseudocodice: il motore corrente non le esegue.
+La pratica apre un esempio compatibile quando previsto; negli altri casi
+apre il laboratorio con il consiglio e la nota sullo pseudocodice.
+
+Il nuovo sesto esempio, Report di misure, legge valori da -100 a 100,
+rifiuta i valori fuori intervallo e termina con la sentinella 9999.
+Calcola conteggio, totale, media e massimo; gestisce assenza di dati,
+un solo zero e sequenze di soli negativi. È incluso anche come .frociart.
+I cinque esempi precedenti rimangono disponibili e nel medesimo ordine.
+
+CONTENUTI E PROGRESSI: 3.415 ASSERZIONI SUPERATE
+Esecuzione JVM sulle classi di produzione FlowLearning,
+FlowLearningProgress, FlowEngine, FlowModel, FlowCodec e FlowExamples.
+Controllati struttura, ID, fonti, feedback per opzione, dimensioni dei testi,
+bilanciamento delle posizioni delle risposte (24/24/24) e progressione.
+42 domande hanno risultati calcolati: 37 mediante l'interprete reale,
+5 mediante calcoli accademici espliciti per gli argomenti in pseudocodice.
+Gli altri quesiti verificano concetti e sono stati revisionati come tali.
+Il progetto finale è passato sul motore con casi vuoti, zero, soli negativi,
+estremi inclusivi e valore respinto; verificata anche la rilettura del file.
+Persistenza valida e malformata, risposta errata/riprova/corretta, avanzamento
+vincolato, completamento unico, ripasso e ripristino dello stato: superati.
+Evidenze: tests/learning/results e tests/learning/README.txt.
+
+DISPOSIZIONE AUTOMATICA: 223 CONTROLLI SUPERATI
+FlowAutoLayout cambia soltanto x/y, senza modificare contenuti, oggetti,
+ordine delle liste o collegamenti. Controllati idempotenza, indipendenza
+dalle vecchie coordinate e dall'ordine delle frecce, rami, ricongiungimenti,
+cicli, componenti separate, riferimenti mancanti e limiti delle coordinate.
+Nessuna sovrapposizione dei blocchi nelle configurazioni coperte, incluse
+quelle da 500 blocchi, 1.500 frecce e dodici grafi misti con seed registrato.
+Le dimensioni dei blocchi entrano nel calcolo delle distanze.
+Il layout non promette assenza di incroci per qualsiasi grafo arbitrario.
+
+Misure JVM dell'intera apply(), 8 riscaldamenti e 25 campioni per caso:
+catena 500: mediana 1,065 ms; p95 1,934 ms;
+grafo 500/1.500: mediana 1,572 ms; p95 1,767 ms;
+500 isolati: mediana 0,597 ms; p95 0,744 ms.
+Questi tempi escludono rendering, Android e display: non sono misure di
+latenza o FPS su telefono. Log, ambito e hash: tests/layout/results.
+
+CANVAS E ANIMAZIONI: 95 NUOVI CONTROLLI E 118 REGRESSIONI SUPERATI
+Esecuzione nativa Android 35 con Canvas, MotionEvent, PathMeasure,
+ValueAnimator e vista collegata a una finestra. Tutti i 118 controlli
+storici del canvas sono stati rieseguiti sul codice aggiornato.
+FlowCanvasView.java verificato:
+aedbd761c84d16f3ce737d860aedb8754ce68a91826aadacb12436ac6f10a10e
+
+Le nuove prove includono drag del +, rilascio sul vuoto/nodo, scelta del
+ramo differita, Undo atomico, CANCEL, pinch, ultimo MOVE e target 48 dp.
+Controllate lettura mobile a 1,05, minimo manuale 0,8, massimo 3, margini e
+conservazione dello zoom 1,2 durante il Run. Due rami verso lo stesso
+arrivo usano percorsi/colore corretti. Stop e riduzione delle animazioni
+arrestano gli animatori; invisibilità e distacco fermano il pulso.
+Verificata l'impostazione animator_duration_scale reale di Android, poi
+ripristinata, insieme alla rimozione dell'observer al distacco.
+
+Layout e Run non scrivono fotogrammi intermedi nel modello o nella
+cronologia. SVG, bounds e pixel PNG/PDF esportati rimangono invariati
+durante le animazioni. Sopra 150 nodi o 400 frecce il riordino usa una
+dissolvenza di massimo 160 ms, conservando cache, Path e array di geometria.
+Il caso da 500 nodi/1.500 frecce conferma il riuso dei buffer fra frame.
+Cinque immagini Android native sono state ispezionate visivamente.
+Evidenze, provenance, runner e limiti: tests/motion/VERIFICA.txt e results/.
+
+COLLAUDO UI NATIVO SULL'APK DEFINITIVO
+La matrice completa usa due configurazioni:
+- Standard: 432 x 960 px a 180 dpi, 384 dp di larghezza, font 1,0.
+- Stretta: 360 x 720 px a 180 dpi, 320 dp di larghezza, font 1,3.
+In entrambe sono coperte rotazione portrait/landscape e temi chiaro/scuro.
+
+Sul medesimo APK 1.2.0 consegnato:
+- Impara/home/integrazione mobile: 71/71 standard e 71/71 stretta.
+- Editor/Prova/input/bozze/rami: 102/102 standard e 102/102 stretta.
+Totale: 346 controlli nativi, zero fallimenti nelle quattro esecuzioni finali.
+
+Le prove di studio coprono le due azioni della home, testo e footer,
+risposta errata, Riprova, avanzamento, 30 XP una volta sola, ripasso,
+rotazione, ricreazione effettiva dell'Activity e ripresa di domanda/risposta.
+Coperti percorso completo di 24 lezioni, apertura della pratica e Trucco,
+Ordina con Annulla/Ripeti, preferenza salvata, trascinamento manuale che
+spegne Ordina e vero drag del + mediante input Android. La scelta Output
+aggiunge esattamente un nodo e il relativo collegamento. Un passo anima
+l'arrivo della freccia realmente eseguita; Chiudi prova ferma l'animazione.
+
+La matrice editor verifica selezione mediante tocco reale, canvas stabile,
+sei scelte del picker visibili, Prova integrata in sola lettura, risultato
+5 interamente visibile, tastiera Android con bounds reali e azione primaria
+sopra la tastiera in verticale e orizzontale. Back chiude l'IME e ripristina
+le intestazioni senza chiudere la prova. L'Input raggiunto con Un passo
+rimane manuale dopo Invio, memorizza il valore e avanza un solo blocco.
+Coperti errore di divisione per zero, riapertura e Reset, cambi di tema,
+bozze dopo due rotazioni e nomi/colori personalizzati delle due uscite.
+
+L'aspetto delle icone della barra di stato è verificato tramite l'API
+nativa in entrambi i temi. Le catture reali finali confermano anche il
+contrasto visivo del tema chiaro, la freccia blu sul pulsante della home,
+la leggibilità del feedback su 320 dp/font 1,3, risultato e pannello Prova,
+Input in landscape con tastiera e modifica Decisione in landscape scuro.
+La preview distribuita è una cattura Android reale della home finale.
+
+Le prime prove su candidati precedenti e le acquisizioni disturbate da
+SystemUI/emulatore sono diagnostica preliminare, non gli esiti finali.
+Una prima iniezione sintetica di drag non superava tempestivamente la
+soglia di movimento e un punto di rilascio ricadeva sul nodo sorgente:
+le precondizioni sono state corrette nel probe, poi i gesti sono passati
+su entrambi i formati. Il codice produttivo collaudato non è stato
+modificato fra le quattro esecuzioni accettate e il confezionamento.
+
+Log, immagini, manifesti e hash: tests/results/android-ui-1.2.0.
+Il probe è separato dall'app e i runner ripristinano le impostazioni del
+solo emulatore dopo le prove. Nessuna misura su un telefono personale.
+In fase di chiusura, dopo tutti i test e il ripristino completati, il comando
+emu kill ha risposto OK ma il processo dell'emulatore è terminato con exit
+139 (segmentation fault). L'esito è registrato in emulator-shutdown.json;
+non è un arresto dell'app durante il collaudo né modifica i risultati sopra.
+
+MOTORE E FILE: CONTINUITÀ DELLE VERIFICHE
+FlowModel, FlowEngine, FlowCodec, FlowStore, FlowExporter e ShareProvider
+sono byte per byte identici alla consegna 1.1.0. FlowExamples è cambiato
+soltanto per aggiungere il sesto esempio e il supporto collegato.
+Confronto: tests/results/update-1.2.0/source-comparison-1.1.0.json.
+Le prove nuove del corso e del progetto finale usano anche queste classi.
+
+I risultati seguenti rimangono evidenze storiche della 1.0.0, non nuove
+esecuzioni complete: 184 controlli del motore, 11 di capacità, 18 di
+compatibilità Java/C#, 15 sui cinque esempi e 43 di I/O Android.
+Coprono archivio atomico, recupero scritture interrotte, PDF singolo e
+multipagina con rilettura, SVG, PNG, MIME, provider in sola lettura e
+nomi/colori dei rami attraverso il codec Windows. I rispettivi sorgenti
+del motore e dell'I/O rimangono invariati. Le prove motion nuove coprono
+inoltre l'invarianza dell'esportazione rispetto alle animazioni.
+Report precedenti conservati in tests/history-1.0.0 e history-1.1.0.
+L'esempio Trova l'errore conserva intenzionalmente un ramo mancante.
+
+PRESTAZIONI E LIMITI
+Canvas nativo con accelerazione hardware, cache delle geometrie e dei
+testi, esclusione dal disegno degli oggetti fuori vista. Animazioni basate
+sul ritmo del display, senza un timer fisso a 30 FPS. Pulso attivo soltanto
+quando pertinente; transizioni finite e arresto in background.
+Validazione, importazione, elenco dei progetti ed esportazione usano un
+worker; il Run rapido limita il lavoro prima di restituire il controllo.
+
+Le prove native sono eseguite su emulatore AOSP Android 35 con CPU software.
+Non sono state misurate prestazioni su un telefono fisico a 120/144 Hz.
+La verifica non copre ogni dispositivo, tastiera, versione Android, input
+possibile o tecnologia assistiva. La compilazione mantiene alcuni avvisi
+di deprecazione per API di compatibilità, senza errori.
+I test e il comando Verifica non dimostrano assenza di ogni possibile bug
+né correttezza matematica del diagramma per tutti gli input.
+
+L'app conserva i limiti di 500 blocchi, 1.500 frecce, 4 MB per progetto,
+10.000 passi e 24 pagine PDF. Il motore supporta numeri, testo, booleani,
+variabili semplici e le funzioni documentate; non liste o funzioni utente.
+Non sono dichiarati permessi Internet, contatti, posizione, microfono o
+accesso generale alla memoria. Fonti e condivisione aprono app di sistema.
+
+FILE DI SUPPORTO
+LEGGIMI.txt: installazione, corso, gesti, Prova ed esportazioni.
+BUILD.txt: procedura di compilazione e identità del pacchetto.
+UI_WORKFLOW.txt: adattamento dell'editor di rinco ed esperienza mobile.
+FONTI_IMPARA.txt: fonti, mappa delle lezioni e ambito del corso.
+examples/: sei diagrammi .frociart, incluso Report di misure.
+tests/: sorgenti delle prove ed evidenze attuali/storiche distinguibili.
+SOURCE_MANIFEST.json: hash di ogni file incluso e confronto fra i sorgenti
+di produzione confezionati e quelli usati dall'APK sottoposto alle prove.
+L'archivio pubblico esclude SDK, APK di test, chiave privata e password.

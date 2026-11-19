@@ -1,0 +1,132 @@
+FROCIART ANDROID 1.1.0 — VERIFICA DELLA CONSEGNA
+18 ottobre 2026
+
+APK FINALE
+Pacchetto: it.frociart.app — versionName 1.1.0, versionCode 2.
+Dimensione: 107.058 byte.
+SHA-256:
+5cad6916c2bb76184aa73d0332a251a3c63957b5b4e63206c209d8f1ca52d644
+Certificato SHA-256, invariato rispetto alla versione 1.0.0:
+f5d2fd4d1f51a0f74562e81b2949a0299fe46869500b07ddd52b5b013572055f
+
+Compilazione Java 8 con JDK 17, Android SDK 35 e Build Tools 35.0.0.
+Min SDK 26 (Android 8.0), target SDK 35. Firma e allineamento verificati.
+Installazione come aggiornamento della 1.0.0, senza disinstallazione o
+cancellazione dei dati. L'APK contiene solo l'applicazione di produzione.
+Non contiene APK di test o librerie native legate a una sola architettura.
+Controllo indipendente dell'hash e del CRC del file distribuito: superato.
+
+UI E WORKFLOW DI RINCO
+Sono stati studiati gli asset effettivi dell'editor di rinco e le regole
+UI concordate per quell'app. L'adattamento mantiene Frociart e il suo blu:
+- Tela centrale e barra contestuale che non ne cambia le dimensioni.
+- Modalità Sposta e Seleziona esplicite; sei blocchi in due colonne.
+- Modifica e Collega vicini al foglio; editor con Applica nel footer.
+- Nome e colore riuniti nella scheda di ciascuna uscita della decisione.
+- Prova integrata, sotto la tela o a fianco in orizzontale.
+- Un passo, Esegui/Pausa, Reset e dettagli di variabili e velocità.
+- Invio manuale mantiene la modalità Un passo; nessun avvio automatico.
+- Tema chiaro/scuro coerente e contrasto delle azioni principali aumentato.
+- Animazioni brevi rispettano la disattivazione delle animazioni di sistema.
+
+GESTI E CANVAS: 118 CONTROLLI SUPERATI
+73 controlli preesistenti, 23 regressioni dei gesti/cache e 22 controlli
+della modalità di navigazione durante Prova. Usano MotionEvent e API native
+Android 35. Il canvas della prova coincide byte per byte con quello finale:
+0236b5f03187555c30cb833e88988fa7d3e0463b70176a2c88c74d0191f1ec83
+
+Verificati selezione singola e a riquadro, gruppi, drag, Undo atomico, pan,
+pinch, collegamenti, duplicazione/eliminazione, accessibilità e limiti.
+Il pan conserva i piccoli MOVE prima della soglia; CANCEL rimuove subito
+il riquadro e la memoria del doppio tap. Il rilascio termina all'ultimo MOVE.
+Durante Prova restano pan e pinch, mentre i gesti non modificano il diagramma.
+Il connettore ha un target di 48 dp. Nessun loop di redraw a foglio fermo.
+
+Le frecce riusano buffer e coordinate quando la topologia non cambia;
+le etichette lunghe vengono misurate solo quando cambia il testo.
+Ripristinando la posizione di un blocco, l'SVG torna esattamente uguale.
+Tema, selezione ed evidenziazione non alterano il disegno esportato.
+Evidenze: tests/canvas/VERIFICA.txt, results/native-readonly.log e
+results/source-sha256.json nella stessa cartella.
+
+COLLAUDO UI NATIVO
+La matrice completa ha usato 432 x 960 px a 180 dpi (384 dp, font 1,0) e
+360 x 720 px a 180 dpi (320 dp, font 1,3), in verticale e orizzontale.
+Sono stati verificati tocchi reali, dimensioni e visibilità delle View,
+tastiera Android, stato del motore, bozze e nomi/colori delle decisioni.
+
+Sul candidato precedente: 90/90 controlli standard e 88/90 sul formato
+stretto. I due fallimenti erano il ritaglio inferiore del contenitore del
+risultato e la larghezza dell'editor in landscape, che includeva la barra
+di navigazione laterale. Sono stati corretti soltanto in Ui.java:
+- Il pannello Prova riserva più altezza quando cresce il font.
+- I pannelli usano la larghezza utile, esclusi barre di sistema e cutout.
+MainActivity, canvas, motore, codec e archivio non sono cambiati dopo
+quella matrice. Gli hash conservano la distinzione tra i due APK.
+
+Sullo stesso APK finale consegnato: 25/25 controlli mirati superati nel
+formato standard e 25/25 nel formato stretto, zero errori. La matrice
+completa non è stata ripetuta dopo le due modifiche circoscritte di layout.
+Log finali: portrait-instrumentation.log e narrow-instrumentation.log
+in tests/results/android-ui-1.1.0. provenance.json e source-sha256.json
+collegano ciascuna prova ai sorgenti e al pacchetto effettivamente usati.
+
+La verifica mirata include output 5 completamente visibile, editor con
+finestra IME realmente presente e con rettangolo stabile, Applica sopra
+la tastiera, editor landscape nell'area utile e ritorno in portrait.
+Le catture finali sono state aperte e ispezionate oltre al controllo delle
+coordinate. Una precedente cattura dell'editor standard era antecedente
+alla comparsa visiva della tastiera: è sostituita dalla prova stabilizzata,
+che confronta anche Applica.bottom con IME.top.
+
+Le correzioni verificate durante il collaudo comprendono inoltre:
+- Zoom spostato nell'area bassa riservata, senza coprire il blocco Inizio.
+- Prova compatta, stato non ripetuto e risultato senza riga vuota aggiunta.
+- Diciture complete dei pulsanti su 320 dp con font 1,3.
+- Input e Invio visibili in landscape con tastiera; Back ripristina gli header.
+- Editor conservato dopo due rotazioni, con nomi e colori della bozza.
+- Errori runtime riapribili in Prova, Reset ed esecuzione nuovamente disponibili.
+- Il tap su Invio dopo Un passo avanza un solo blocco e memorizza il valore.
+- Selezione senza ridimensionamento del canvas; tutti i sei blocchi visibili.
+
+Le prime passate coperte da finestre ANR di SystemUI o del vecchio harness
+canvas sono state scartate. I controlli accettati rifiutano sovrapposizioni
+di errore del sistema e richiedono il marcatore finale con zero errori.
+
+MOTORE E FILE: REGRESSIONI STORICHE E SORGENTI INVARIATI
+FlowModel, FlowEngine, FlowCodec, FlowExamples, FlowStore, FlowExporter e
+ShareProvider sono byte per byte identici alla consegna Android 1.0.0.
+Il confronto è in tests/results/update-1.1.0/source-comparison-1.0.0.json.
+I risultati sotto riportati sono quelli della 1.0.0, non nuove esecuzioni:
+184 controlli Java del motore; 11 di capacità; 18 di compatibilità Java/C#;
+15 sui cinque esempi; 43 controlli I/O sul runtime Android, tutti superati.
+
+Le prove I/O storiche coprono AtomicFile, recupero di scritture interrotte,
+PDF singolo/multipagina, riapertura con PdfRenderer, SVG, PNG, MIME, provider
+in sola lettura e nomi/colori dei rami attraverso il codec Windows.
+Il quinto esempio ha intenzionalmente un ramo mancante per provare Verifica.
+.frociart resta modificabile; PDF, PNG e SVG sono formati di esportazione.
+I dettagli precedenti sono conservati in tests/history-1.0.0/VERIFICA.txt.
+
+PRESTAZIONI E LIMITI
+Canvas nativo con accelerazione hardware, cache di geometrie/testi e
+esclusione dal disegno degli oggetti fuori vista. I gesti non richiedono
+ricostruire la barra contestuale o ridimensionare il foglio.
+Validazione, importazione, lista progetti ed esportazione usano un worker;
+l'esecuzione rapida mantiene un budget di tempo per lasciare lavorare la UI.
+
+Le prove sono state eseguite su emulatore AOSP Android 35 con CPU software.
+Non sono state misurate prestazioni/FPS su un telefono fisico o su uno
+schermo a 120/144 Hz. Il collaudo non copre ogni produttore, tastiera,
+versione Android, input possibile o tecnologia assistiva.
+La compilazione contiene avvisi di deprecazione per API di compatibilità,
+senza errori. I controlli non dimostrano l'assenza di ogni possibile bug.
+
+FILE DI SUPPORTO
+LEGGIMI.txt: installazione, gesti, condizioni, Prova ed esportazione.
+BUILD.txt: ricompilazione e identità del pacchetto.
+UI_WORKFLOW.txt: adattamento del workflow dell'editor di rinco.
+tests/ui: instrumentation separata e runner riproducibile.
+tests/results/android-ui-1.1.0: evidenze native ordinate e hash degli APK.
+SOURCE_MANIFEST.json nell'archivio sorgenti: hash dei file inclusi.
+Il pacchetto sorgenti esclude SDK, APK di test, chiavi di firma e password.

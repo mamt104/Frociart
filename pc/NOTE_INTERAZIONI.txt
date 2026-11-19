@@ -1,0 +1,10 @@
+﻿Frociart PC 1.11.7: pressione ferma 800ms + riempimento 600ms.
+Il progresso, lo sticker e l'appoggio sono sovrapposti alla superficie
+conservata del canvas; non vengono memorizzati come pixel permanenti.
+Trascinamento normale: collegamenti conservati. Pressione completata:
+distacco confermato al rilascio, anche senza spostare il blocco.
+Decisione con rami distinti: scelta esplicita del ramo da ricucire nel vecchio
+punto o Nessuno; nessuna casella eliminata, annullamento completo e un solo Undo.
+Rilascio di una freccia nel vuoto: aggiunta o Scollega questo collegamento.
+Riordina anima geometria e vista; modello ed esportazioni usano i dati finali.
+Rispettare le preferenze di movimento ridotto; tutti i timer hanno durata finita.

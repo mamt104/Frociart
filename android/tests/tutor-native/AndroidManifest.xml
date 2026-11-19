@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="it.frociart.tutorchecks" android:versionCode="1" android:versionName="1">
+  <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="35"/>
+  <instrumentation android:name="it.frociart.tutorchecks.TutorProbe" android:targetPackage="it.frociart.app.continua" android:functionalTest="true"/>
+  <application android:label="Frociart tutor checks"/>
+</manifest>

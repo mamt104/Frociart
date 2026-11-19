@@ -1,0 +1,202 @@
+FROCIART 1.2.1 — ANDROID
+Editor, verificatore e simulatore di diagrammi di flusso, in italiano.
+
+INSTALLA
+La revisione 1.2.1 in questo archivio è un candidato con sorgenti e
+collaudo. Lo stato della firma di distribuzione è indicato in VERIFICA.txt.
+Quando viene fornito il relativo APK firmato, aprilo sul telefono e segui
+la richiesta di installazione del browser o del gestore file.
+Richiede Android 8.0 o successivo. Il pacchetto non contiene librerie native
+legate a un processore: usa Java e le API del sistema Android.
+
+AGGIORNARE LE VERSIONI PRECEDENTI
+Un aggiornamento deve usare la firma originale per conservare i progetti.
+L’identità e lo stato del pacchetto compilato sono indicati in VERIFICA.txt.
+Non disinstallare l’app per sostituire un pacchetto con firma diversa.
+
+DUE STRADE ALL'AVVIO
+La home offre Impara e Modalità libera. Il pulsante Home nell'editor
+riporta qui senza perdere il progetto.
+Impara contiene 24 microlezioni in 6 tappe e 72 esercizi originali:
+1. Leggere un flusso: input, blocchi, frecce e ordine di esecuzione.
+2. Dati che cambiano: variabili, assegnazioni, numeri, testo e calcoli.
+3. Scegliere una strada: soglie, condizioni, rami e controlli sui dati.
+4. Ripetere con criterio: cicli, conteggi, totali e segnali di fine.
+5. Capire perché funziona: debugging, casi limite, invarianti, terminazione.
+6. Progettare e migliorare: contratti, ricerca, costo e progetto finale.
+Ogni lezione spiega un'idea, propone un trucco documentato e offre tre
+esercizi. Una risposta errata mostra un indizio specifico: premi Riprova.
+Non ci sono vite o penalità. Completare una lezione assegna 30 XP una sola
+volta; il ripasso conserva i progressi senza moltiplicare gli XP.
+Domanda in corso, risposta e progressi restano sul telefono. Puoi seguire
+il passo consigliato o esplorare le altre lezioni dal percorso.
+Il pulsante Perché funziona · fonti apre i riferimenti della lezione.
+I concetti provengono da documentazione Flowgorithm, Harvard CS50, MIT e
+Cornell. FONTI_IMPARA.txt contiene il catalogo e la mappa delle lezioni.
+Le spiegazioni sono in italiano e gli esercizi sono originali; le fonti
+sono prevalentemente in inglese e si aprono nel browser.
+Le lezioni funzionano offline; consultare le pagine delle fonti richiede
+una connessione del browser. Il corso introduce i metodi avanzati: la
+padronanza richiede poi pratica con progetti, test e ulteriori problemi.
+
+PRIMA PROVA NEL LABORATORIO
+Apri laboratorio riprende il tuo ultimo progetto. Al primo uso trovi
+Somma veloce. Premi Prova, poi Esegui: il risultato dell'esempio è 5.
+Una luce percorre la freccia eseguita e il blocco di arrivo si evidenzia.
+La vista segue il percorso quando un passaggio esce dall'area leggibile.
+Un passo avanza un blocco; Ricomincia riparte da Inizio.
+Dettagli mostra variabili, risultato completo e velocità.
+Lenta e Normale mostrano ogni passaggio. Rapida esegue gruppi di passi
+per mantenere la risposta dell'interfaccia e anima l'ultima freccia utile
+del gruppo: non mostra singolarmente tutte le operazioni accelerate.
+Dal menu trovi sei esempi con input, decisioni e cicli. Il nuovo Report di
+misure calcola conteggio, media e massimo, gestendo dati assenti e negativi.
+Dopo una lezione, Prova su un esempio apre un esempio pertinente se
+presente; Apri il laboratorio riprende invece il progetto corrente con il
+consiglio della lezione. I contenuti in pseudocodice sono indicati come tali.
+Il pulsante Trucco mantiene a portata spiegazione, controesempio e fonti.
+
+CREA CON IL POLLICE
+Blocco, Verifica e Prova sono nel dock inferiore.
+Blocco è l'azione principale della costruzione; le sei forme sono disposte
+in due colonne. Scegli il tipo, modifica il contenuto e premi Applica.
+Tocca un blocco: Modifica e Collega compaiono accanto al foglio.
+Un doppio tocco apre direttamente l'editor. Trascina il blocco per muoverlo.
+La barra della selezione non cambia dimensione alla tela.
+Da Altre azioni sulla selezione trovi Duplica ed Elimina.
+Annulla/Ripeti e Sposta/Gruppo sono nella barra sotto il foglio.
+Il + del blocco selezionato pulsa, anche su Inizio e nel modo Gruppo
+quando è selezionato un solo blocco. Fine non ha uscite.
+- Tocca il +: scegli subito il tipo del nuovo passaggio.
+- Trascina il + nel vuoto: scegli il nuovo passaggio nel punto indicato.
+- Trascina il + sopra un blocco: l’arrivo si evidenzia prima del rilascio.
+Da una Decisione scegli l’uscita con nome completo, colore e significato.
+Se inserisci C tra A e B, il flusso diventa A → C → B. Quando C è una
+Decisione, scegli quale ramo continua verso B. Quando C è Fine, un pannello
+spiega prima che la continuazione sarà scollegata; i blocchi restano.
+Annullare un pannello o un gesto non crea blocchi o frecce.
+
+GESTISCI LE FRECCE
+Collega mostra le uscite e la loro destinazione attuale. Tocca un’uscita
+per scegliere l’arrivo da un elenco ricercabile oppure sul foglio.
+Se l’uscita è già occupata, il cambiamento mostra vecchio e nuovo arrivo
+prima della conferma. Scegliere di nuovo lo stesso arrivo non crea duplicati.
+In modalità Sposta, tocca una freccia o la sua etichetta: Cambia arrivo e Scollega sono subito
+disponibili. Scollega conserva entrambi i blocchi ed è annullabile.
+Nei pannelli, i nomi lunghi dei rami vanno a capo. Sul foglio le etichette
+possono essere abbreviate; il pannello mostra la dicitura completa.
+Inizio non riceve frecce; un collegamento diretto sullo stesso blocco viene
+rifiutato con una spiegazione. I cicli verso altri blocchi restano possibili.
+
+ORDINA O DISPONI A MANO
+Il toggle Ordina è visibile in alto nel foglio. Quando è attivo, i nuovi
+collegamenti e blocchi si dispongono con distanze regolari e un movimento
+breve; i rami sono separati e i cicli mantengono le frecce di ritorno.
+Per diagrammi con più di 150 blocchi o 400 collegamenti, una breve
+dissolvenza sostituisce il movimento di ogni blocco per ridurre il lavoro
+di disegno durante il riordino.
+I nuovi progetti mobile partono con Ordina attivo. I progetti già presenti
+e quelli importati conservano le coordinate; puoi attivarlo esplicitamente.
+Trascinare un blocco passa alla posizione libera e spegne Ordina.
+Disattivare Ordina conserva le posizioni raggiunte. Riattivarlo riallinea;
+l'operazione che cambia le posizioni è annullabile con Annulla.
+Lo stato del toggle è salvato per progetto sul telefono. Il file .frociart
+contiene le coordinate finali, compatibili anche con il PC.
+La navigazione resta vicina ai blocchi, con margini e zoom leggibile:
+non c'è una pagina infinita da perdere scorrendo nel vuoto.
+
+GESTI
+- Sposta: trascina con un dito nel vuoto per spostare il foglio.
+- Due dita: zoom e spostamento; il foglio resta fermo al rilascio.
+- Tieni premuto nel vuoto: disegna un riquadro di selezione.
+- Gruppo, nella barra sotto il foglio, attiva la selezione multipla. Trascina un riquadro o tocca più blocchi.
+- Tieni premuto su un blocco: aggiungilo o toglilo dal gruppo.
+- Trascina un blocco del gruppo: muovi insieme tutti i selezionati.
+- Duplica conserva i collegamenti interni al gruppo.
+- I tre pulsanti in basso sul foglio riducono, centrano e aumentano lo zoom.
+  Con una selezione lasciano spazio alle azioni sul blocco; lo zoom a due
+  dita rimane disponibile.
+
+NOMI E COLORI DELLE CONDIZIONI
+Modifica una Decisione. Oltre all'espressione puoi personalizzare il nome
+e il colore dell'uscita Quando è vera e dell'uscita Quando è falsa.
+Nome e colore sono riuniti in una scheda per ciascuna uscita.
+Su schermi stretti la palette si dispone su due righe.
+Per esempio: Pari / Dispari, Accettato / Rifiutato, Continua / Riprova.
+Le due uscite mantengono la funzione logica vero/falso: la dicitura è libera.
+Le etichette possono avere fino a 60 caratteri. La palette offre sei colori;
+i file importati conservano anche altri colori validi nel formato #RRGGBB.
+
+SALVA, RIAPRI, ESPORTA
+Le modifiche si salvano automaticamente nell'archivio del telefono.
+Tocca il titolo del progetto per scegliere fra i diagrammi salvati.
+I campi non ancora applicati vengono conservati come bozza soltanto se
+differiscono dal contenuto applicato. Aprire e chiudere un campo invariato
+non crea una falsa bozza né una voce Undo. Le bozze sono indipendenti per
+progetto e blocco: cambiare progetto o scrivere in un altro blocco le conserva.
+Applica o Scarta agisce solo sulla bozza aperta. Le bozze della versione
+precedente vengono migrate senza cambiare il contenuto del progetto.
+Dal menu puoi rinominare, importare e salvare una copia modificabile
+.frociart. Puoi passare i file a Frociart Windows 1.3.2 e successive mantenendo nomi e
+colori delle uscite. Sono leggibili anche i progetti .flow precedenti.
+Il pulsante Esporta è direttamente nell’intestazione.
+Esporta PDF su una pagina, PDF A4 multipagina, PNG oppure SVG vettoriale.
+Nel PDF A4 le pagine vengono separate negli spazi tra i blocchi. Se i
+blocchi sono sovrapposti senza spazi sufficienti, le pagine si sovrappongono
+in parte per mantenere almeno una copia intera di ogni blocco.
+Le esportazioni hanno sfondo bianco, senza selezione e griglia.
+Salva una copia usa il selettore documenti Android. Condividi apre il
+pannello Android e ti lascia scegliere l'app e il destinatario.
+Esporta i progetti prima di disinstallare: l'archivio interno viene rimosso
+dal sistema quando l'app viene disinstallata.
+
+ASPETTO
+Menu > Aspetto: Segui il telefono, Chiaro, Scuro.
+Il tema comprende foglio, strumenti, campi, pannelli, selezioni e risultati.
+Tastiera, selettore dei file e condivisione sono componenti del telefono.
+L'interfaccia riprende il workflow dell'editor di rinco: tela ampia,
+strumenti vicini al pollice, modalità esplicite e un'azione principale per
+fase. Frociart mantiene il blu con neutri carta/inchiostro e testo più
+contrastato. Home, schede, quiz, pannelli, collegamenti, disposizione e avanzamento
+hanno transizioni brevi. Impostazioni > Animazioni permette di ridurle;
+la preferenza di sistema per disabilitarle prevale. Il canvas è nativo:
+non esiste un limite fisso a 30 fps per le animazioni. Il + pulsa solo
+quando serve e i movimenti si fermano con la schermata non visibile.
+La fluidità effettiva dipende dal dispositivo; le prove non certificano
+144 fps su un telefono fisico.
+UI_WORKFLOW.txt documenta i riferimenti e le scelte.
+
+CONTROLLI E LIMITI
+Verifica controlla grafo, raggiungibilità, uscite, sintassi e variabili.
+Esegui prova i valori reali e segnala anche errori dipendenti dall'input.
+Prova apre i controlli sotto la tela; in orizzontale sono affiancati.
+Il diagramma resta navigabile con pan e zoom. Durante la simulazione i
+gesti non modificano i blocchi: Chiudi prova torna alla costruzione.
+Usa Un passo, Esegui/Pausa, Ricomincia e le tre velocità nei Dettagli.
+Quando serve Input, Invio prende il posto dei controlli non utilizzabili.
+Se stavi usando Un passo, dopo l'invio rimani in modalità manuale;
+se avevi avviato Esegui, la simulazione riprende automaticamente.
+Gli errori restano leggibili e Ricomincia è raggiungibile riaprendo Prova.
+In orizzontale, mentre scrivi un Input, le intestazioni si nascondono per
+lasciare spazio al campo e a Invio. Ritornano chiudendo la tastiera.
+Indietro chiude prima tastiera, poi pannello/gesto, poi la home.
+I controlli non dimostrano la correttezza per ogni input possibile.
+Limiti: 500 blocchi, 1.500 collegamenti, progetto di 4 MB, 10.000 passi,
+24 pagine per PDF multipagina. PNG fino a 12 megapixel / 4.096 pixel per lato.
+Le espressioni supportano numeri, testo, valori logici e variabili semplici.
+Funzioni: abs, sqrt, min, max, floor, round, len.
+Il motore non esegue liste o funzioni definite dall'utente. Le lezioni
+avanzate che ne parlano le indicano come pseudocodice da studiare, non
+come testo incollabile in un blocco Operazione.
+
+L'app funziona offline e non richiede un account. Non dichiara permessi
+Internet, contatti, posizione, microfono o accesso generale alla memoria.
+I file scelti dall'utente passano attraverso il selettore documenti Android.
+
+SORGENTI E RICOMPILAZIONE
+Il pacchetto sorgenti include Java, risorse, esempi, verifiche e build_apk.py.
+BUILD.txt spiega come ricompilare con gli strumenti ufficiali Android SDK.
+Il backup privato della firma fornito con la 1.0.0 è ancora valido: conservalo per
+firmare aggiornamenti installabili sopra questa stessa applicazione.
+
+Versione 1.2.1, 18 ottobre 2026. Dettagli e limiti delle prove in VERIFICA.txt.

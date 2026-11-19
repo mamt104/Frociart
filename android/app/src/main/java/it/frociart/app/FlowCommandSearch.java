@@ -1,0 +1,12 @@
+package it.frociart.app;
+import java.text.Normalizer;import java.util.*;
+final class FlowCommandSearch {
+ static final int MAX_QUERY=128;
+ static String fold(String value){StringBuilder b=new StringBuilder();boolean space=true;for(char c:Normalizer.normalize(value==null?"":value,Normalizer.Form.NFD).toCharArray()){if(Character.getType(c)==Character.NON_SPACING_MARK)continue;if(Character.isLetterOrDigit(c)||c=='+'||c=='#'){b.append(Character.toLowerCase(c));space=false;}else if(!space){b.append(' ');space=true;}}return b.toString().trim();}
+ static int rank(String query,String label,String path,String aliases){String wanted=fold(query);if(wanted.isEmpty())return 100;String title=fold(label),place=fold(path),words=title+" "+place+" "+fold(aliases);int rank=title.equals(wanted)?0:title.startsWith(wanted+" ")?1:10;for(String word:wanted.split(" ")){if(!words.contains(word))return -1;if((" "+title+" ").contains(" "+word+" "))rank-=2;else if(title.contains(word))rank--;else rank++;}return title.equals(wanted)?0:title.startsWith(wanted+" ")?1:Math.max(2,rank);}
+ static String aliases(String label){String s=fold(label);StringBuilder b=new StringBuilder();if((s.contains("apri progetto")||s.contains("apri file")))b.append(" importa carica flowgorithm fprg frociart ");if(s.contains("esporta"))b.append(" immagine pdf svg png condividi ");if(s.contains("salva"))b.append(" file progetto archivia ");if(s.contains("inquadra"))b.append(" tutto mostra centra adatta zoom ");if(s.contains("riordina"))b.append(" allinea disponi ordine spaziatura ");if(s.contains("variabili e chiamate"))b.append(" watch memoria valori stack ispeziona ");if(s.contains("cerca nel progetto"))b.append(" trova testo blocco variabile ricerca ");if(s.contains("pseudocodice"))b.append(" testo algoritmo importa leggi stampa ");if(s.contains("modelli di codice"))b.append(" template fpgt frotemplate ");if(s.contains("ciclo guidato"))b.append(" for per while mentre repeat ripeti until loop ");if(s.contains("stile dei diagrammi"))b.append(" font carattere dimensione colori aspetto ");if(s.contains("comandi rapidi"))b.append(" tastiera shortcut scorciatoie ");return b.toString();}
+ static final class Entry {
+  final String id,label,path,icon,aliases;final int tone;final boolean enabled;final Runnable action;
+  Entry(String id,String label,String path,String icon,int tone,boolean enabled,Runnable action){this.id=id;this.label=label;this.path=path;this.icon=icon;this.tone=tone;this.enabled=enabled;this.action=action;aliases=aliases(label);}
+ }
+}

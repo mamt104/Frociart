@@ -1,3 +1,8 @@
 * text=auto eol=lf
 /docs/download/** -text
 /docs/assets/*.png -text
+
+# Preserve the exact archived bytes, including historical mixed line endings.
+# Whitespace cleanup of the imported baseline is a separate change.
+android/** -text whitespace=-blank-at-eol,-blank-at-eof
+pc/** -text whitespace=-blank-at-eol,-blank-at-eof

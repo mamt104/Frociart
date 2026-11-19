@@ -1,0 +1,122 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Diagnostics;
+using System.Windows.Forms;
+namespace Frociart {
+ public partial class FlowCanvas {
+  internal sealed class PaletteBlock {internal NodeKind Kind;internal bool ChooseIo;internal PaletteBlock(NodeKind kind,bool chooseIo=false){Kind=kind;ChooseIo=chooseIo;}}
+  private Timer manipulationTimer,holdDelay;private readonly Stopwatch manipulationClock=Stopwatch.StartNew();
+  private long holdStart=-1,liftStart=-1,settleStart=-1;private float holdFill,lift;private bool stickerDetached,stickerAmbiguous,stickerDetachNone;
+  private string landingId;private long landingAt;private float landingLift,landingPulse;private bool landingPeeled;
+  private bool paletteChooseIo;private FlowNode paletteNode;private Diagram insertionDocument;private float paletteReveal;private long paletteStart;
+  private bool arrangeCamera;private float arrangeFromX,arrangeFromY,arrangeFromZoom,arrangeToX,arrangeToY,arrangeToZoom;
+  private Dictionary<string,PointF> pendingDropPositions;private string pendingDropId;private bool pendingDropDetached;
+  private Dictionary<string,PointF> settleFrom;private const int HoldGrace=800,HoldDuration=600,SettleDuration=360;
+  private void InitManipulation(){AllowDrop=true;manipulationTimer=new Timer{Interval=16};manipulationTimer.Tick+=delegate{TickManipulation();};holdDelay=new Timer{Interval=400};holdDelay.Tick+=delegate{holdDelay.Stop();if(holdStart>=0){TickManipulation();manipulationTimer.Start();}};Disposed+=delegate{StopClipboardFlight();if(trashFlight!=null)trashFlight.Dispose();insertGlowTile.Dispose();holdDelay.Dispose();manipulationTimer.Dispose();};}
+  internal void WirePalette(Control source,NodeKind kind,Action clicked,Action prepare,bool chooseIo=false){Point start=Point.Empty;bool consumed=false;
+   source.MouseDown+=delegate(object s,MouseEventArgs e){start=e.Location;consumed=false;};
+   source.MouseMove+=delegate(object s,MouseEventArgs e){if(consumed||e.Button!=MouseButtons.Left||Math.Abs(e.X-start.X)+Math.Abs(e.Y-start.Y)<SystemInformation.DragSize.Width)return;consumed=true;if(prepare!=null)prepare();source.DoDragDrop(new PaletteBlock(kind,chooseIo),DragDropEffects.Copy);};
+   source.Click+=delegate{if(!consumed&&clicked!=null)clicked();};
+  }
+  private sealed class PortMotion {internal float Value,From,To;internal long At;}
+  private readonly Dictionary<string,PortMotion> hoverPorts=new Dictionary<string,PortMotion>();
+  private void SetHoverNode(string id){if(_hoverNodeId==id)return;string previous=_hoverNodeId;_hoverNodeId=id;foreach(string key in new[]{previous,id}){if(key==null)continue;PortMotion motion;if(!hoverPorts.TryGetValue(key,out motion)){motion=new PortMotion();hoverPorts[key]=motion;}motion.From=motion.Value;motion.To=key==id?1:0;motion.At=manipulationClock.ElapsedMilliseconds;InvalidateNode(key,200);}manipulationTimer.Start();}
+  private bool TickHoverPorts(long now){bool active=false;foreach(var pair in hoverPorts.ToArray()){var h=pair.Value;float t=UiMotion.Enabled?Math.Min(1,(now-h.At)/200f):1;h.Value=h.From+(h.To-h.From)*UiMotion.Spring(t);var node=FindNode(pair.Key);if(node!=null)MarkWorldDirty(DisplayBounds(node),200);InvalidateNode(pair.Key,200);if(t>=1&&h.To==0)hoverPorts.Remove(pair.Key);else active|=t<1;}return active;}
+  private bool ShowsPorts(FlowNode n){return n.Kind!=NodeKind.Note&&!IsFoldCard(n.Id)&&!ViewOnly&&!IsConnecting&&!IsPointerGestureActive&&((_selectedNodeIds.Contains(n.Id)&&SelectionCount==1)||_hoverNodeId==n.Id||hoverPorts.ContainsKey(n.Id));}
+  private FlowNode PortNodeAt(PointF world){FlowNode selected=FindNode(_selectedNodeId);if(HitPort(selected,world)!=null)return selected;FlowNode hovered=FindNode(_hoverNodeId);return HitPort(hovered,world)!=null?hovered:null;}
+  private void ArmSticker(){if(GroupDragging?!FlowGroupPlacement.Eligible(_diagram,_dragOrigins.Keys):_dragNode.Kind==NodeKind.Start||_dragNode.Kind==NodeKind.End)return;holdStart=manipulationClock.ElapsedMilliseconds;holdFill=lift=0;liftStart=-1;stickerDetached=stickerAmbiguous=stickerDetachNone=false;holdDelay.Start();_toolTip.Hide(this);_toolTip.SetToolTip(this,string.Empty);SetHoverNode(null);holdHintReported=false;RequestFrameRepaint();}
+  private void ClearSticker(){SetTrashReveal(false);blockedBypass.Clear();bypassExited=false;holdDelay.Stop();holdStart=liftStart=-1;holdFill=lift=0;stickerDetached=stickerAmbiguous=stickerDetachNone=false;insertionDocument=null;}
+  private bool holdHintReported;
+  private void TickManipulation(){long now=manipulationClock.ElapsedMilliseconds;bool portsActive=TickHoverPorts(now);bool trashActive=TickTrash(now),clipboardActive=TickClipboardFlight(now);
+   if(holdStart>=0&&_dragNode!=null&&!ViewOnly){if(!holdHintReported&&now-holdStart>=400){holdHintReported=true;Report("Tieni premuto");}holdFill=Math.Max(0,Math.Min(1,(now-holdStart-HoldGrace)/(float)HoldDuration));
+    if(holdFill>=1&&liftStart<0){liftStart=now;SetTrashReveal(!GroupDragging);_dragging=true;if(BeginGroupLift()){lift=0;return;}bool linked=_diagram.Edges.Any(e=>e.From==_dragNode.Id||e.To==_dragNode.Id);
+     bool eligible=_dragNode.Kind!=NodeKind.Start&&_dragNode.Kind!=NodeKind.End;
+     stickerDetachNone=eligible&&linked&&!_diagram.Edges.Any(e=>e.From==_dragNode.Id);
+     stickerDetached=eligible&&linked&&(stickerDetachNone||FlowPlacement.Continuation(_diagram,_dragNode.Id)!=null);
+     stickerAmbiguous=eligible&&linked&&!stickerDetached&&_dragNode.Kind==NodeKind.Decision;
+     if(stickerDetached||stickerAmbiguous){blockedBypass.Clear();bypassExited=false;foreach(var edge in _diagram.Edges.Where(e=>e.To==_dragNode.Id))blockedBypass.Add(edge.Id);insertionDocument=DiagramIO.Clone(_diagram);if(stickerDetachNone||stickerAmbiguous)FlowPlacement.Disconnect(insertionDocument,_dragNode.Id);else FlowPlacement.Detach(insertionDocument,_dragNode.Id);CaptureInsertRoutes();Report(stickerAmbiguous?"Decisione sollevata: nel vuoto si stacca senza menu. I vecchi rami restano liberi.":"Blocco sollevato: trascina oppure rilascia per staccarlo.");}
+     else Report("Blocco sollevato. Trascina per spostarlo.");
+    }
+    if(liftStart>=0)lift=UiMotion.Enabled?UiMotion.Spring(Math.Min(1,(now-liftStart)/320f)):1;
+   }
+   if(paletteNode!=null)paletteReveal=UiMotion.Enabled?UiMotion.Spring(Math.Min(1,(now-paletteStart)/320f)):1;
+   if(arrangeCamera){float t=UiMotion.Enabled?UiMotion.Spring(Math.Min(1,(now-settleStart)/(float)SettleDuration)):1;_panX=arrangeFromX+(arrangeToX-arrangeFromX)*t;_panY=arrangeFromY+(arrangeToY-arrangeFromY)*t;_zoom=Math.Max(.18f,Math.Min(2.5f,arrangeFromZoom+(arrangeToZoom-arrangeFromZoom)*t));RaiseViewChanged();if(!UiMotion.Enabled||now-settleStart>=SettleDuration){_panX=arrangeToX;_panY=arrangeToY;_zoom=arrangeToZoom;arrangeCamera=false;}}
+   if(settleFrom!=null&&(!UiMotion.Enabled||now-settleStart>=SettleDuration))settleFrom=null;
+   if(landingId!=null){float t=Math.Min(1,(now-landingAt)/360f);landingLift=landingPeeled&&UiMotion.Enabled?1-UiMotion.Spring(t):0;landingPulse=!landingPeeled&&UiMotion.Enabled?(float)(Math.Sin(t*Math.PI*3)*Math.Exp(-5*t)):0;if(!UiMotion.Enabled||t>=1){landingId=null;landingLift=landingPulse=0;}}
+   bool bladeAnimating=TickBlade(now),sizeAnimating=TickSizeMotion(now);
+   RequestFrameRepaint();if(!bladeAnimating&&!sizeAnimating&&!trashActive&&!clipboardActive&&!portsActive&&!arrangeCamera&&landingId==null&&(holdStart<0||liftStart>=0&&now-liftStart>=320)&&(paletteNode==null||now-paletteStart>=320)&&settleFrom==null)manipulationTimer.Stop();
+  }
+  private string ChooseDetachBranch(FlowNode n){
+   bool yes=FlowPlacement.DetachVia(DiagramIO.Clone(_diagram),n.Id,"true"),no=FlowPlacement.DetachVia(DiagramIO.Clone(_diagram),n.Id,"false");
+   return BranchContinuationDialog.Choose(FindForm(),n,"Quale ramo continua nel punto precedente?\nLe caselle di entrambi i rami restano sul foglio.","Stacca la decisione",true,yes,no);
+  }
+  private bool IsManipulationOverlay(FlowNode node){return !_exportRendering&&(HeldNode(node)||LandingNode(node));}
+  private void PaintManipulationNode(Graphics g){if(_diagram==null)return;foreach(var n in _diagram.Nodes.Where(IsManipulationOverlay)){NodeVisual visual;if(_nodeIndex.TryGetValue(n.Id,out visual))DrawNode(g,visual,true,_zoom);}}
+  private void PaintHoldHint(Graphics g){
+   if(TrashReady&&TrashBounds().Contains(_lastMouse))return;
+   if(holdStart<0||manipulationClock.ElapsedMilliseconds-holdStart<400||_dragNode==null||_dragging&&insertHover!=null&&insertStrength>=.1f)return;
+   float reveal=UiMotion.Enabled?Math.Max(0,Math.Min(1,(manipulationClock.ElapsedMilliseconds-holdStart-400)/160f)):1;int alpha=(int)(255*reveal);
+   string text=liftStart>=0?(stickerAmbiguous?"Pronto: trascina o rilascia per staccare":stickerDetached?"Pronto: trascina o rilascia per staccare":"Pronto: trascina per spostare"):(holdFill>0?"Mantieni premuto · stacco in corso":"Tieni premuto");
+   var bounds=DesignBounds(_dragNode);var anchor=WorldToClient(new PointF(bounds.Left+bounds.Width/2,bounds.Top));var size=TextRenderer.MeasureText(text,Font);
+   var rect=new Rectangle(Math.Max(6,Math.Min(ClientSize.Width-size.Width-26,(int)anchor.X-size.Width/2-12)),Math.Max(6,(int)anchor.Y-size.Height-38),size.Width+24,size.Height+24);
+   using(var path=Ui.Rounded(rect,9))using(var fill=new SolidBrush(Color.FromArgb(alpha,Ui.Surface)))using(var pen=new Pen(Color.FromArgb(alpha,Ui.Blue),1.2f)){g.FillPath(fill,path);g.DrawPath(pen,path);}
+   using(var ink=new SolidBrush(Color.FromArgb(alpha,Ui.Ink)))g.DrawString(text,Font,ink,new RectangleF(rect.X+12,rect.Y+7,rect.Width-24,size.Height));
+   var track=new Rectangle(rect.X+12,rect.Bottom-8,rect.Width-24,3);using(var fill=new SolidBrush(Color.FromArgb(alpha,Ui.Line)))g.FillRectangle(fill,track);
+   if(holdFill>0)using(var fill=new SolidBrush(Color.FromArgb(alpha,Ui.Blue)))g.FillRectangle(fill,track.X,track.Y,track.Width*Math.Min(1,holdFill),track.Height);
+  }
+  private void StartLanding(string id,bool peeled=false){landingGroup.Clear();landingId=id;landingAt=manipulationClock.ElapsedMilliseconds;landingPeeled=peeled;landingLift=peeled&&UiMotion.Enabled?1:0;landingPulse=0;manipulationTimer.Start();}
+  private Dictionary<string,PointF> ModelPositions(){return _diagram.Nodes.ToDictionary(n=>n.Id,n=>new PointF(n.X,n.Y));}
+  internal void ArrangeAnimated(Action arrange){
+   if(_diagram==null)return;CancelPointerGesture(true,true);CancelConnection(false);landingId=null;ClearSticker();
+   var before=_diagram.Nodes.ToDictionary(n=>n.Id,n=>{var b=DisplayBounds(n);return new PointF(b.X,b.Y);});
+   float x=_panX,y=_panY,z=_zoom;settleFrom=null;arrangeCamera=false;arrange();if(cycleFold!=null)EnsureFoldModel(true);EnsureScene();FitToView();
+   if(UiMotion.Enabled){arrangeFromX=x;arrangeFromY=y;arrangeFromZoom=z;arrangeToX=_panX;arrangeToY=_panY;arrangeToZoom=_zoom;_panX=x;_panY=y;_zoom=z;arrangeCamera=true;AnimatePlacement(before);RaiseViewChanged();}
+   RequestFrameRepaint();
+  }
+  private void AnimatePlacement(Dictionary<string,PointF> before){settleFrom=before;settleStart=manipulationClock.ElapsedMilliseconds;manipulationTimer.Start();RequestFrameRepaint();}
+  private RectangleF DisplayBounds(FlowNode n){n=FoldVisual(n);var b=DesignBounds(n);b.Size=DisplaySize(n);PointF from;if(!_exportRendering&&pendingDropPositions!=null&&pendingDropPositions.TryGetValue(n.Id,out from)){b.Location=from;return b;}if(!_exportRendering&&settleFrom!=null&&settleFrom.TryGetValue(n.Id,out from)){float t=UiMotion.Enabled?UiMotion.Spring(Math.Min(1,(manipulationClock.ElapsedMilliseconds-settleStart)/(float)SettleDuration)):1;b.X=from.X+(b.X-from.X)*t;b.Y=from.Y+(b.Y-from.Y)*t;}return b;}
+  private bool SkipStickerEdge(FlowEdge e){if(!_exportRendering&&pendingDropDetached&&(e.From==pendingDropId||e.To==pendingDropId))return true;return !_exportRendering&&(stickerDetached||stickerAmbiguous)&&lift>0&&_dragNode!=null&&(GroupDragging?(_dragOrigins.ContainsKey(e.From)!=_dragOrigins.ContainsKey(e.To)):(e.From==_dragNode.Id||e.To==_dragNode.Id));}
+  private void PaintStickerConnections(Graphics g){if(!stickerDetached||stickerDetachNone||_dragNode==null||lift<=0||_diagram==null)return;
+   if(GroupDragging){foreach(var edge in insertionDocument.Edges.Where(e=>blockedBypass.Contains(e.Id))){var a=FindNode(edge.From);var b=FindNode(edge.To);if(a==null||b==null)continue;var points=Prefix(RouteEdge(a,b,edge.Branch).ToArray(),lift);if(points.Count>1)using(var pen=new Pen(Color.FromArgb(Math.Min(255,(int)(90+165*lift)),Ui.Blue),2/_zoom))g.DrawLines(pen,points.ToArray());}return;}
+   var targets=stickerAmbiguous?_diagram.Edges.Where(e=>e.From==_dragNode.Id).Select(e=>e.To).Distinct():new[]{FlowPlacement.Continuation(_diagram,_dragNode.Id)};
+   foreach(string next in targets){var to=FindNode(next);if(to==null)continue;foreach(var edge in _diagram.Edges.Where(e=>e.To==_dragNode.Id)){var source=FindNode(edge.From);if(source==null)continue;var points=RouteEdge(source,to,edge.Branch);var prefix=Prefix(points.ToArray(),lift);if(prefix.Count>1)using(var pen=new Pen(Color.FromArgb(stickerAmbiguous?110:Math.Min(255,(int)(90+165*lift)),Ui.Blue),2/_zoom){StartCap=LineCap.Round,EndCap=LineCap.Round,LineJoin=LineJoin.Round})g.DrawLines(pen,prefix.ToArray());if(lift>=1&&points.Count>1)DrawArrow(g,points[points.Count-2],points[points.Count-1],Ui.Blue,8/_zoom);}}
+  }
+  private GraphicsState BeginStickerPaint(Graphics g,FlowNode node,RectangleF bounds,bool interactive){if(!interactive||!(HeldNode(node)||LandingNode(node)))return null;float amount=LandingNode(node)?landingLift:lift;var state=g.Save();if(LandingNode(node)&&!landingPeeled&&landingPulse!=0){g.TranslateTransform(bounds.Left+bounds.Width/2,bounds.Top+bounds.Height/2);g.ScaleTransform(1+.012f*landingPulse,1-.018f*landingPulse);g.TranslateTransform(-bounds.Left-bounds.Width/2,-bounds.Top-bounds.Height/2);}if(amount!=0){var center=new PointF(bounds.Left+bounds.Width/2,bounds.Top+bounds.Height/2);g.TranslateTransform(center.X,center.Y-10*amount/_zoom);g.RotateTransform(-3*amount);g.ScaleTransform(1+.035f*amount,1+.035f*amount);g.TranslateTransform(-center.X,-center.Y);using(var shadow=NodeShape(node.Kind,new RectangleF(bounds.X+3,bounds.Y+9,bounds.Width,bounds.Height)))using(var fill=new SolidBrush(Color.FromArgb((int)(40*Math.Max(0,Math.Min(1,amount))),0,0,0)))g.FillPath(fill,shadow);}return state;}
+  private void PaintHoldFill(Graphics g,FlowNode node,RectangleF bounds,bool interactive){if(!interactive)return;
+   if(HeldNode(node)&&holdFill>0){var state=g.Save();using(var path=NodeShape(node.Kind,bounds))g.SetClip(path,CombineMode.Intersect);var area=new RectangleF(bounds.X,bounds.Bottom-bounds.Height*holdFill,bounds.Width,bounds.Height*holdFill);using(var fill=new LinearGradientBrush(bounds,Color.FromArgb(80,Ui.Blue),Color.FromArgb(20,Ui.Blue),90))g.FillRectangle(fill,area);g.Restore(state);}
+   float amount=LandingNode(node)?landingLift:HeldNode(node)?lift:0;if(amount>0){var corner=new[]{new PointF(bounds.Right-23*amount,bounds.Top),new PointF(bounds.Right,bounds.Top+23*amount),new PointF(bounds.Right-23*amount,bounds.Top+23*amount)};using(var fill=new SolidBrush(UiMotion.Blend(Ui.Surface,Ui.Blue,.22f)))g.FillPolygon(fill,corner);}
+  }
+  protected override void OnDragEnter(DragEventArgs e){base.OnDragEnter(e);if(e.Data!=null&&e.Data.GetDataPresent(DataFormats.FileDrop,false))return;var data=e.Data.GetData(typeof(PaletteBlock)) as PaletteBlock;if(data==null||ViewOnly||_diagram==null||!CanAddNode()){e.Effect=DragDropEffects.None;return;}BeginPalettePreview(data.Kind,PointToClient(new Point(e.X,e.Y)),data.ChooseIo);e.Effect=DragDropEffects.Copy;}
+  protected override void OnDragOver(DragEventArgs e){base.OnDragOver(e);if(e.Data!=null&&e.Data.GetDataPresent(DataFormats.FileDrop,false))return;if(paletteNode==null||ViewOnly){e.Effect=DragDropEffects.None;return;}MovePalettePreview(PointToClient(new Point(e.X,e.Y)));e.Effect=DragDropEffects.Copy;}
+  protected override void OnDragLeave(EventArgs e){base.OnDragLeave(e);EndPalettePreview();}
+  protected override void OnDragDrop(DragEventArgs e){base.OnDragDrop(e);if(e.Data!=null&&e.Data.GetDataPresent(DataFormats.FileDrop,false))return;if(paletteNode==null)return;MovePalettePreview(PointToClient(new Point(e.X,e.Y)));CommitPaletteDrop();}
+  internal void BeginPalettePreview(NodeKind kind,Point point,bool chooseIo=false){paletteChooseIo=chooseIo;CancelPointerGesture(false,false);settleFrom=null;paletteNode=CreateNodeCandidate(kind,ClientToWorld(point));_dragNode=paletteNode;_dragging=true;insertionDocument=DiagramIO.Clone(_diagram);insertionDocument.Nodes.Add(paletteNode);paletteStart=manipulationClock.ElapsedMilliseconds;paletteReveal=0;CaptureInsertRoutes();MovePalettePreview(point);manipulationTimer.Start();}
+  internal void MovePalettePreview(Point point){if(paletteNode==null)return;var world=ClientToWorld(point);var bounds=DesignBounds(paletteNode);paletteNode.X=Math.Max(-99900,Math.Min(99900,world.X-bounds.Width/2));paletteNode.Y=Math.Max(-99900,Math.Min(99900,world.Y-bounds.Height/2));UpdateInsertPreview();RequestFrameRepaint();}
+  private void PaintPalettePreview(Graphics g){if(paletteNode==null)return;var bounds=DesignBounds(paletteNode);var state=g.Save();g.TranslateTransform(bounds.Left+bounds.Width/2,bounds.Top+bounds.Height/2);float scale=.88f+.12f*paletteReveal;g.ScaleTransform(scale,scale);g.TranslateTransform(-bounds.Left-bounds.Width/2,-bounds.Top-bounds.Height/2);using(var visual=new NodeVisual{Model=paletteNode,Id=paletteNode.Id,Kind=paletteNode.Kind,Bounds=bounds})DrawNode(g,visual,true,_zoom);using(var shape=NodeShape(paletteNode.Kind,bounds))using(var pen=new Pen(Ui.Blue,2/_zoom))g.DrawPath(pen,shape);g.Restore(state);}
+  internal void EndPalettePreview(){if(paletteNode==null)return;paletteNode=null;ClearPointerState();RequestFrameRepaint();}
+  internal bool CommitPaletteDrop(){if(paletteNode==null||ViewOnly||_diagram==null)return false;var node=paletteNode;var document=_diagram;string edgeId=insertReady&&insertHover!=null?insertHover.Id:null;var edge=edgeId==null?null:document.Edges.FirstOrDefault(e=>e.Id==edgeId);string source=edge==null?null:edge.From,target=edge==null?null:edge.To;bool forward=edge!=null&&FindNode(target).Y>FindNode(source).Y;var before=ModelPositions();bool chooseIo=paletteChooseIo;EndPalettePreview();
+   
+   string branch=edgeId==null?null:InsertionBranch(node,edgeId);if(edgeId!=null&&branch==null)return false;if(branch=="skip"){edgeId=source=target=null;forward=false;}if(!ReferenceEquals(document,_diagram)||!CanAddNode()||ViewOnly)return false;
+   node.X=Snap(node.X);node.Y=Snap(node.Y);RaiseDiagramChanging();if(!ReferenceEquals(document,_diagram))return false;document.Nodes.Add(node);if(edgeId!=null&&!FlowInsertion.Apply(document,node.Id,edgeId,branch,ReservedEdges)){document.Nodes.Remove(node);return false;}
+   FlowPlacement.Reflow(document,node.Id,source,target,forward);SelectNode(node.Id);RaiseDiagramChanged();before[node.Id]=new PointF(node.X,node.Y+16/_zoom);StartLanding(node.Id);AnimatePlacement(before);Report(edgeId==null?"Blocco posizionato. I blocchi vicini si adattano.":"Blocco creato nella freccia. Ctrl+Z annulla anche il riordino locale.");if(chooseIo&&EditRequested!=null)EditRequested(this,EventArgs.Empty);return true;
+  }
+  private Bitmap trashFlight;private PointF trashFrom;private long trashAt=-1,trashRevealAt;private float trashReveal,trashRevealFrom,trashRevealTo;private bool trashHovered;private float trashHoverAmount,trashHoverFrom;private long trashHoverAt;
+  private Rectangle TrashBounds(){int size=(int)Math.Round(56*DeviceDpi/96f),gap=(int)Math.Round(16*DeviceDpi/96f);return new Rectangle(Math.Max(gap,ClientSize.Width-size-gap),gap,size,size);}
+  private bool TrashReady {get{return !GroupDragging&&!ViewOnly&&_dragNode!=null&&_dragging&&liftStart>=0&&_dragNode.Kind!=NodeKind.Start&&_dragNode.Kind!=NodeKind.End;}}
+  private void SetTrashReveal(bool visible){float target=visible?1:0;if(trashRevealTo==target)return;trashRevealFrom=trashReveal;trashRevealTo=target;trashRevealAt=manipulationClock.ElapsedMilliseconds;manipulationTimer.Start();}
+  private void StopTrashMotion(){trashAt=-1;trashReveal=trashRevealFrom=trashRevealTo=trashHoverAmount=0;if(trashFlight!=null){trashFlight.Dispose();trashFlight=null;}}
+  private bool TickTrash(long now){float hoverT=UiMotion.Enabled?Math.Min(1,(now-trashHoverAt)/220f):1;trashHoverAmount=trashHoverFrom+((trashHovered?1:0)-trashHoverFrom)*UiMotion.Spring(hoverT);float t=UiMotion.Enabled?Math.Min(1,(now-trashRevealAt)/240f):1;trashReveal=trashRevealFrom+(trashRevealTo-trashRevealFrom)*UiMotion.Spring(t);if(trashAt>=0&&(!UiMotion.Enabled||now-trashAt>=320)){trashAt=-1;if(trashFlight!=null){trashFlight.Dispose();trashFlight=null;}}return t<1||hoverT<1||trashAt>=0;}
+  private void PaintTrash(Graphics g){var box=TrashBounds();float reveal=Math.Max(0,Math.Min(1.05f,trashReveal));bool hover=TrashReady&&box.Contains(_lastMouse);if(hover!=trashHovered){trashHoverFrom=trashHoverAmount;trashHoverAt=manipulationClock.ElapsedMilliseconds;trashHovered=hover;manipulationTimer.Start();Report(hover?"Rilascia nel cestino per eliminare. Ctrl+Z ripristina il blocco.":"Trascina su una freccia per inserire o sul cestino per eliminare.");}
+   if(reveal>.01f){var state=g.Save();g.TranslateTransform(box.X+box.Width/2f,box.Y+box.Height/2f);g.ScaleTransform(.7f+.3f*reveal,.7f+.3f*reveal);g.TranslateTransform(-box.Width/2f,-box.Height/2f);int alpha=(int)(255*Math.Min(1,reveal));using(var fill=new SolidBrush(Color.FromArgb(alpha,UiMotion.Blend(Ui.Surface,Ui.Red,Math.Max(0,Math.Min(1,trashHoverAmount))))))using(var pen=new Pen(Color.FromArgb(alpha,Ui.Red),hover?2.4f:1.5f)){g.FillEllipse(fill,1,1,box.Width-2,box.Height-2);g.DrawEllipse(pen,1,1,box.Width-2,box.Height-2);}float u=box.Width/56f;Color ink=Color.FromArgb(alpha,UiMotion.Blend(Ui.Red,Color.White,Math.Max(0,Math.Min(1,trashHoverAmount))));using(var pen=new Pen(ink,2*u){StartCap=LineCap.Round,EndCap=LineCap.Round,LineJoin=LineJoin.Round}){g.DrawLines(pen,new[]{new PointF(18*u,23*u),new PointF(20*u,41*u),new PointF(36*u,41*u),new PointF(38*u,23*u)});g.DrawLine(pen,16*u,(21-4*trashHoverAmount)*u,40*u,(21-7*trashHoverAmount)*u);g.DrawLine(pen,24*u,(17-4*trashHoverAmount)*u,32*u,(17-5*trashHoverAmount)*u);g.DrawLine(pen,25*u,26*u,25*u,36*u);g.DrawLine(pen,31*u,26*u,31*u,36*u);}g.Restore(state);}
+   if(trashFlight!=null&&trashAt>=0){float t=Math.Min(1,(manipulationClock.ElapsedMilliseconds-trashAt)/320f),p=UiMotion.Spring(t),scale=Math.Max(.02f,1-.98f*p),x=trashFrom.X+(box.X+box.Width/2f-trashFrom.X)*p,y=trashFrom.Y+(box.Y+box.Height/2f-trashFrom.Y)*p-18*(float)Math.Sin(Math.PI*t);using(var attrs=new System.Drawing.Imaging.ImageAttributes()){var matrix=new System.Drawing.Imaging.ColorMatrix();matrix.Matrix33=Math.Max(0,1-t*t);attrs.SetColorMatrix(matrix);int width=Math.Max(1,(int)(trashFlight.Width*scale)),height=Math.Max(1,(int)(trashFlight.Height*scale));g.DrawImage(trashFlight,new Rectangle((int)x-width/2,(int)y-height/2,width,height),0,0,trashFlight.Width,trashFlight.Height,GraphicsUnit.Pixel,attrs);}}
+  }
+  private bool CommitTrashDrop(){if(!TrashReady||!TrashBounds().Contains(_lastMouse))return false;EnsureScene();var node=_dragNode;var document=_diagram;NodeVisual visual;if(_nodeIndex.TryGetValue(node.Id,out visual)&&UiMotion.Enabled){if(trashFlight!=null)trashFlight.Dispose();var b=visual.Bounds;trashFlight=new Bitmap(Math.Max(1,(int)Math.Ceiling(b.Width*_zoom)+32),Math.Max(1,(int)Math.Ceiling(b.Height*_zoom)+32));using(var g=Graphics.FromImage(trashFlight)){PrepareGraphics(g);g.TranslateTransform(16-b.X*_zoom,16-b.Y*_zoom);g.ScaleTransform(_zoom,_zoom);DrawNode(g,visual,true,_zoom);}trashFrom=WorldToClient(new PointF(b.X+b.Width/2,b.Y+b.Height/2));trashAt=manipulationClock.ElapsedMilliseconds;}
+   var origins=_dragOrigins;ApplyOffset(origins,PointF.Empty);ClearPointerState();Capture=false;RaiseDiagramChanging();if(!ReferenceEquals(document,_diagram))return true;
+   if(FlowPlacement.Continuation(document,node.Id)!=null)FlowPlacement.Detach(document,node.Id);else FlowPlacement.Disconnect(document,node.Id);document.Edges.RemoveAll(e=>e.From==node.Id||e.To==node.Id);document.Nodes.Remove(node);SetSelection(Enumerable.Empty<string>(),null);RaiseDiagramChanged();manipulationTimer.Start();Report("Blocco eliminato. Ctrl+Z ripristina casella e collegamenti.");return true;
+  }
+
+ }
+}

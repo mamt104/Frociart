@@ -1,0 +1,30 @@
+{
+  "base_commit": "924ba1dfb60228b2ac746a2631bab7f3839020e0",
+  "release": "https://github.com/mamt104/Frociart/releases/tag/v1-windows186",
+  "published_at": "2026-11-19T18:20:58Z",
+  "archives": [
+    {
+      "name": "Frociart_Android_105_Sorgenti.zip",
+      "directory": "android",
+      "files": 255,
+      "sha256": "065691c66678c51a19b804eb8f66aa5ff1acf29c7b932fd9f906a320a097c2da"
+    },
+    {
+      "name": "Frociart_Windows_1.86_Sorgenti.zip",
+      "directory": "pc",
+      "files": 343,
+      "sha256": "11409a6b7e36f77f89f41d52e495d01c89ee5389ca43b3d59ba8fd9691854c45"
+    }
+  ],
+  "adjustments": {
+    "android/tests/EngineTests.java": {
+      "reason": "Reject future version 99: version 3 is now supported.",
+      "sha256_after": "32f19b811f82f90369a2a23d4084f5701ac7b2677290ee8f7762492c9fc20a6b"
+    },
+    "android/app/src/main/java/it/frociart/app/FlowBackup.java": {
+      "reason": "Own the destination separately so ZIP finish failures cannot prevent closing it.",
+      "sha256_after": "45f5a2cbf0a5207c4509e8a49e3b4b963f125fb3741ff4e59598e183aede3e8b"
+    }
+  },
+  "original_patch_base": "25554df730b6ba510fce6e7acc651f9a5444a6af"
+}

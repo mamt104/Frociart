@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="it.frociart.statechecks" android:versionCode="121" android:versionName="1.2.1-state-checks">
+  <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="35"/>
+  <instrumentation android:name="it.frociart.statechecks.StateProbe" android:targetPackage="it.frociart.app" android:functionalTest="true"/>
+  <application android:label="Frociart state checks" android:allowBackup="false"/>
+</manifest>
