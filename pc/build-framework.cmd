@@ -1,22 +1,44 @@
-@echo off
-setlocal
-pushd "%~dp0"
-set "FROCIART_CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-if not exist "%FROCIART_CSC%" set "FROCIART_CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe"
-if not exist "%FROCIART_CSC%" (
-  echo Compilatore .NET Framework non trovato. Usa Visual Studio con il Developer Pack .NET Framework 4.8.
-  popd
-  exit /b 1
-)
-for %%F in ("%FROCIART_CSC%") do set "FROCIART_NET=%%~dpF"
-if not exist bin\framework mkdir bin\framework
-"%FROCIART_CSC%" /nologo /codepage:65001 /target:winexe /optimize+ /platform:anycpu /out:bin\framework\Frociart.exe /win32manifest:app.manifest /win32icon:Frociart.ico /resource:Icons\expand.png,Frociart.Icons.expand.png /resource:Icons\collapse.png,Frociart.Icons.collapse.png /resource:Guide.txt,Frociart.Guide.txt /resource:CodeTemplateGuide.txt,Frociart.CodeTemplateGuide.txt /resource:Frociart.Document.ico,Frociart.Document.ico /resource:Learning\lessons.json,Frociart.Learning.lessons.json /resource:Tutor\curriculum.json,Frociart.Tutor.curriculum.json /resource:Tutor\guide.json,Frociart.Tutor.guide.json /resource:Source\PythonRuntime.py,Frociart.Source.PythonRuntime.py /resource:Source\RubyRuntime.rb,Frociart.Source.RubyRuntime.rb /resource:Source\PhpRuntime.php,Frociart.Source.PhpRuntime.php /resource:Source\JavaRuntime.txt,Frociart.Source.JavaRuntime.txt /resource:Source\KotlinRuntime.kt,Frociart.Source.KotlinRuntime.kt /resource:Source\CSharpRuntime.txt,Frociart.Source.CSharpRuntime.txt /resource:Source\VisualBasicRuntime.txt,Frociart.Source.VisualBasicRuntime.txt /resource:Source\CppRuntime.txt,Frociart.Source.CppRuntime.txt /resource:Source\JavaScriptRuntime.cjs,Frociart.Source.JavaScriptRuntime.cjs /resource:Source\TypeScriptRuntime.cts,Frociart.Source.TypeScriptRuntime.cts /r:Accessibility.dll /r:System.dll /r:System.Core.dll /r:System.Numerics.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll /r:System.Runtime.Serialization.dll /r:System.Xml.dll /r:System.IO.Compression.dll /r:System.Xaml.dll /r:"%FROCIART_NET%WPF\WindowsBase.dll" /r:"%FROCIART_NET%WPF\PresentationCore.dll" FlowText.cs FlowRecovery.cs Program.cs BrandArtwork.cs StartupDiagnostics.cs Theme.cs ChromeControls.cs NativeTheme.cs GridSnap.cs Learning.cs LearningDialog.cs Tutor.cs TutorVariables.cs TutorDiagnostics.cs TutorStore.cs TutorDialog.cs TutorDesktop.cs TutorFeedbackControls.cs FlowMotion.cs FlowMenus.cs FlowSizing.cs FlowTextSpacing.cs FlowClipboard.cs DocumentLaunch.cs FileRegistration.cs InstallIntegration.cs FlowLayout.cs CanvasExperience.cs FlowInsertion.cs CanvasInsertion.cs FlowPlacement.cs FlowGroupPlacement.cs CanvasGroupManipulation.cs CanvasDirectManipulation.cs DesktopReview.cs FlowTransitions.cs RuntimeDeck.cs ExecutionSnapshot.cs HomeScreen.cs MainForm.cs Dialogs.cs BranchStyleDialog.cs FlowOutput.cs OutputControls.cs FlowgorithmImport.cs FlowgorithmExport.cs FlowgorithmExportDialog.cs FlowPseudocode.cs PseudocodeDialog.cs FlowExpressionLibrary.cs FunctionLibraryDialog.cs FunctionLibraryData.cs FlowFunctions.cs FunctionEditing.cs FunctionTransfer.cs FlowLoopBuilder.cs FlowCycle.cs FlowCycleView.cs FlowCycleFold.cs CanvasCycleFolding.cs CycleOverview.cs LoopEditor.cs FunctionNavigation.cs WorkspaceLayouts.cs FlowRuntime.cs FlowInspectExpression.cs FlowWatchExpressions.cs FlowWatchWindow.cs FlowEvaluateDialog.cs FlowVariableInspection.cs FlowVariableWindow.cs FlowVariableLayout.cs VariableControls.cs FlowDebugger.cs DebuggerControls.cs FlowDeclaration.cs FlowTextFiles.cs FlowTurtle.cs TurtleEditorDialog.cs TurtleView.cs FlowFileRecovery.cs FileRuntimeControls.cs DeclarationEditor.cs FileBlocks.cs FlowCodeView.cs SourceCodeDialog.cs SourceRuntimeControls.cs FlowPython.cs FlowRuby.cs FlowPhp.cs FlowPowerShell.cs FlowJava.cs FlowGroovy.cs FlowKotlin.cs FlowCSharp.cs FlowVisualBasic.cs FlowCpp.cs FlowJavaScript.cs FlowCodeTemplate.cs FlowFpgtSyntax.cs FlowFpgtTypes.cs FlowFpgt.cs FlowFpgtReturn.cs FlowFpgtPen.cs FlowFpgtStorage.cs FlowFpgtExpressions.cs FlowTemplateData.cs FlowTemplateStore.cs FlowTemplateDraft.cs CodeTemplateEditor.cs CodeTemplateLibrary.cs CodeTemplateControls.cs FlowSourceTarget.cs FlowSource.cs FlowSourceText.cs FlowSourcePlan.cs Core.cs FlowAnnotations.cs FlowConsoleLog.cs FlowConsoleWindow.cs ConsoleControls.cs Examples.cs FlowBranchRouting.cs CanvasBranchRouting.cs CanvasAccessibility.cs FlowCanvas.cs CanvasEdgeCut.cs BlockPicker.cs DiagramExport.cs DiagramPrint.cs FlowAppearance.cs FlowDesign.cs DiagramDesignDialog.cs FlowSearch.cs FlowVariableRename.cs VariableRenameDialog.cs CommandPalette.cs ProjectSearchDialog.cs ExportDialog.cs
-if errorlevel 1 (
-  echo Compilazione non riuscita.
-  popd
-  exit /b 1
-)
-echo Compilazione riuscita: bin\framework\Frociart.exe
-popd
-endlocal
-
+@echo off
+
+setlocal
+
+pushd "%~dp0"
+
+set "FROCIART_CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+
+if not exist "%FROCIART_CSC%" set "FROCIART_CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+
+if not exist "%FROCIART_CSC%" (
+
+  echo Compilatore .NET Framework non trovato. Usa Visual Studio con il Developer Pack .NET Framework 4.8.
+
+  popd
+
+  exit /b 1
+
+)
+
+for %%F in ("%FROCIART_CSC%") do set "FROCIART_NET=%%~dpF"
+
+if not exist bin\framework mkdir bin\framework
+
+"%FROCIART_CSC%" /nologo /codepage:65001 /target:winexe /optimize+ /platform:anycpu /out:bin\framework\Frociart.exe /win32manifest:app.manifest /win32icon:Frociart.ico /resource:Icons\expand.png,Frociart.Icons.expand.png /resource:Icons\collapse.png,Frociart.Icons.collapse.png /resource:Guide.txt,Frociart.Guide.txt /resource:CodeTemplateGuide.txt,Frociart.CodeTemplateGuide.txt /resource:Frociart.Document.ico,Frociart.Document.ico /resource:Learning\lessons.json,Frociart.Learning.lessons.json /resource:Tutor\curriculum.json,Frociart.Tutor.curriculum.json /resource:Tutor\guide.json,Frociart.Tutor.guide.json /resource:Source\PythonRuntime.py,Frociart.Source.PythonRuntime.py /resource:Source\RubyRuntime.rb,Frociart.Source.RubyRuntime.rb /resource:Source\PhpRuntime.php,Frociart.Source.PhpRuntime.php /resource:Source\JavaRuntime.txt,Frociart.Source.JavaRuntime.txt /resource:Source\KotlinRuntime.kt,Frociart.Source.KotlinRuntime.kt /resource:Source\CSharpRuntime.txt,Frociart.Source.CSharpRuntime.txt /resource:Source\VisualBasicRuntime.txt,Frociart.Source.VisualBasicRuntime.txt /resource:Source\CppRuntime.txt,Frociart.Source.CppRuntime.txt /resource:Source\JavaScriptRuntime.cjs,Frociart.Source.JavaScriptRuntime.cjs /resource:Source\TypeScriptRuntime.cts,Frociart.Source.TypeScriptRuntime.cts /r:Accessibility.dll /r:System.dll /r:System.Core.dll /r:System.Numerics.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll /r:System.Runtime.Serialization.dll /r:System.Xml.dll /r:System.IO.Compression.dll /r:System.Xaml.dll /r:"%FROCIART_NET%WPF\WindowsBase.dll" /r:"%FROCIART_NET%WPF\PresentationCore.dll" FlowText.cs FlowRecovery.cs Program.cs BrandArtwork.cs StartupDiagnostics.cs Theme.cs ChromeControls.cs NativeTheme.cs GridSnap.cs Learning.cs LearningDialog.cs Tutor.cs TutorVariables.cs TutorDiagnostics.cs TutorStore.cs TutorDialog.cs TutorDesktop.cs TutorFeedbackControls.cs FlowMotion.cs FlowMenus.cs FlowSizing.cs FlowTextSpacing.cs FlowClipboard.cs DocumentLaunch.cs DocumentDropPresentation.cs CanvasDocumentEntrance.cs FileRegistration.cs InstallIntegration.cs FlowLayout.cs CanvasExperience.cs FlowInsertion.cs CanvasInsertion.cs FlowPlacement.cs FlowGroupPlacement.cs CanvasGroupManipulation.cs CanvasDirectManipulation.cs DesktopReview.cs FlowTransitions.cs RuntimeDeck.cs RuntimeInputChat.cs RuntimeInputChatDialog.cs ExecutionSnapshot.cs HomeScreen.cs MainForm.cs Dialogs.cs BranchStyleDialog.cs FlowOutput.cs OutputControls.cs FlowgorithmImport.cs FlowgorithmExport.cs FlowgorithmExportDialog.cs FlowPseudocode.cs PseudocodeDialog.cs FlowExpressionLibrary.cs FunctionLibraryDialog.cs FunctionLibraryData.cs FlowFunctions.cs FunctionEditing.cs FunctionTransfer.cs FlowLoopBuilder.cs FlowCycle.cs FlowCycleView.cs FlowCycleFold.cs CanvasCycleFolding.cs CycleOverview.cs LoopEditor.cs FunctionNavigation.cs WorkspaceLayouts.cs FlowRuntime.cs FlowInspectExpression.cs FlowWatchExpressions.cs FlowWatchWindow.cs FlowEvaluateDialog.cs FlowVariableInspection.cs FlowVariableWindow.cs FlowVariableLayout.cs VariableControls.cs FlowDebugger.cs DebuggerControls.cs FlowDeclaration.cs FlowTextFiles.cs FlowTurtle.cs TurtleEditorDialog.cs TurtleView.cs FlowFileRecovery.cs FileRuntimeControls.cs DeclarationEditor.cs FileBlocks.cs FlowCodeView.cs SourceCodeDialog.cs SourceRuntimeControls.cs FlowPython.cs FlowRuby.cs FlowPhp.cs FlowPowerShell.cs FlowJava.cs FlowGroovy.cs FlowKotlin.cs FlowCSharp.cs FlowVisualBasic.cs FlowCpp.cs FlowJavaScript.cs FlowCodeTemplate.cs FlowFpgtSyntax.cs FlowFpgtTypes.cs FlowFpgt.cs FlowFpgtReturn.cs FlowFpgtPen.cs FlowFpgtStorage.cs FlowFpgtExpressions.cs FlowTemplateData.cs FlowTemplateStore.cs FlowTemplateDraft.cs CodeTemplateEditor.cs CodeTemplateLibrary.cs CodeTemplateControls.cs FlowSourceTarget.cs FlowSource.cs FlowSourceText.cs FlowSourcePlan.cs Core.cs FlowAnnotations.cs FlowConsoleLog.cs FlowConsoleWindow.cs ConsoleControls.cs Examples.cs FlowBranchRouting.cs CanvasBranchRouting.cs CanvasAccessibility.cs FlowCanvas.cs CanvasEdgeCut.cs BlockPicker.cs DiagramExport.cs DiagramPrint.cs FlowAppearance.cs FlowDesign.cs DiagramDesignDialog.cs FlowSearch.cs FlowVariableRename.cs VariableRenameDialog.cs CommandPalette.cs ProjectSearchDialog.cs ExportDialog.cs
+
+if errorlevel 1 (
+
+  echo Compilazione non riuscita.
+
+  popd
+
+  exit /b 1
+
+)
+
+echo Compilazione riuscita: bin\framework\Frociart.exe
+
+popd
+
+endlocal
+
+
+

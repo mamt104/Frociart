@@ -1,9 +1,9 @@
 # Sviluppo e compilazioni di Frociart
 
-I sorgenti Android build 105 e Windows 1.83 sono stati recuperati dagli archivi della
-[release del 30 ottobre 2026](https://github.com/mamt104/Frociart/releases/tag/v1-android105).
-La migrazione parte dal commit `25554df730b6ba510fce6e7acc651f9a5444a6af`.
-Le release, i tag e i pacchetti sotto `docs/download/` non vengono modificati.
+La CI compila Android build 105 e Windows 1.86 dai sorgenti versionati.
+La patch originale importava Windows 1.83. L’integrazione aggiorna la cartella
+`pc/` con i sorgenti 1.86 della release del 19 novembre e conserva le due
+correzioni Android della patch. [Release di origine](https://github.com/mamt104/Frociart/releases/tag/v1-windows186)
 
 ## Struttura
 
@@ -28,12 +28,12 @@ miste; una pulizia della formattazione sarebbe una modifica separata.
 | Archivio originale | File | SHA256 |
 | --- | ---: | --- |
 | `Frociart_Android_105_Sorgenti.zip` | 255 | `065691c66678c51a19b804eb8f66aa5ff1acf29c7b932fd9f906a320a097c2da` |
-| `Frociart_Windows_1.83_Sorgenti.zip` | 339 | `bf4c05e40ab308cf355752ca9ea5431b1dd0545baab1f21b62a0f12b4a94ae53` |
+| `Frociart_Windows_1.86_Sorgenti.zip` | 343 | `11409a6b7e36f77f89f41d52e495d01c89ee5389ca43b3d59ba8fd9691854c45` |
 
-Scarica i due asset originali e verifica tutti i 594 file senza estrarli:
+Scarica i due asset originali e verifica tutti i 598 file con il comando seguente.
 
 ```sh
-python tools/ci/verify_source_import.py Frociart_Android_105_Sorgenti.zip Frociart_Windows_1.83_Sorgenti.zip
+python tools/ci/verify_source_import.py Frociart_Android_105_Sorgenti.zip Frociart_Windows_1.86_Sorgenti.zip
 ```
 
 Questa verifica riguarda la patch di migrazione. Le normali modifiche future ai

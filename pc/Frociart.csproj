@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
 
@@ -84,13 +84,13 @@
 
     <Compile Include="FlowMenus.cs" />
 
-    <Compile Include="FlowTextSpacing.cs" /><Compile Include="FlowSizing.cs" /><Compile Include="FlowText.cs" /><Compile Include="FlowClipboard.cs" /><Compile Include="DocumentLaunch.cs" /><Compile Include="FileRegistration.cs" /><Compile Include="InstallIntegration.cs" />
+    <Compile Include="FlowTextSpacing.cs" /><Compile Include="FlowSizing.cs" /><Compile Include="FlowText.cs" /><Compile Include="FlowClipboard.cs" /><Compile Include="DocumentLaunch.cs" /><Compile Include="DocumentDropPresentation.cs" /><Compile Include="CanvasDocumentEntrance.cs" /><Compile Include="FileRegistration.cs" /><Compile Include="InstallIntegration.cs" />
 
     <Compile Include="FlowLayout.cs"/><Compile Include="CanvasExperience.cs" /><Compile Include="FlowInsertion.cs" /><Compile Include="CanvasInsertion.cs" /><Compile Include="FlowPlacement.cs" /><Compile Include="FlowGroupPlacement.cs" /><Compile Include="CanvasGroupManipulation.cs" /><Compile Include="CanvasDirectManipulation.cs" />
 
     <Compile Include="DesktopReview.cs"/><Compile Include="FlowTransitions.cs" />
 
-    <Compile Include="RuntimeDeck.cs" /><Compile Include="ExecutionSnapshot.cs" /><Compile Include="LearningDialog.cs"/><Compile Include="HomeScreen.cs" /><Compile Include="MainForm.cs" />
+    <Compile Include="RuntimeDeck.cs" /><Compile Include="RuntimeInputChat.cs" /><Compile Include="RuntimeInputChatDialog.cs" /><Compile Include="ExecutionSnapshot.cs" /><Compile Include="LearningDialog.cs"/><Compile Include="HomeScreen.cs" /><Compile Include="MainForm.cs" />
 
     <Compile Include="Dialogs.cs" />
 

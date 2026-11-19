@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -433,7 +433,7 @@ namespace Frociart
 
         private bool viewOnly;
         [System.ComponentModel.DefaultValue(false)]
-        public bool ViewOnly {get{return viewOnly;}set{if(viewOnly==value)return;if(value){CancelPointerGesture(true,true);CancelConnection();InvalidateNode(_hoverNodeId,24);hoverPorts.Clear();_hoverNodeId=null;}viewOnly=value;NotifyAccessibleModeChanged();RequestFrameRepaint();}}
+        public bool ViewOnly {get{return viewOnly;}set{if(value)FinishDocumentEntrance();if(viewOnly==value)return;if(value){CancelPointerGesture(true,true);CancelConnection();InvalidateNode(_hoverNodeId,24);hoverPorts.Clear();_hoverNodeId=null;}viewOnly=value;NotifyAccessibleModeChanged();RequestFrameRepaint();}}
 
         public FlowCanvas()
         {
@@ -461,6 +461,7 @@ namespace Frociart
             get { return _diagram; }
             set
             {
+                FinishDocumentEntrance();
                 if(!ReferenceEquals(_diagram,value)){StopClipboardFlight();StopBladeFeedback();}
                 CancelPointerGesture(false, false);
                 ClearFlowHistory();
@@ -954,7 +955,7 @@ namespace Frociart
         {
             // Hosts may directly edit the model and call Invalidate. Internal pointer
             // repaint requests retain the surface; model/state snapshots find their dirt.
-            if (!_retainFrame) _frameDirtyAll = true;
+            if (!_retainFrame){FinishDocumentEntrance();_frameDirtyAll = true;}
             base.OnInvalidated(e);
         }
 
@@ -1171,7 +1172,7 @@ namespace Frociart
         {
             PrepareGraphics(e.Graphics);
             e.Graphics.CompositingQuality=CompositingQuality.HighSpeed;
-            if (!UpdateFrame(e.Graphics) || !_frame.Present(e.Graphics, e.ClipRectangle))
+            if (!PaintDocumentEntrance(e.Graphics,e.ClipRectangle)&&(!UpdateFrame(e.Graphics) || !_frame.Present(e.Graphics, e.ClipRectangle)))
             { EnsureScene(); PaintSceneRegion(e.Graphics, e.ClipRectangle); }
             GraphicsState state = e.Graphics.Save();
             using (Matrix transform = new Matrix(_zoom, 0, 0, _zoom, _panX, _panY)) e.Graphics.Transform = transform;
@@ -2000,6 +2001,7 @@ namespace Frociart
         internal event Action<string> ReadOnlyNodeTapped;private string readOnlyDownNode;
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            FinishDocumentEntrance();
             base.OnMouseDown(e);
             if(ViewOnly&&e.Button!=MouseButtons.Middle){if(e.Button==MouseButtons.Left){_mouseDown=e.Location;var read=HitNode(ClientToWorld(e.Location));readOnlyDownNode=read==null?null:read.Id;}return;}
             settleFrom=null;arrangeCamera=false;landingId=null;
@@ -2222,6 +2224,7 @@ namespace Frociart
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
+            FinishDocumentEntrance();
             base.OnMouseWheel(e);
             if (IsPointerGestureActive || IsBlockPickerOpen) return;
             SetZoomAt(_zoom * (float)Math.Pow(1.12, e.Delta / 120.0), e.Location);
@@ -2243,6 +2246,7 @@ namespace Frociart
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
+            FinishDocumentEntrance();
             if(!Enabled){e.Handled=true;e.SuppressKeyPress=true;return;}
             if(HandleCanvasNavigation(e))return;
             if(ViewOnly){e.Handled=true;e.SuppressKeyPress=true;return;}
@@ -3101,7 +3105,7 @@ namespace Frociart
         private static float Clamp(float value, float min, float max) { return Math.Max(min, Math.Min(max, value)); }
         private void Report(string message) { if (StatusChanged != null) StatusChanged(this, new StatusEventArgs(message)); }
         private void RaiseSelectionChanged() { NotifyAccessibleSelection(); if (SelectionChanged != null) SelectionChanged(this, EventArgs.Empty); }
-        private void RaiseDiagramChanging() { if (DiagramChanging != null) DiagramChanging(this, EventArgs.Empty); }
+        private void RaiseDiagramChanging() { FinishDocumentEntrance();if (DiagramChanging != null) DiagramChanging(this, EventArgs.Empty); }
         private void RaiseDiagramChanged() { FlowAnnotations.Promote(_diagram);NotifyFoldModelChanged();NotifyAccessibleStructure();RequestFrameRepaint(); if (DiagramChanged != null) DiagramChanged(this, EventArgs.Empty); }
         private void RaiseViewChanged() { if (ViewChanged != null) ViewChanged(this, EventArgs.Empty); }
         private void RaiseConnectionStateChanged() { if (ConnectionStateChanged != null) ConnectionStateChanged(this, EventArgs.Empty); }
@@ -3119,6 +3123,7 @@ namespace Frociart
         {
             if (disposing)
             {
+                DisposeDocumentEntrance();
                 ClearInsertPreview();
                 StopBladeFeedback();
                 Ui.ThemeChanged -= OnThemeChanged;

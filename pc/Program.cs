@@ -13,7 +13,7 @@ using System.Windows.Forms;
 [assembly: AssemblyProduct("Frociart")]
 [assembly: AssemblyInformationalVersion("v1")]
 [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.83.0.0")]
+[assembly: AssemblyFileVersion("1.86.0.0")]
 [assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 #if !NET8_0_OR_GREATER
 [assembly: TargetFramework(".NETFramework,Version=v4.8", FrameworkDisplayName=".NET Framework 4.8")]

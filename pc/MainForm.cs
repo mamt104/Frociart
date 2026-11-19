@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -98,7 +98,7 @@ namespace Frociart
             AutoScaleMode=AutoScaleMode.Dpi; AutoScaleDimensions=new SizeF(96,96);
             Font=Ui.Font(); ForeColor=Ui.Ink; BackColor=Ui.Paper; KeyPreview=true;
             try { Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
-            BuildInterface();InstallOutputEditor();InstallDocumentDrop(this);
+            BuildInterface();InstallOutputEditor();InitializeDocumentPresentation();InstallDocumentDrop(this);
             runTimer.Interval=650; runTimer.Tick+=delegate { RunTick(); };
             recoveryTimer.Interval=3500; recoveryTimer.Tick+=delegate { SaveRecovery(); };
             Canvas.OtherNodeCount=()=>Project==null?0:FunctionEditing.Graphs(Project).Where(g=>g!=Document).Sum(g=>g.Nodes.Count);
@@ -122,6 +122,7 @@ namespace Frociart
             prompt.TextChanged+=delegate { InspectorEdited(); };
             titleEdit.TextChanged+=delegate { InspectorEdited(); };
             FormClosing+=OnClosing;
+            Activated+=delegate{SyncRuntimeInputChat();};
             Shown+=delegate {
                 Ui.FitStartupToScreen(this);
                 bool loaded=false;
@@ -252,7 +253,7 @@ namespace Frociart
         {if(String.IsNullOrEmpty(homeLessonToResume)){ShowLearning();return;}string id=homeLessonToResume;ShowLearningPage(delegate(TutorDialog dialog){dialog.SelectLesson(id);});}
         internal void ShowHome()
         {
-            CloseRuntimeConsole();CloseVariableInspector();
+            CloseRuntimeConsole();CloseVariableInspector();ResetRuntimeInputChat();
             if(homePanel!=null&&!homePanel.Visible)FlowTransitions.Change(shell);
             CommitInspector();PauseRun();RefreshHomeState();
             editorBody.Visible=false;homePanel.Visible=true;homePanel.BringToFront();commandHost.Visible=false;shell.RowStyles[1].Height=0;LayoutHome();
@@ -262,7 +263,7 @@ namespace Frociart
         internal void EnterEditor()
         {
             if(homePanel!=null&&homePanel.Visible)FlowTransitions.Change(shell);
-            if(homePanel==null)return;homePanel.Visible=false;editorBody.Visible=true;commandHost.Visible=true;shell.RowStyles[1].Height=S(58);Canvas.Focus();
+            if(homePanel==null)return;homePanel.Visible=false;editorBody.Visible=true;commandHost.Visible=true;shell.RowStyles[1].Height=S(58);Canvas.Focus();SyncRuntimeInputChat();
         }
         private void ShowLearning(){ShowLearningPage(null);}
         private void ShowLearningPage(Action<TutorDialog> destination)
@@ -366,6 +367,8 @@ namespace Frociart
         internal void SetDocument(Diagram diagram, string path, bool isDirty)
         {
             sourceDocumentEpoch++;
+            FinishDocumentPresentation();
+            ResetRuntimeInputChat();
             CloseRuntimeConsole();CloseVariableInspector();watchExpressions.Clear();ResetNavigationHistory();
             if(!ignoreRecovery)DeleteRecovery();
             EnterEditor();
@@ -680,11 +683,11 @@ namespace Frociart
         internal void StartRun()
         {
             SetCanvasFocus(false);
-            if(Runner!=null&&Runner.State==RuntimeState.WaitingForInput&&GetDebugger().Mode==FlowDebugger.Command.ToBlock){tabs.SelectedTab=runTab;RefreshRuntime();inputValue.Focus();return;}
+            if(Runner!=null&&Runner.State==RuntimeState.WaitingForInput&&GetDebugger().Mode==FlowDebugger.Command.ToBlock){tabs.SelectedTab=runTab;RefreshRuntime();FocusRuntimeInputResponse();return;}
             if(Runner!=null&&Runner.State==RuntimeState.WaitingForFile){tabs.SelectedTab=runTab;RefreshRuntime();runtimeFileAction.Focus();return;}
             if(Runner!=null&&(Runner.State==RuntimeState.Completed||Runner.State==RuntimeState.Error))ResetRun(false);
             if(!EnsureRunner())return;tabs.SelectedTab=runTab;automatic=true;GetDebugger().Begin(FlowDebugger.Command.Continue);runTimer.Interval=new[]{1000,650,180,15}[Math.Max(0,speed.SelectedIndex)];
-            if(Runner.State==RuntimeState.WaitingForInput){inputValue.Focus();return;}if(Runner.State==RuntimeState.WaitingForFile){RefreshRuntime();runtimeFileAction.Focus();return;}
+            if(Runner.State==RuntimeState.WaitingForInput){RefreshRuntime();FocusRuntimeInputResponse();return;}if(Runner.State==RuntimeState.WaitingForFile){RefreshRuntime();runtimeFileAction.Focus();return;}
             runTimer.Start();RefreshRuntime();
         }
         internal void SingleStep(){DebugStep(FlowDebugger.Command.Into);}
@@ -742,13 +745,13 @@ namespace Frociart
                 runtimeTitle.Text=state==RuntimeState.Completed?"Esecuzione finita":state==RuntimeState.Error?"C'è un problema":state==RuntimeState.WaitingForFile?"Scegli il file":state==RuntimeState.WaitingForInput?"Serve un valore":runTimer.Enabled?"In esecuzione":GetDebugger().AtTarget?"Blocco raggiunto":"In pausa";
                 runtimeTitle.ForeColor=state==RuntimeState.Completed?Ui.Green:state==RuntimeState.Error?Ui.Red:Ui.Blue;
                 runtimeInfo.Text=state==RuntimeState.Error?Runner.Error:state==RuntimeState.WaitingForInput||state==RuntimeState.WaitingForFile?Runner.LastMessage:GetDebugger().Message??Runner.LastMessage;stepLabel.Text=Runner.Steps+(Runner.Steps==1?" passo eseguito":" passi eseguiti")+"  ·  limite 10.000";
-                bool waiting=state==RuntimeState.WaitingForInput;inputPanel.Visible=waiting;
+                bool waiting=state==RuntimeState.WaitingForInput;inputPanel.Visible=false;
                 if(waiting){
                     // Synchronize the question even when its tab is hidden. A refresh of the
                     // same waiting step must preserve the user's draft and correction text.
                     inputQuestion.Text=Runner.InputPrompt;inputValue.AccessibleName="Valore per "+Runner.InputVariable;
                     bool nextInput=displayedInputNode!=Runner.CurrentNodeId||displayedInputStep!=Runner.Steps;
-                    if(nextInput){inputValue.Clear();if(sourceViewer!=null&&sourceViewer.Visible&&sourceViewer.ContainsFocus){sourceViewer.RefreshSourceRuntime();sourceViewer.FocusSourceInput();}else if(variableInspector!=null&&variableInspector.Visible&&variableInspector.ContainsFocus){variableInspector.RefreshState();variableInspector.FocusPendingInput();}else if(runtimeConsole!=null&&runtimeConsole.Visible)runtimeConsole.FocusPendingInput();else if(inputPanel.Visible)inputValue.Focus();}
+                    if(nextInput){inputValue.Clear();if(sourceViewer!=null&&sourceViewer.Visible&&sourceViewer.ContainsFocus){sourceViewer.RefreshSourceRuntime();sourceViewer.FocusSourceInput();}else if(variableInspector!=null&&variableInspector.Visible&&variableInspector.ContainsFocus){variableInspector.RefreshState();variableInspector.FocusPendingInput();}else if(runtimeConsole!=null&&runtimeConsole.Visible&&runtimeConsole.ContainsFocus)runtimeConsole.FocusPendingInput();}
                     displayedInputNode=Runner.CurrentNodeId;displayedInputStep=Runner.Steps;
                 }else{displayedInputNode=null;displayedInputStep=-1;}
                 UpdateRuntimeVariables();AppendRuntimeOutput();
@@ -764,6 +767,7 @@ namespace Frociart
             runButton.Enabled=!runTimer.Enabled&&(Runner==null||Runner.State!=RuntimeState.WaitingForFile);stepButton.Enabled=runButton.Enabled;
             if(Runner!=null)UpdateRuntimeStatus();
             RefreshVariableInspector();RefreshSourceRuntime();if(livePseudocode!=null)livePseudocode.Highlight(Runner==null?ActiveFunctionId:Runner.CurrentFunctionId,Runner==null?Canvas.SelectedNodeId:Canvas.CurrentNodeId,Runner!=null);
+            SyncRuntimeInputChat();
         }
         private void UpdateRuntimeStatus()
         {
@@ -856,7 +860,8 @@ namespace Frociart
         {
             object found;if(documentDropControls.TryGetValue(control,out found))return;
             documentDropControls.Add(control,new object());control.AllowDrop=true;
-            control.DragEnter+=DocumentDragOver;control.DragOver+=DocumentDragOver;control.DragDrop+=DocumentDropped;
+            control.DragEnter+=DocumentDragOver;control.DragOver+=DocumentDragOver;control.DragDrop+=DocumentDropped;control.DragLeave+=DocumentDragLeave;
+            control.MouseDown+=delegate{FinishDocumentPresentation();};control.MouseWheel+=delegate{FinishDocumentPresentation();};control.KeyDown+=delegate{FinishDocumentPresentation();};
             control.ControlAdded+=delegate(object sender,ControlEventArgs e){InstallDocumentDrop(e.Control);};
             foreach(Control child in control.Controls)InstallDocumentDrop(child);
         }
@@ -869,17 +874,18 @@ namespace Frociart
         }
         private void DocumentDragOver(object sender,DragEventArgs e)
         {
-            if(!IsDocumentDrop(e.Data))return;e.Effect=DragDropEffects.None;
-            if(openingDroppedDocument||Canvas.IsPointerGestureActive||Canvas.IsConnecting)return;
-            try{DroppedDocumentPath(e.Data);if((e.AllowedEffect&DragDropEffects.Copy)!=0)e.Effect=DragDropEffects.Copy;}
-            catch(InvalidDataException){}catch(ArgumentException){}catch(NotSupportedException){}catch(System.Security.SecurityException){}
+            if(!IsDocumentDrop(e.Data)){HideDocumentDropCue();return;}e.Effect=DragDropEffects.None;
+            if(openingDroppedDocument||Canvas.IsPointerGestureActive||Canvas.IsConnecting){HideDocumentDropCue();return;}
+            try{string path=DroppedDocumentPath(e.Data);if((e.AllowedEffect&DragDropEffects.Copy)!=0){if(Canvas.DocumentEntranceActive)Canvas.FinishDocumentEntrance();e.Effect=DragDropEffects.Copy;ShowDocumentDropCue(path);}else HideDocumentDropCue();}
+            catch(InvalidDataException){HideDocumentDropCue();}catch(ArgumentException){HideDocumentDropCue();}catch(NotSupportedException){HideDocumentDropCue();}catch(System.Security.SecurityException){HideDocumentDropCue();}
         }
         private void DocumentDropped(object sender,DragEventArgs e)
         {
+            FinishDocumentPresentation();
             if(!IsDocumentDrop(e.Data)||openingDroppedDocument)return;e.Effect=DragDropEffects.None;
             if(Canvas.IsPointerGestureActive||Canvas.IsConnecting){SetStatus("Termina il gesto sul foglio, poi trascina il file per aprirlo.");return;}
             openingDroppedDocument=true;
-            try{string path=DroppedDocumentPath(e.Data);if(!ConfirmDiscard())return;if(LoadPath(path))e.Effect=DragDropEffects.Copy;}
+            try{string path=DroppedDocumentPath(e.Data);if(!ConfirmDiscard())return;if(LoadPath(path)){e.Effect=DragDropEffects.Copy;QueueDroppedDocumentEntrance();}}
             catch(Exception error){ShowError("Impossibile aprire il diagramma trascinato",error);}
             finally{openingDroppedDocument=false;}
         }
@@ -1096,7 +1102,7 @@ namespace Frociart
             using(var dialog=new FlowgorithmExportDialog(Project,(function,node)=>{NavigateToOrigin(function,node);}))dialog.ShowDialog(this);
         }
         private void ShowGuide(){using(var guide=new GuideDialog())guide.ShowDialog(this);}
-        private void OnClosing(object sender,FormClosingEventArgs e){if(!ConfirmDiscard()){e.Cancel=true;return;}runTimer.Stop();Runner=null;if(!ignoreRecovery)DeleteRecovery();}
+        private void OnClosing(object sender,FormClosingEventArgs e){FinishDocumentPresentation();if(!ConfirmDiscard()){e.Cancel=true;return;}runtimeChatClosing=true;ResetRuntimeInputChat();runTimer.Stop();Runner=null;if(!ignoreRecovery)DeleteRecovery();}
         private void SaveRecovery()
         {
             recoveryTimer.Stop();if(ignoreRecovery)return;
@@ -1149,6 +1155,7 @@ namespace Frociart
 
         protected override bool ProcessCmdKey(ref Message msg,Keys keyData)
         {
+            FinishDocumentPresentation();
             if(HandleNavigationKey(keyData))return true;
             if(keyData==(Keys.Control|Keys.K)){ShowCommandPalette();return true;}
             if(keyData==(Keys.Control|Keys.F10)){EnterEditor();RunToSelected();return true;}
@@ -1186,7 +1193,7 @@ namespace Frociart
             Control c=parent.ActiveControl;while(c is ContainerControl)c=((ContainerControl)c).ActiveControl;return c as TextBoxBase;
         }
         protected override void Dispose(bool disposing)
-        {if(disposing){Ui.ThemeChanged-=OnThemeChanged;runTimer.Dispose();recoveryTimer.Dispose();if(recoverySession!=null)recoverySession.Dispose();tips.Dispose();foreach(var menu in taskMenus.Values)menu.Dispose();taskMenus.Clear();}base.Dispose(disposing);}
+        {if(disposing){DisposeDocumentPresentation();runtimeChatClosing=true;ResetRuntimeInputChat();Ui.ThemeChanged-=OnThemeChanged;runTimer.Dispose();recoveryTimer.Dispose();if(recoverySession!=null)recoverySession.Dispose();tips.Dispose();foreach(var menu in taskMenus.Values)menu.Dispose();taskMenus.Clear();}base.Dispose(disposing);}
     }
 }
 

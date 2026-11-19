@@ -1,5 +1,5 @@
 FROCIART v1 - WINDOWS
-Versione tecnica del file: 1.83.0.0. Guida aggiornata al 30 ottobre 2026.
+Versione tecnica del file: 1.86.0.0. Guida aggiornata al 30 ottobre 2026.
 
 SCEGLI LA BUILD
 - Windows autonomo x64: apri Frociart_v1.exe (oppure Frociart.exe

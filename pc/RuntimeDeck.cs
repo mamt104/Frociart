@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -15,6 +15,7 @@ namespace Frociart {
     private bool runtimeDetailsOpen=true,runtimeDeckReady;
     private string runtimeVisualKey="";
     private int observedFlowStep=-1;
+    private FlowButton runtimeInputReply;
     private void BuildRuntimeDeck(){
         runtimePanel.Dock=DockStyle.Fill;runtimePanel.AutoScroll=true;runtimePanel.BackColor=Ui.Paper;runtimePanel.Tag="paper";runTab.Controls.Add(runtimePanel);
         runtimeStatusCard=new RuntimeSurface();runtimePanel.Controls.Add(runtimeStatusCard);
@@ -37,7 +38,9 @@ namespace Frociart {
         runtimeEmptyVariables=Ui.Label("Le variabili compariranno dopo un Input o un’operazione.",9.5f,Ui.Muted);runtimeDetailsCard.Controls.Add(runtimeEmptyVariables);
         var speedLabel=Ui.Label("Velocità del flusso",9,Ui.Muted);speedLabel.Name="RuntimeSpeedLabel";speedLabel.Visible=false;runtimeDetailsCard.Controls.Add(speedLabel);speed.DropDownStyle=ComboBoxStyle.DropDownList;speed.Items.AddRange(new object[]{"Lenta","Normale","Veloce","Istantanea"});speed.SelectedIndex=1;speed.SelectedIndexChanged+=delegate{if(speed.SelectedIndex>=0&&speed.SelectedIndex<4)runTimer.Interval=new[]{1000,650,180,15}[speed.SelectedIndex];if(runtimeSpeedButton!=null)runtimeSpeedButton.Text="Velocità: "+speed.Text;};
         runtimeSpeedButton=Ui.Button("Velocità: Normale",180,delegate{var menu=new FlowContextMenu();for(int i=0;i<speed.Items.Count;i++){int index=i;var item=FlowMenus.Command(menu,this,speed.Items[i].ToString(),delegate{speed.SelectedIndex=index;});item.Checked=i==speed.SelectedIndex;}FlowMenus.ShowTransient(menu,this,runtimeSpeedButton.PointToScreen(new Point(0,runtimeSpeedButton.Height)));});runtimePanel.Controls.Add(runtimeSpeedButton);
-        inputPanel.BackColor=Ui.Tint;inputPanel.Tag="tint";runtimePanel.Controls.Add(inputPanel);inputQuestion.Font=Ui.Font(10,FontStyle.Bold);inputPanel.Controls.Add(inputQuestion);inputValue.Font=Ui.Font(12);inputPanel.Controls.Add(inputValue);inputValue.KeyDown+=(s,e)=>{if(e.KeyCode==Keys.Enter){SubmitInput();e.SuppressKeyPress=true;}};var send=Ui.Button("Invia",88,SubmitInput,true);send.Name="RuntimeSend";inputPanel.Controls.Add(send);inputPanel.Visible=false;
+        // Keep the canonical pending-value controls for source/console/inspector hosts; the deck now opens the conversation.
+        inputPanel.Visible=false;inputPanel.Controls.Add(inputQuestion);inputPanel.Controls.Add(inputValue);runtimePanel.Controls.Add(inputPanel);inputValue.MaxLength=Values.MaxStringLength;inputValue.TextChanged+=delegate{SyncRuntimeInputChatPendingText();};
+        runtimeInputReply=Ui.Button("Rispondi…",180,OpenRuntimeInputChat,true);runtimeInputReply.Name="RuntimeInputReply";runtimeInputReply.AccessibleDescription="Apri la conversazione e rispondi alla domanda corrente. Chiudere la conversazione conserva la bozza.";runtimePanel.Controls.Add(runtimeInputReply);
         BuildRuntimeFiles();BuildRuntimeTurtle();InstallConsole();runtimePanel.Resize+=delegate{LayoutRuntimeDeck();};runtimeDeckReady=true;LayoutRuntimeDeck();
     }
     private readonly Timer copiedOutputTimer=new Timer{Interval=1800};
@@ -83,7 +86,7 @@ namespace Frociart {
         runtimeConsoleButton.SetBounds(S(12),y,w,S(38));y+=S(50);
         y=LayoutRuntimeFiles(y,w);y=LayoutRuntimeTurtle(y,w);debuggerButton.SetBounds(S(12),y,w,S(38));y+=S(50);
         runtimeSnapshotButton.SetBounds(S(12),y,w,S(38));y+=S(50);
-        bool waiting=Runner!=null&&Runner.State==RuntimeState.WaitingForInput;inputPanel.Visible=waiting;if(waiting){inputPanel.SetBounds(S(12),y,w,S(116));inputQuestion.SetBounds(S(12),S(10),w-S(24),S(42));inputValue.SetBounds(S(12),S(65),w-S(120),S(32));inputPanel.Controls["RuntimeSend"].SetBounds(w-S(98),S(60),S(86),S(40));y+=S(128);}
+        bool waiting=Runner!=null&&Runner.State==RuntimeState.WaitingForInput;inputPanel.Visible=false;runtimeInputReply.Visible=runtimeInputReply.Enabled=waiting;if(waiting){runtimeInputReply.SetBounds(S(12),y,w,S(40));y+=S(52);}
         runtimeDetailsCard.Visible=runtimeDetailsOpen;if(runtimeDetailsOpen){int rows=Math.Max(1,Math.Min(6,variables.Items.Count)),tableHeight=S(28*rows+10),cardHeight=S(60)+tableHeight;runtimeDetailsCard.SetBounds(S(12),y,w,cardHeight);varsLabel.SetBounds(S(16),S(12),inner,S(25));variables.SetBounds(S(12),S(44),w-S(24),tableHeight);if(variables.Columns.Count>1){variables.Columns[0].Width=Math.Max(S(68),(w-S(120))/2);variables.Columns[1].Width=Math.Max(S(72),(w-S(120))/2);variables.Columns[2].Width=S(86);}runtimeEmptyVariables.Bounds=variables.Bounds;runtimeEmptyVariables.Visible=variables.Items.Count==0;variables.Visible=variables.Items.Count>0;y+=cardHeight+S(12);}
         runtimeOutputCard.SetBounds(S(12),y,w,S(172));outputLabel.SetBounds(S(16),S(16),inner-S(90),S(23));copyOutputButton.SetBounds(w-S(96),S(10),S(80),S(34));output.SetBounds(S(16),S(52),inner,S(101));runtimeEmptyOutput.Bounds=output.Bounds;runtimeEmptyOutput.Visible=output.TextLength==0;output.Visible=output.TextLength>0;
         bool hasResult=Runner!=null&&Runner.Output.Count>0;
