@@ -120,7 +120,7 @@ fuori da questa CI; non sono necessari per compilare e verificare gli EXE.
 ## CI e risultati
 
 Entrambi i workflow girano sulle pull request, su `main` e manualmente.
-`native.yml` gira anche sul ramo di preparazione della patch. Le Actions sono
+Le Actions sono
 fissate a commit verificati dei rispettivi repository. I job hanno timeout,
 permesso `contents: read`, checkout senza credenziali persistenti e nessun accesso
 a segreti. Le build non effettuano upload nelle release o nel sito.
@@ -131,8 +131,9 @@ evidenze usano `if: always()`; un test fallito fa fallire il job.
 La revisione Python 3.12 e l'immagine del runner possono ricevere aggiornamenti:
 le versioni effettive vengono registrate. L'APK contiene timestamp ZIP e le
 firme ufficiali non sono riprodotte: non si promettono file identici bit per bit
-ai pacchetti pubblicati. Il primo run GitHub della patch resta necessario per
-confermare l'esecuzione su runner Windows.
+ai pacchetti pubblicati. Ogni esecuzione mostra gli esiti separati di Android e
+Windows e permette di scaricare i pacchetti e i log.
+[Apri le compilazioni native su GitHub Actions](https://github.com/mamt104/Frociart/actions/workflows/native.yml)
 
 ## Chiavi, credenziali e dati locali
 
