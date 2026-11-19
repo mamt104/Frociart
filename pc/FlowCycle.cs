@@ -1,0 +1,44 @@
+using System;using System.Collections.Generic;using System.Linq;using System.Text.RegularExpressions;using System.Drawing;
+namespace Frociart {
+ // Derived from current edges, never a second executable representation or persisted membership.
+ internal static class FlowCycle {
+  internal sealed class Info {internal int Kind;internal string Entry,Check,Increment,BodyEntry,Exit,LoopBranch;internal HashSet<string> Members;internal FlowLoopBuilder.Spec Spec;internal string Header;}
+  static FlowNode Node(Diagram d,string id){return d.Nodes.FirstOrDefault(n=>n.Id==id);}
+  static string Next(Diagram d,string id,string branch){var es=d.Edges.Where(e=>e.From==id&&e.Branch==branch).ToArray();return es.Length==1?es[0].To:null;}
+  static HashSet<string> Body(Diagram d,string entry,string stop,string forbidden){var seen=new HashSet<string>();var q=new Queue<string>();q.Enqueue(entry);while(q.Count>0){string id=q.Dequeue();if(id==stop)continue;if(id==forbidden||id==null)return null;if(!seen.Add(id))continue;var n=Node(d,id);if(n==null||n.Kind==NodeKind.Start||n.Kind==NodeKind.End)return null;string[] branches=n.Kind==NodeKind.Decision?new[]{"true","false"}:new[]{"next"};if(d.Edges.Count(e=>e.From==id)!=branches.Length)return null;foreach(string b in branches){string to=Next(d,id,b);if(to==null)return null;q.Enqueue(to);}}
+   var returns=new HashSet<string>{stop};bool changed;do{changed=false;foreach(var e in d.Edges)if(seen.Contains(e.From)&&returns.Contains(e.To))changed|=returns.Add(e.From);}while(changed);return seen.All(returns.Contains)?seen:null;
+  }
+  internal static string Negate(string value){value=(value??"").Trim();if(value.StartsWith("non (",StringComparison.OrdinalIgnoreCase)&&value.EndsWith(")",StringComparison.Ordinal)){int depth=0;bool outer=true,escaped=false;char quote='\0';for(int i=4;i<value.Length;i++){char c=value[i];if(quote!='\0'){if(escaped)escaped=false;else if(c=='\\')escaped=true;else if(c==quote)quote='\0';continue;}if(c=='"'||c=='\''){quote=c;continue;}if(value[i]=='(')depth++;else if(value[i]==')')depth--;if(depth==0&&i!=value.Length-1){outer=false;break;}}if(outer&&depth==0)return value.Substring(5,value.Length-6).Trim();}return "non ("+value+")";}
+  internal static List<Info> Find(Diagram graph){
+   var result=new List<Info>();var forChecks=new HashSet<string>();
+   foreach(var init in graph.Nodes.Where(n=>n.Kind==NodeKind.Process)){var pattern=FlowPseudocode.InspectFor(graph,init);if(pattern==null)continue;var body=Body(graph,pattern.Body,pattern.Increment.Id,pattern.Check.Id);if(body==null)continue;var ids=new HashSet<string>(body){init.Id,pattern.Check.Id,pattern.Increment.Id};if(graph.Edges.Any(e=>ids.Contains(e.To)&&!ids.Contains(e.From)&&e.To!=init.Id))continue;
+    result.Add(new Info{Kind=0,Entry=init.Id,Check=pattern.Check.Id,Increment=pattern.Increment.Id,BodyEntry=pattern.Body,Exit=pattern.Exit,LoopBranch="true",Members=ids,Spec=new FlowLoopBuilder.Spec{Kind=0,Variable=pattern.Variable,From=pattern.From,To=pattern.To,Step=pattern.Step},Header=pattern.Header});forChecks.Add(pattern.Check.Id);
+   }
+   foreach(var check in graph.Nodes.Where(n=>n.Kind==NodeKind.Decision&&!forChecks.Contains(n.Id))){if(graph.Edges.Count(e=>e.From==check.Id)!=2)continue;foreach(string branch in new[]{"true","false"}){string entry=Next(graph,check.Id,branch),exit=Next(graph,check.Id,branch=="true"?"false":"true");if(entry==null||exit==null||entry==exit||exit==check.Id)continue;var body=Body(graph,entry,check.Id,exit);if(body==null)continue;
+    bool pre=graph.Edges.Any(e=>e.To==check.Id&&e.From!=check.Id&&!body.Contains(e.From));
+    if(pre){if(graph.Edges.Any(e=>body.Contains(e.To)&&!body.Contains(e.From)&&e.From!=check.Id))continue;}
+    else{if(body.Count==0||!graph.Edges.Any(e=>body.Contains(e.To)&&e.From!=check.Id&&!body.Contains(e.From))||graph.Edges.Any(e=>body.Contains(e.To)&&e.From!=check.Id&&!body.Contains(e.From)&&e.To!=entry))continue;}
+    var ids=new HashSet<string>(body){check.Id};string condition=branch=="true"?(check.Text??""):Negate(check.Text);result.Add(new Info{Kind=pre?1:2,Entry=pre?check.Id:entry,Check=check.Id,BodyEntry=entry,Exit=exit,LoopBranch=branch,Members=ids,Spec=new FlowLoopBuilder.Spec{Kind=pre?1:2,Condition=condition,Initialize=""},Header=(pre?"MENTRE ":"RIPETI · continua mentre ")+condition});break;
+   }}
+   return result.OrderBy(i=>Node(graph,i.Entry).Y).ThenBy(i=>i.Members.Count).ToList();
+  }
+  internal static FlowLoopBuilder.Plan Prepare(Diagram project,string functionId,Info info,FlowLoopBuilder.Spec spec){
+   string before=Convert.ToBase64String(DiagramIO.EncodeDocument(project));var candidate=DiagramIO.Clone(project);var graph=FunctionEditing.Graph(candidate,functionId);var current=Find(graph).FirstOrDefault(i=>i.Entry==info.Entry&&i.Check==info.Check&&i.Kind==info.Kind);
+   if(current==null||spec.Kind!=current.Kind)throw new FlowException("La struttura del ciclo è cambiata. Riapri il riepilogo; i singoli blocchi restano modificabili.");
+   var owner=FunctionEditing.Find(candidate,functionId);var changed=new List<FlowNode>();var sizes=graph.Nodes.ToDictionary(n=>n.Id,n=>FlowSizing.Size(n));
+   if(current.Kind==0){if(spec.Variable!=current.Spec.Variable)throw new FlowException("Modifica il contatore nei singoli blocchi per aggiornare anche i suoi riferimenti.");var tmp=new FlowLoopBuilder.Spec{Kind=0,Variable=spec.Variable,From=spec.From,To=spec.To,Step=spec.Step,Body="STAMPA 0"};var names=new HashSet<string>(StringComparer.OrdinalIgnoreCase);foreach(var g in FunctionEditing.Graphs(candidate))foreach(var n in g.Nodes)foreach(Match m in Regex.Matches(n.Text??"",ExpressionLanguage.IdentifierWordPattern))names.Add(m.Value);if(owner!=null){foreach(var p in owner.Parameters)names.Add(p.Name);names.Add(owner.ReturnVariable);}
+    var fragment=FlowPseudocode.DecodeFragment(FlowLoopBuilder.Source(tmp),candidate,owner,names);var f=Find(fragment).First(i=>i.Kind==0);var oldInit=Node(graph,current.Entry);var oldCheck=Node(graph,current.Check);var oldIncrement=Node(graph,current.Increment);var newInit=Node(fragment,f.Entry);var newCheck=Node(fragment,f.Check);var newIncrement=Node(fragment,f.Increment);
+    string oldLimit=FlowPseudocode.Assignments(oldInit.Text)[1][0],newLimit=FlowPseudocode.Assignments(newInit.Text)[1][0];var rename=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase){{newLimit,oldLimit}};
+    var a=FlowPseudocode.Assignments(oldInit.Text);var b=FlowPseudocode.Assignments(newInit.Text);if(a.Count==3&&b.Count==3)rename[b[2][0]]=a[2][0];
+    oldInit.Text=TutorVariables.Rewrite(newInit.Text,rename);oldCheck.Text=TutorVariables.Rewrite(newCheck.Text,rename);oldIncrement.Text=TutorVariables.Rewrite(newIncrement.Text,rename);if(a.Count==3&&b.Count==2){string stride=a[2][0];oldInit.Text+="; "+stride+" = int("+spec.Step.Trim()+", \"passo\")";oldCheck.Text=FlowPseudocode.ForCondition(spec.Variable,oldLimit,stride);oldIncrement.Text=spec.Variable+" = "+spec.Variable+" + "+stride;}changed.AddRange(new[]{oldInit,oldCheck,oldIncrement});
+   }else{string condition=(spec.Condition??"").Trim();if(condition.Length==0||condition.Length>8192||condition.Any(Char.IsControl))throw new FlowException("Scrivi la condizione su una sola riga.");ExpressionLanguage.Parse(condition,FunctionModel.Catalog(candidate));var check=Node(graph,current.Check);check.Text=current.LoopBranch=="true"?condition:Negate(condition);changed.Add(check);}
+   foreach(var n in changed)Compiler.Block(n,FunctionModel.Catalog(candidate),owner);
+   // Remove recognized return edges for ancestry. Nested-loop increments are descendants,
+   // not ancestors merely because execution returns to an enclosing condition.
+   var backEdges=new HashSet<string>();foreach(var cycle in Find(graph))foreach(var e in graph.Edges){bool back=cycle.Kind==2?e.From==cycle.Check&&e.To==cycle.BodyEntry:e.To==cycle.Check&&cycle.Members.Contains(e.From)&&e.From!=cycle.Entry;if(back)backEdges.Add(e.Id);}
+   var upstream=new HashSet<string>();var rev=new Queue<string>();foreach(var e in graph.Edges.Where(e=>e.To==current.Entry&&!current.Members.Contains(e.From)&&!backEdges.Contains(e.Id)))rev.Enqueue(e.From);while(rev.Count>0){string id=rev.Dequeue();if(current.Members.Contains(id)||!upstream.Add(id))continue;foreach(var e in graph.Edges.Where(e=>e.To==id&&!backEdges.Contains(e.Id)))rev.Enqueue(e.From);}
+   var local=new Diagram{Nodes=graph.Nodes.Where(n=>!upstream.Contains(n.Id)).ToList(),Edges=graph.Edges.Where(e=>!upstream.Contains(e.From)&&!upstream.Contains(e.To)).ToList()};if(changed.Any(n=>sizes[n.Id]!=FlowSizing.Size(n)))FlowPlacement.Grow(local,current.Entry);DiagramIO.EncodeDocument(candidate);var entryNode=Node(graph,current.Entry);
+   return new FlowLoopBuilder.Plan{Project=candidate,FunctionId=functionId,EntryId=current.Entry,BaseDocument=before,Editing=true,Origin=new PointF(entryNode.X,entryNode.Y)};
+  }
+ }
+}

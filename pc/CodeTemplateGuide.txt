@@ -1,0 +1,235 @@
+MODELLI DI CODICE
+
+
+
+Un modello definisce come esportare il diagramma. I modelli personali sono separati dai progetti e restano sul dispositivo. Esporta un file .frotemplate per portarli sull'altro dispositivo. Le bozze conservano anche una sintassi incompleta; Salva modello aggiorna la versione da usare. Cestino permette di ripristinare un modello con la sua bozza.
+
+
+
+PER INIZIARE
+
+Scegli un generatore di base: Python, Java, Kotlin, C#, C++, JavaScript, TypeScript, Visual Basic .NET, Groovy, Ruby, PowerShell o PHP. Il campo seguente inserisce tutto il programma, con il supporto autonomo e i collegamenti alle righe:
+
+{{ source }}
+
+
+
+Puoi aggiungere un'intestazione. Per Python, per esempio:
+
+# Compito: {{ project.title | literal }}
+
+{{ source }}
+
+
+
+Scegli Formato libero per descrivere un formato tuo, anche un inventario .txt. Il modello riceve i dati logici del diagramma; non viene eseguito come codice dall'app. Puoi anche importare i modelli .fpgt di Flowgorithm e modificarne direttamente le sezioni originali.
+
+
+
+CAMPI E CONTROLLI
+
+{{ project.title }} inserisce il titolo. Il testo inserito non viene riletto come istruzioni del modello.
+
+{% if condition %}...{% else %}...{% endif %} sceglie un contenuto.
+
+{% for item in list %}...{% else %}...{% endfor %} scorre un elenco. else è facoltativo e vale per l'elenco vuoto.
+
+loop.index parte da 1; loop.index0 da 0. Sono disponibili loop.first, loop.last e loop.length. Il nome loop è riservato.
+
+{% macro name value %}...{% endmacro %} definisce una macro con un parametro.
+
+{% render name expression %} inserisce una macro.
+
+{% require condition | 'messaggio' %} interrompe la generazione se manca un requisito.
+
+{# commento #} non produce testo.
+
+{% raw %}{{ testo letterale }}{% endraw %} permette di scrivere i delimitatori stessi.
+
+
+
+FILTRI
+
+literal: rappresentazione di un testo, con gli escape del generatore di base.
+
+identifier: nome stabile e distinto dalle parole riservate, con prefisso user_.
+
+number: rappresentazione numerica usata dal generatore di base; può richiedere le sue funzioni di supporto. Nei formati propri puoi usare anche i bit della costante per definirne la rappresentazione.
+
+count: numero di elementi di un elenco, o di unità UTF-16 di un testo.
+
+join:', ': unisce un elenco di valori semplici.
+
+default:'valore': sostituisce un valore vuoto o falso.
+
+upper, lower: cambia maiuscole e minuscole.
+
+not: inverte una condizione.
+
+equals:'output': confronta con una costante. Per esempio {% if block.kind | equals:'output' %}.
+
+Il campo source conserva la mappa delle righe e non accetta filtri.
+
+
+
+DATI DEL DIAGRAMMA
+
+program.title, program.main, program.functions e program.scopes.
+
+Ogni scope contiene name, key, parameters, returnType, returnVariable, returnIdentifier, symbols, symbolNames, blocks, notes, structured e statements.
+
+I parametri hanno name, identifier, type, array e reference.
+
+I blocchi hanno id, kind, text, prompt, comment, reachable, input, value, declaration, writes, links, next, yes e no. I campi fileReading, fileNewline, outputNewline, turtleDraw e turtleLeft conservano le opzioni dei comandi.
+
+Ogni scrittura contiene target e value. Il target contiene name, identifier, indexed e index.
+
+Un'espressione contiene kind, text, number, bits, boolean, identifier, functionKey e children. Sono disponibili isNumber, isText, isBoolean, isVariable, isVector, isIndex, isUnary, isBinary e isCall.
+
+Il piano strutturato contiene kind (instruction, if, while o repeat), instruction, conditional, loop, postTest, loopOnTrue, block, entryBlock, body e otherwise. Nei cicli repeat il corpo viene eseguito prima del test: block è la condizione finale, entryBlock è il primo blocco del corpo. loopOnTrue indica se si ripete quando la condizione è vera. Se structured è falso, usa i collegamenti espliciti oppure inserisci source con un generatore di base.
+
+
+
+ESEMPIO DI INVENTARIO
+
+{{ program.title }}
+
+{% for scope in program.scopes %}
+
+{{ scope.name }}
+
+{% for block in scope.blocks %}
+
+{{ loop.index }}. {{ block.kind }}: {{ block.text }}
+
+{% endfor %}
+
+{% endfor %}
+
+
+
+FORMATO DEL FILE
+
+UTF-8, con [Frociart Template], Version = 1, Name, Base, Extension, Instructions e Case Sensitive. Il corpo segue [Template]. L'estensione non include il punto. I modelli non leggono altri file e non hanno accesso agli oggetti dell'applicazione.
+
+
+
+LIMITI
+
+262144 caratteri per il corpo del modello, con spazio separato per i metadati della libreria, 1 MiB per file importato, 8192 elementi di sintassi, 64 livelli di sintassi, 128 livelli di macro e blocchi, 500000 operazioni, 32768 unità di dati richiesti. Output fino a 2 MiB di caratteri UTF-16 e 50000 righe. I dati sono caricati su richiesta. L'archivio e il cestino accolgono ciascuno 32 modelli e 8 MiB.
+
+
+
+Anteprima mostra il testo generato per il diagramma corrente. I modelli personali possono cambiare il significato del codice: controlla ed esegui il risultato nel relativo ambiente. Frociart continua a provare il diagramma con il proprio interprete.
+
+
+
+
+
+MODELLI FLOWGORITHM · .FPGT
+
+In Modelli di codice scegli Importa e seleziona il file .fpgt. Sono accettati UTF-8 e UTF-16 con BOM. Rivedi il testo, poi premi Salva modello; la versione salvata e la bozza restano separate.
+
+Il nome nella libreria è un’etichetta locale. Le sezioni [Language], [Types], [Program], [Main], [Function] e quelle di istruzioni ed espressioni rimangono nel loro formato originale. Estensione e distinzione dei nomi si modificano nel testo del modello. Esporta una copia produce un vero .fpgt, senza un contenitore Frociart.
+
+Se mancano tipi per input o valori automatici, il pannello chiede Intero, Reale, Testo o Logico. La scelta riguarda solo quella copia di codice: non modifica il flowchart, le variabili della prova o il modello salvato. Sul PC usa Tipi anche nell’anteprima laterale. Annullare conserva il codice precedente, quando presente. Non vengono esportati risultati incompleti in caso di errore.
+
+Il modello decide il linguaggio, il codice di supporto, i tipi numerici e le convenzioni. Un modello importato può contenere errori: controlla il sorgente e provalo con gli strumenti del linguaggio. Salva Java propone il nome della classe pubblica quando è riconoscibile; verifica il nome richiesto dal tuo modello.
+
+Per alcune forme riconosciute dei modelli Python, Java e C#, Frociart adatta il sorgente: risolve dipendenze e nomi matematici errati, corregge letture logiche e terminatori mancanti e mantiene una riga per ogni lettura Java. Il visualizzatore indica Codice adattato o Adattamenti applicati; Come eseguirlo elenca le correzioni; nell’anteprima laterale usa Info. Il modello salvato, la bozza e la sua esportazione restano invariati. Le forme personalizzate non riconosciute non vengono riscritte: gli adattamenti non costituiscono una verifica completa del modello.
+
+Il generatore segnala il blocco o la sezione del modello non rappresentabili. Il formato standard non descrive tutte le estensioni di Frociart: fra i limiti attuali restano alcune rappresentazioni numeriche e di riferimento e i modelli che non descrivono le operazioni richieste. I nove generatori integrati restano disponibili per i programmi che richiedono queste funzioni.
+
+La copia a = b conserva valori indipendenti: modificare a non cambia b. I modelli riconosciuti Python, Java e C# gestiscono anche dimensioni calcolate e vettori automatici. Una variabile automatica può ricevere un nuovo vettore di dimensione diversa; un vettore dichiarato conserva invece la lunghezza allocata. Il valore completo viene valutato una sola volta e la dimensione viene controllata prima di sostituire la destinazione. Le conversioni numeriche avvengono elemento per elemento. I parametri per riferimento si modificano per elementi e non si riassegnano. I modelli che descrivono solo le copie per elementi mantengono i limiti indicati dalla diagnosi. Il modello importato e il flowchart rimangono invariati.
+
+Il testo del modello è trattato come dati: non può eseguire comandi, includere altri file o accedere alla rete. Il codice esportato viene eseguito solo se lo avvii tu nell’ambiente di destinazione.
+
+
+
+Visual Basic .NET: Codice > Genera codice > Visual Basic .NET. Il file .vb è autonomo, con controlli di tipo, limiti, funzioni, vettori, file e disegni SVG. Copia e Salva includono sempre il programma completo. Per compilarlo usa gli strumenti Visual Basic .NET e il riferimento System.Numerics. Nei modelli personali, Base = vbnet usa il generatore nativo.
+
+
+
+PARAMETRI VETTORIALI PER COPIA NEI MODELLI .FPGT
+
+I modelli riconosciuti Python, Java e C# mantengono la modalità Copia della funzione: ciascun argomento vettoriale viene copiato prima di valutare quello successivo. La funzione può modificare la propria copia senza cambiare l’originale. La modalità Originale continua invece a condividere il vettore. Il visualizzatore segnala l’adattamento; il modello salvato resta invariato.
+
+Sono gestiti elementi dello stesso tipo e il passaggio da vettori interi a parametri reali. Per le altre conversioni usa un generatore integrato: viene indicata la chiamata da controllare, senza esportare un file incompleto.
+
+Un modello personalizzato può definire [Array Copy]: Text è un’espressione che valuta {Expression} una sola volta e restituisce una nuova copia indipendente, della stessa lunghezza, con elementi del tipo {Type}. I flag integer/real/string/boolean descrivono l’argomento; integer-parameter/real-parameter/string-parameter/boolean-parameter descrivono il parametro. {Element} è un nome temporaneo distinto, disponibile per le conversioni. Needed indica la precedenza richiesta all’argomento e Precedence quella del risultato. Esempio Python: Text = ({Expression}).copy(), Precedence = 100, Needed = 100, su righe separate. La sezione è un’estensione di Frociart: verifica il modello se lo apri in un altro programma.
+
+
+
+VALORI VETTORIALI NEI MODELLI .FPGT
+
+Puoi usare [1, 2, 3] nelle assegnazioni, negli argomenti delle funzioni, negli indici e nelle espressioni supportate. I modelli riconosciuti Python, Java e C# mantengono l’ordine di valutazione, stampano il contenuto dei vettori e confrontano gli elementi con = e <>. Testi tra virgolette, caratteri speciali e valori logici seguono la visualizzazione di Frociart. Il codice di supporto è incluso nel file esportato. Se i tipi del programma non sono ricavabili, scegli il profilo di quella copia; per esempio un vettore vuoto da solo richiede un tipo.
+
+I modelli personali possono aggiungere [Array Literal]: Text produce un valore vettoriale da {Elements}, {Type} e {Size}; Separator separa gli elementi e Precedence descrive il risultato. La sezione facoltativa [Array Literal Element] riceve {Expression}, {Type}, first e last; Needed descrive la precedenza richiesta. Usa {{ per una parentesi graffa letterale, come nelle altre sezioni del modello.
+
+[Array Mismatch] riceve {Message}, già scritto come stringa nel linguaggio di destinazione. Text deve interrompere il programma quando la nuova lunghezza è incompatibile: non deve continuare né modificare la destinazione. Per le copie indipendenti serve anche [Array Copy].
+
+[Array Values] con Language = python, java o csharp include il supporto per stampe e uguaglianza dei vettori in quel linguaggio. Per Python il programma deve avere funzioni e corpo principale a livello del modulo. In alternativa [Array Text] riceve {Expression} e restituisce il testo del vettore; [Array Equals] riceve {1} e {2} e restituisce un valore logico. Entrambe possono definire Precedence. Una regola esplicita array in Output o nell’operatore di confronto mantiene la gestione definita dal modello. In Assign, array indica l’assegnazione a un elemento; un collegamento all’intero vettore usa la regola senza array.
+
+Queste sezioni sono estensioni di Frociart: verifica il modello negli altri programmi. I tipi numerici e le librerie scelti dal modello restano vincoli della copia esportata. Il limite delle espressioni è distinto dal limite di 1.024 elementi di un vettore: per vettori grandi usa una dichiarazione e assegnazioni agli elementi.
+
+
+
+
+
+KOTLIN/JVM
+
+Codice > Genera codice > Kotlin mostra il programma con collegamenti ai blocchi. Copia e Salva includono anche il supporto completo; l’anteprima può nasconderlo per rendere leggibile l’algoritmo. Usa kotlinc Programma.kt -include-runtime -d Programma.jar, poi java -jar Programma.jar. Sono necessari Kotlin/JVM 1.9+ e Java 8+. Il disegno si apre in una finestra sul computer. Nei modelli personali, Base = kotlin ed Extension = kt usano il generatore nativo; le stringhe proteggono anche il simbolo $ dall’interpolazione. L’app non esegue il codice generato.
+
+
+
+
+
+RISULTATI VETTORIALI DELLE FUNZIONI
+
+I modelli Python, Java e C# riconosciuti esportano funzioni che restituiscono vettori, mantenendo la firma e una copia indipendente. Il tipo del risultato viene controllato al ritorno: assegnare temporaneamente valori frazionari non li tronca in anticipo. Un risultato INTERO[] deve contenere interi al ritorno; i tipi numerici del modello restano un vincolo della copia esportata. Gli adattamenti sono elencati nel pannello del codice; il modello originale resta invariato.
+
+Nei modelli propri aggiungi [Array Return]. Type descrive il tipo completo del risultato (per esempio {Type}[] in Java/C#, {Type} in Python), Text descrive l’espressione di ritorno e può usare {Expression}; Needed indica la precedenza richiesta. Con Language = python, java o csharp viene prima applicato il controllo del tipo e viene prodotta una copia indipendente con i tipi standard di quel linguaggio. Il flag array-return è disponibile nelle funzioni che restituiscono un vettore. Le regole esplicite del modello restano sotto il controllo dell’autore.
+
+Per altri tipi o linguaggi, Language = custom mantiene Type e Text definiti dal modello: l’autore deve fornire controllo e copia del risultato. I modelli Java/C# standard usano interi a 32 bit; valori più grandi e firme numeriche personalizzate possono richiedere un generatore nativo oppure regole esplicite nel modello. I generatori nativi restano disponibili in Codice > Genera codice.
+
+Le stampe logiche dei modelli compatibili usano vero/falso. Una regola esplicita boolean in Output o Output List conserva la formattazione scelta dal modello.
+
+
+
+
+
+COLORI DELLA TARTARUGA NEI MODELLI .FPGT
+
+Il modello Python originale riconosciuto gestisce nomi italiani e inglesi, #RGB, #RRGGBB e colori calcolati da variabili o funzioni. Per un modello personale usa [Pen] con Text che contiene {Expression}; il valore viene catturato una volta prima dell’istruzione, anche se il modello lo ripete. Language = python, java oppure csharp attiva normalizzazione e controllo dei colori nel sorgente esportato; Language = custom lascia le regole al modello. Le forme Python standard vengono riconosciute solo se tutte le dieci righe Pen corrispondono. Gli adattamenti sono indicati nel visualizzatore; modello e diagramma salvati restano identici. Un modello privo di un’istruzione Pen eseguibile continua a segnalare il blocco non rappresentabile.
+
+
+
+
+
+VETTORI NEI GRAFI CON COLLEGAMENTI LIBERI
+
+Nei modelli Python, Java e C# riconosciuti, lo spazio per i vettori è dichiarato all’inizio della funzione; la dimensione e la nuova allocazione restano nel blocco Dichiara. Ogni visita crea nuovi valori, con dimensione intera da 0 a 1024. Una dimensione calcolata viene valutata una sola volta anche per più nomi. Il codice segnala questi adattamenti e conserva i collegamenti alle caselle originali.
+
+Per un modello personale, [Array Storage] Language = python, java oppure csharp abilita queste regole. In alternativa, definisci Text in [Array Storage] e [Array Allocate], con {Name}, {Variable}, {Type}, {Size} e {Default}. Language = custom lascia al modello la rappresentazione e il controllo della dimensione. La sezione di spazio riceve Size=0; la sezione di allocazione riceve la dimensione del blocco. I modelli restano dati passivi; nessun codice esportato viene avviato nell’app.
+
+
+
+GROOVY
+
+Il nono generatore integrato usa Groovy 5+ con Java 17+. In un modello personale puoi scegliere Base = groovy ed Extension = groovy. Il filtro literal conserva anche il simbolo $ come testo; source contiene il programma completo con il supporto, senza richiedere librerie aggiuntive oltre a Groovy e Java.
+
+
+
+RUBY
+
+Base = ruby; estensione rb. {{ source }} include algoritmo e supporto completo. Le macro testuali usano stringhe Ruby con interpolazione protetta. I numeri non semplici conservano il valore binario nel supporto del programma.
+
+
+
+POWERSHELL
+
+Codice > Genera codice > PowerShell genera un programma .ps1 con funzioni e controllo del flusso PowerShell. L’anteprima può nascondere il supporto; Copia e Salva lo includono sempre. Salva in UTF-8 con BOM per Windows PowerShell 5.1, oppure usa PowerShell 7+. Add-Type compila il supporto .NET nel processo corrente: la prima esecuzione può richiedere qualche secondo. Non servono Frociart o moduli aggiuntivi; le impostazioni del computer devono consentire gli script e Add-Type. L’app non esegue il sorgente e non modifica queste impostazioni. File, bozze e disegni SVG usano la cartella di esecuzione. Per un modello personale usa Base = powershell, Extension = ps1 e {{ source }} per il programma completo. I filtri literal e number producono le forme usate dal generatore di base; number richiede il supporto incluso nel sorgente.
+
+
+PHP
+Base = php; Extension = php. {{ source }} include già <?php, algoritmo e supporto autonomo; non anteporre una seconda apertura PHP. I filtri literal e number producono la sintassi del generatore; i numeri binari richiedono il supporto completo incluso nel sorgente. Il codice è destinato alla CLI PHP 8.2+ a 64 bit e non viene eseguito nell’app.

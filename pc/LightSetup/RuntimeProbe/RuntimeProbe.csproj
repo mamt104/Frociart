@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms><UseWPF>true</UseWPF>
+    <UseAppHost>false</UseAppHost><GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>Frociart.RuntimeProbe</AssemblyName><RollForward>LatestPatch</RollForward>
+    <DebugType>none</DebugType><Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildProjectDirectory)=/_/Frociart/LightSetup/RuntimeProbe,$(MSBuildProjectExtensionsPath)=/_/RuntimeProbe/obj</PathMap>
+  </PropertyGroup>
+  <ItemGroup><Compile Include="RuntimeProbe.cs" /></ItemGroup>
+</Project>

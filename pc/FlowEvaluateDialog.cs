@@ -1,0 +1,28 @@
+using System;using System.Drawing;using System.Windows.Forms;
+namespace Frociart {
+ internal sealed class FlowEvaluateDialog:Form {
+  internal readonly TextBox Expression=Ui.TextBox(),ResultText=Ui.TextBox(true);
+  internal readonly FlowButton EvaluateButton,CopyButton,ReadButton;
+  internal FlowInspectExpression.Result Result {get;private set;}
+  internal readonly Label Status;readonly FlowInspectExpression.Context context;readonly Action<string> copy;
+  readonly FlowScrollPanel viewport=new FlowScrollPanel{Dock=DockStyle.Fill,AutoScroll=true};readonly FlowLayoutPanel body=new FlowLayoutPanel{AutoSize=true,FlowDirection=FlowDirection.TopDown,WrapContents=false,Dock=DockStyle.Top,Padding=new Padding(18)};
+  internal FlowEvaluateDialog(FlowInspectExpression.Context context,string draft,Action<string> copy,int percent=100){
+   this.context=context;this.copy=copy;float scale=Math.Max(1,Math.Min(2,percent/100f));Text="Valuta espressione — Frociart";Font=Ui.Font(10*scale);BackColor=Ui.Surface;StartPosition=FormStartPosition.CenterParent;ShowInTaskbar=false;MinimumSize=new Size(480,400);Size=new Size(760,Math.Min(760,(int)(510*scale)));AutoScaleMode=AutoScaleMode.Dpi;
+   var title=Ui.Label("Valuta espressione",17*scale,Ui.Ink,true);title.AutoSize=true;body.Controls.Add(title);
+   var frame=Ui.Label(context.FunctionName+" · passo "+context.Steps+" · valori in pausa",10*scale,Ui.Muted);frame.AutoSize=true;body.Controls.Add(frame);
+   var help=Ui.Label("Calcola sui valori in pausa. Puoi usare le funzioni integrate; funzioni del programma e numeri casuali non vengono eseguiti.",10*scale,Ui.Muted);help.AutoSize=true;body.Controls.Add(help);
+   var label=Ui.Label("Espressione",10*scale,Ui.Ink,true);label.AutoSize=true;body.Controls.Add(label);Expression.Font=Ui.Mono(12*scale);Expression.MaxLength=8192;Expression.AccessibleName="Espressione da valutare sui valori in pausa";Expression.Text=draft??"";Expression.Margin=new Padding(0,6,0,10);body.Controls.Add(Expression);
+   Status=Ui.Label("Scrivi un’espressione, poi premi Valuta. Puoi usare variabili, indici e funzioni integrate.",10*scale,Ui.Muted);Status.AutoSize=true;Status.AccessibleName="Esito della valutazione";body.Controls.Add(Status);
+   ResultText.ReadOnly=true;ResultText.Font=Ui.Mono(12*scale);ResultText.Height=(int)(150*scale);ResultText.WordWrap=true;ResultText.ScrollBars=ScrollBars.Vertical;ResultText.AccessibleName="Anteprima del risultato";ResultText.Margin=new Padding(0,8,0,8);body.Controls.Add(ResultText);
+   ReadButton=Ui.Button("Valore completo",160,ReadResult);ReadButton.Font=Ui.Font(10*scale);ReadButton.AutoSize=true;ReadButton.Enabled=false;body.Controls.Add(ReadButton);
+   viewport.Controls.Add(body);var layout=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=2,Margin=Padding.Empty,Padding=Padding.Empty};layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));layout.RowStyles.Add(new RowStyle(SizeType.Percent,100));layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));Controls.Add(layout);layout.Controls.Add(viewport,0,0);var footer=new FlowLayoutPanel{Dock=DockStyle.Fill,AutoSize=true,WrapContents=true,Padding=new Padding(12),Margin=Padding.Empty};
+   EvaluateButton=Ui.Button("Valuta",110,Calculate,true);CopyButton=Ui.Button("Copia risultato",150,CopyResult);var close=Ui.Button("Chiudi",100,Close);foreach(var b in new[]{EvaluateButton,CopyButton,close}){b.Font=Ui.Font(10*scale);b.Width=(int)(b.Width*scale);b.Height=Math.Max(40,b.Font.Height+20);footer.Controls.Add(b);}CopyButton.Enabled=false;layout.Controls.Add(footer,0,1);AcceptButton=EvaluateButton;CancelButton=close;
+   Expression.TextChanged+=delegate{Result=null;ResultText.Clear();CopyButton.Enabled=ReadButton.Enabled=false;Status.ForeColor=Ui.Muted;Status.Text="Premi Valuta per aggiornare il risultato.";};viewport.ClientSizeChanged+=delegate{FitBody();};Shown+=delegate{Ui.FitStartupToScreen(this);FitBody();Expression.Focus();Expression.Select(Expression.TextLength,0);};Ui.ApplyTheme(this);FlowFormMotion.Attach(this);FlowConsoleMotion.AttachExit(this);
+  }
+  void FitBody(){int width=Math.Max(1,viewport.ClientSize.Width-body.Padding.Horizontal-4);foreach(Control c in body.Controls){c.Width=width;var l=c as Label;if(l!=null)l.MaximumSize=new Size(width,0);}body.PerformLayout();}
+  internal void Calculate(){try{Result=context.Evaluate(Expression.Text);ResultText.Text=Result.Preview;Status.ForeColor=Ui.Muted;Status.Text=Result.Note.Length==0?"Valutazione completata. Il programma non è stato modificato.":Result.Note;CopyButton.Enabled=ReadButton.Enabled=Result.CopyText!=null;}catch(FlowException error){Result=null;ResultText.Clear();CopyButton.Enabled=ReadButton.Enabled=false;Status.ForeColor=Ui.Red;Status.Text=error.Message;Expression.Focus();}FitBody();}
+  void CopyResult(){if(Result==null||Result.CopyText==null)return;bool escaped=Result.CopyText.IndexOf('\0')>=0;try{copy(escaped?FlowInspectExpression.Readable(Result):Result.CopyText);Status.ForeColor=Ui.Muted;Status.Text=escaped?"Risultato copiato con caratteri di controllo espliciti.":"Risultato copiato.";}catch(Exception error){if(!(error is System.Runtime.InteropServices.ExternalException||error is System.Threading.ThreadStateException||error is InvalidOperationException))throw;Status.ForeColor=Ui.Red;Status.Text="Non riesco a copiare ora. Puoi riprovare o selezionare il valore completo.";}}
+  void ReadResult(){if(Result!=null&&Result.CopyText!=null)TutorTextDialog.ShowText(this,"Valore completo",FlowInspectExpression.Readable(Result));}
+  protected override bool ProcessCmdKey(ref Message message,Keys key){if(key==(Keys.Control|Keys.Enter)){Calculate();return true;}return base.ProcessCmdKey(ref message,key);}
+ }
+}

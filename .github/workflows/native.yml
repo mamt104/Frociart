@@ -1,0 +1,104 @@
+name: Native builds and tests
+
+on:
+  push:
+    branches: [main, codex/version-native-sources]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17.0.21+9'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Run packaged JVM suites
+        run: python tools/ci/test_android.py
+      - name: Install exact Android SDK components
+        run: bash tools/ci/install_android_sdk.sh "$RUNNER_TEMP/frociart-sdk"
+      - name: Compile unsigned Android APK
+        run: >-
+          python android/build_apk.py android
+          --sdk "$RUNNER_TEMP/frociart-sdk" --java-home "$JAVA_HOME"
+          --output artifacts/android/Frociart-ci-unsigned.apk
+          --build-dir artifacts/android-build
+          --compile-sdk 35 --build-tools 35.0.0 --min-sdk 26 --target-sdk 35
+      - name: Record build inputs and tool versions
+        run: |
+          git rev-parse HEAD > artifacts/android/commit.txt
+          java -version 2> artifacts/android/java-version.txt
+          python --version > artifacts/android/python-version.txt
+          cp artifacts/android-build/build-result.json artifacts/android/
+          sha256sum artifacts/android/*.apk > artifacts/android/SHA256SUMS.txt
+      - name: Keep Android build and test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-unsigned-and-tests
+          path: |
+            artifacts/android/
+            artifacts/android-tests/*.log
+            artifacts/android-tests/checks.json
+          if-no-files-found: error
+          retention-days: 14
+
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Publish standalone Windows x64
+        run: |
+          dotnet publish pc/Frociart.csproj -c Release -r win-x64 --self-contained true -o artifacts/windows-x64
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compile classic .NET Framework 4.8
+        shell: cmd
+        run: call pc\build-framework.cmd
+      - name: Run packaged native logic suites
+        run: python tools/ci/test_windows.py
+      - name: Record Windows outputs
+        run: |
+          if (!(Test-Path artifacts/windows-x64/Frociart.exe)) { throw 'Standalone EXE missing' }
+          New-Item -ItemType Directory -Force artifacts/windows-classic | Out-Null
+          Copy-Item pc/bin/framework/Frociart.exe artifacts/windows-classic/
+          git rev-parse HEAD | Set-Content artifacts/windows-tests/commit.txt
+          dotnet --info | Set-Content artifacts/windows-tests/dotnet-info.txt
+          Get-FileHash artifacts/windows-x64/Frociart.exe,artifacts/windows-classic/Frociart.exe -Algorithm SHA256 | Format-List | Out-File artifacts/windows-tests/SHA256SUMS.txt
+      - name: Keep Windows builds and test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-builds-and-tests
+          path: |
+            artifacts/windows-x64/
+            artifacts/windows-classic/
+            artifacts/windows-tests/
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,4 @@
+using System;using System.Collections.Generic;using Frociart;
+public static class ExpressionBaselineTests {
+ public static int Main(){try{if(ValueFormatter.Format(ExpressionLanguage.Evaluate("-2^2",null))!="-4"||ValueFormatter.Format(ExpressionLanguage.Evaluate("2^3^2",null))!="512")throw new Exception("legacy precedence");if(ValueFormatter.Format(ExpressionLanguage.Evaluate("mod + 1",new Dictionary<string,object>{{"mod",7d}}))!="8")throw new Exception("mod identifier");int missing=0;foreach(var e in new[]{"17 mod 5","2 × 3","1 & 2"})try{ExpressionLanguage.Evaluate(e,null);}catch(FlowException){missing++;}if(missing!=3)throw new Exception("unexpected baseline");Console.WriteLine("BASELINE PASS: legacy precedence and mod identifier preserved; 3 new spellings currently unsupported");return 0;}catch(Exception e){Console.WriteLine(e);return 1;}}
+}

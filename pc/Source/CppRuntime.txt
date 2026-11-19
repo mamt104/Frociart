@@ -1,0 +1,441 @@
+// CppRuntime.hpp
+// Standalone C++17 support for emitted instructions. No graph, parser or app is loaded.
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <functional>
+#include <iomanip>
+#include <limits>
+#include <locale>
+#include <memory>
+#include <random>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
+
+namespace frociart_support {
+using Text=std::u16string;
+struct Problem:std::runtime_error {explicit Problem(const std::string& message):std::runtime_error(message){}};
+inline double finite(double n){if(!std::isfinite(n))throw Problem("Il risultato non è un numero finito: controlla dominio e grandezza dei valori.");return n;}
+inline bool high(char16_t c){return c>=0xd800&&c<=0xdbff;}
+inline bool low(char16_t c){return c>=0xdc00&&c<=0xdfff;}
+inline std::vector<std::uint32_t> characters(const Text& text){
+ std::vector<std::uint32_t> result;result.reserve(text.size());
+ for(std::size_t i=0;i<text.size();++i){std::uint32_t cp=text[i];if(high(text[i])){if(i+1>=text.size()||!low(text[i+1]))throw Problem("Il testo contiene un carattere Unicode incompleto.");cp=0x10000+((cp-0xd800)<<10)+(text[++i]-0xdc00);}else if(low(text[i]))throw Problem("Il testo contiene un carattere Unicode incompleto.");result.push_back(cp);}return result;
+}
+inline Text character(std::uint32_t cp){if(cp>0x10ffff||(cp>=0xd800&&cp<=0xdfff))throw Problem("Il codice non rappresenta un carattere Unicode completo.");if(cp<0x10000)return Text(1,static_cast<char16_t>(cp));cp-=0x10000;return Text{static_cast<char16_t>(0xd800+(cp>>10)),static_cast<char16_t>(0xdc00+(cp&0x3ff))};}
+inline std::string utf8(const Text& text){std::string result;for(auto cp:characters(text)){if(cp<0x80)result.push_back(static_cast<char>(cp));else if(cp<0x800){result.push_back(static_cast<char>(0xc0|(cp>>6)));result.push_back(static_cast<char>(0x80|(cp&63)));}else if(cp<0x10000){result.push_back(static_cast<char>(0xe0|(cp>>12)));result.push_back(static_cast<char>(0x80|((cp>>6)&63)));result.push_back(static_cast<char>(0x80|(cp&63)));}else{result.push_back(static_cast<char>(0xf0|(cp>>18)));result.push_back(static_cast<char>(0x80|((cp>>12)&63)));result.push_back(static_cast<char>(0x80|((cp>>6)&63)));result.push_back(static_cast<char>(0x80|(cp&63)));}}return result;}
+inline Text fromUtf8(const std::string& bytes){
+ Text result;for(std::size_t i=0;i<bytes.size();){unsigned c=static_cast<unsigned char>(bytes[i++]);std::uint32_t cp;unsigned rest;std::uint32_t minimum;
+ if(c<0x80){cp=c;rest=0;minimum=0;}else if(c>=0xc2&&c<=0xdf){cp=c&31;rest=1;minimum=0x80;}else if(c>=0xe0&&c<=0xef){cp=c&15;rest=2;minimum=0x800;}else if(c>=0xf0&&c<=0xf4){cp=c&7;rest=3;minimum=0x10000;}else throw Problem("Il testo UTF-8 non è valido.");
+ if(rest>bytes.size()-i)throw Problem("Il testo UTF-8 non è valido.");for(unsigned j=0;j<rest;++j){unsigned d=static_cast<unsigned char>(bytes[i++]);if((d&0xc0)!=0x80)throw Problem("Il testo UTF-8 non è valido.");cp=(cp<<6)|(d&63);}if(cp<minimum||cp>0x10ffff||(cp>=0xd800&&cp<=0xdfff))throw Problem("Il testo UTF-8 non è valido.");result+=character(cp);
+ }return result;
+}
+inline bool space(char16_t c){return (c>=9&&c<=13)||c==0x20||c==0x85||c==0xa0||c==0x1680||(c>=0x2000&&c<=0x200a)||c==0x2028||c==0x2029||c==0x202f||c==0x205f||c==0x3000;}
+inline Text trim(const Text& text){std::size_t a=0,b=text.size();while(a<b&&space(text[a]))++a;while(b>a&&space(text[b-1]))--b;return text.substr(a,b-a);}
+inline Text asciiLower(Text text){for(auto& c:text)if(c>=u'A'&&c<=u'Z')c+=32;return text;}
+inline Text shortText(const Text& text){if(text.size()<=60)return text;std::size_t end=57;if(high(text[end-1]))--end;return text.substr(0,end)+u"...";}
+inline Text formatNumber(double value){
+ finite(value);if(value==0)return u"0";if(std::abs(value)<1e15&&value==std::trunc(value))return fromUtf8(std::to_string(static_cast<std::int64_t>(value)));
+ bool negative=value<0;double absolute=std::abs(value);std::uint64_t bits;std::memcpy(&bits,&absolute,8);int power=static_cast<int>((bits>>52)&2047);
+ std::uint64_t mantissa=bits&4503599627370495ULL;if(power)mantissa|=4503599627370496ULL;
+ int shift=(power==0?-1022:power-1023)-52,scale=shift<0?-shift:0;std::vector<std::uint32_t> parts;while(mantissa){parts.push_back(static_cast<std::uint32_t>(mantissa%1000000000));mantissa/=1000000000;}
+ auto multiply=[&](std::uint32_t factor){std::uint64_t carry=0;for(auto& part:parts){std::uint64_t next=static_cast<std::uint64_t>(part)*factor+carry;part=static_cast<std::uint32_t>(next%1000000000);carry=next/1000000000;}while(carry){parts.push_back(static_cast<std::uint32_t>(carry%1000000000));carry/=1000000000;}};
+ if(shift>=0){while(shift){int step=std::min(shift,29);multiply(std::uint32_t(1)<<step);shift-=step;}}
+ else{static const std::uint32_t powers[]={1,5,25,125,625,3125,15625,78125,390625,1953125,9765625,48828125,244140625,1220703125};int remaining=scale;while(remaining){int step=std::min(remaining,13);multiply(powers[step]);remaining-=step;}}
+ std::ostringstream text;text.imbue(std::locale::classic());text<<parts.back();for(std::size_t i=parts.size()-1;i>0;--i)text<<std::setw(9)<<std::setfill('0')<<parts[i-1];std::string digits=text.str();int exponent=static_cast<int>(digits.size())-scale-1;
+ if(digits.size()>15){auto head=std::stoull(digits.substr(0,15));if(digits[15]>='5')++head;digits=std::to_string(head);if(digits.size()>15){++exponent;digits.resize(15);}}
+ while(digits.size()>1&&digits.back()=='0')digits.pop_back();std::string body;
+ if(exponent>=15||exponent< -4){int e=std::abs(exponent);body=digits.substr(0,1)+(digits.size()>1?"."+digits.substr(1):"")+"E"+(exponent>=0?"+":"-")+(e<10?"0":"")+std::to_string(e);}
+ else{int at=exponent+1;body=at<=0?"0."+std::string(-at,'0')+digits:at>=static_cast<int>(digits.size())?digits+std::string(at-digits.size(),'0'):digits.substr(0,at)+"."+digits.substr(at);}
+ return fromUtf8((negative?"-":"")+body);
+}
+inline double numberFromBits(std::uint64_t bits){double value;static_assert(sizeof(value)==sizeof(bits),"IEEE754 binary64 required");std::memcpy(&value,&bits,sizeof(value));return finite(value);}
+struct Vector;struct ArrayArgument;
+class Value {
+ using Raw=std::variant<std::monostate,double,bool,Text,std::shared_ptr<const Vector>,std::shared_ptr<ArrayArgument>>;
+ Raw raw;
+ explicit Value(Raw value):raw(std::move(value)){}
+public:
+ Value()=default;
+ static Value number(double n){return Value(finite(n));}
+ static Value text(Text text){if(text.size()>32768)throw Problem("Il testo supera il limite di 32768 caratteri.");return Value(std::move(text));}
+ static Value logical(bool value){return Value(value);}
+ static Value vector(std::vector<Value> values);
+ static Value reference(std::shared_ptr<ArrayArgument> argument){return Value(std::move(argument));}
+ bool isNull()const{return std::holds_alternative<std::monostate>(raw);}
+ bool isNumber()const{return std::holds_alternative<double>(raw);}
+ bool isText()const{return std::holds_alternative<Text>(raw);}
+ bool isBoolean()const{return std::holds_alternative<bool>(raw);}
+ bool isVector()const{return std::holds_alternative<std::shared_ptr<const Vector>>(raw);}
+ bool isReference()const{return std::holds_alternative<std::shared_ptr<ArrayArgument>>(raw);}
+ const Text& asText()const{if(!isText())throw Problem("Questa funzione richiede un testo tra virgolette o una variabile di testo.");return std::get<Text>(raw);}
+ double asNumber()const;
+ bool asBoolean()const{if(isBoolean())return std::get<bool>(raw);if(isNumber())return asNumber()!=0;throw Problem("La condizione deve restituire vero/falso o un numero, non un testo.");}
+ const Vector& asVector()const;
+ std::shared_ptr<ArrayArgument> asReference()const{if(!isReference())throw Problem("Parametro per riferimento non valido.");return std::get<std::shared_ptr<ArrayArgument>>(raw);}
+ Text format()const;
+ bool same(const Value& other)const;
+};
+inline int integer(const Value& value,int minimum,int maximum,const std::string& label){double n=value.asNumber();if(n<minimum||n>maximum||n!=std::trunc(n))throw Problem(label+" deve essere un intero da "+std::to_string(minimum)+" a "+std::to_string(maximum)+".");return static_cast<int>(n);}
+inline Text quoted(const Text& text){Text result=u"\"";for(char16_t c:text){if(c==u'\\')result+=u"\\\\";else if(c==u'\"')result+=u"\\\"";else if(c==u'\n')result+=u"\\n";else if(c==u'\r')result+=u"\\r";else if(c==u'\t')result+=u"\\t";else result+=c;}return result+u"\"";}
+struct Vector {
+ const std::vector<Value> items;
+ explicit Vector(std::vector<Value> values):items(std::move(values)){
+  if(items.size()>1024)throw Problem("Un vettore può contenere al massimo 1024 elementi.");int kind=-1;std::size_t total=2;
+  for(const auto& value:items){int next=scalar(value);if(kind<0)kind=next;else if(kind!=next)throw Problem("Tutti gli elementi del vettore devono avere lo stesso tipo.");total+=elementText(value).size()+2;if(total>32768)throw Problem("Il contenuto del vettore supera 32768 caratteri.");}
+ }
+ static int scalar(const Value& value){if(value.isNumber()){value.asNumber();return 0;}if(value.isBoolean())return 1;if(value.isText())return 2;throw Problem("I vettori contengono numeri, testi o valori logici; i vettori annidati non sono supportati.");}
+ static Text elementText(const Value& value){return value.isText()?quoted(value.asText()):value.format();}
+ Text format()const{Text result=u"[";for(std::size_t i=0;i<items.size();++i){if(i)result+=u", ";result+=elementText(items[i]);}return result+u"]";}
+ int index(const Value& value)const{int i=integer(value,0,2147483647,"L’indice");if(static_cast<std::size_t>(i)>=items.size())throw Problem(items.empty()?"Il vettore è vuoto: non contiene elementi.":"Indice "+std::to_string(i)+" fuori dal vettore. Usa un indice da 0 a "+std::to_string(items.size()-1)+".");return i;}
+ Value at(int i)const{return items[static_cast<std::size_t>(index(Value::number(i)))];}
+ Value set(int i,const Value& value)const{if(scalar(at(i))!=scalar(value))throw Problem("Il nuovo valore deve avere lo stesso tipo degli elementi del vettore.");auto next=items;next[static_cast<std::size_t>(i)]=value;return Value::vector(std::move(next));}
+ bool same(const Vector& other)const{if(items.size()!=other.items.size())return false;for(std::size_t i=0;i<items.size();++i)if(!items[i].same(other.items[i]))return false;return true;}
+};
+inline Value Value::vector(std::vector<Value> values){return Value(std::make_shared<const Vector>(std::move(values)));}
+inline const Vector& Value::asVector()const{if(!isVector())throw Problem("Serve un vettore, per esempio valori = [10, 20, 30].");return *std::get<std::shared_ptr<const Vector>>(raw);}
+inline Text Value::format()const{if(isNull())return u"";if(isNumber())return formatNumber(asNumber());if(isText())return asText();if(isBoolean())return std::get<bool>(raw)?u"vero":u"falso";if(isVector())return asVector().format();throw Problem("Il riferimento a un vettore può essere usato solo come parametro.");}
+inline double Value::asNumber()const{if(!isNumber())throw Problem("Serve un numero, ma il valore è «"+utf8(shortText(format()))+"».");return finite(std::get<double>(raw));}
+inline bool Value::same(const Value& other)const{if(raw.index()!=other.raw.index())return false;if(isNull())return true;if(isNumber())return asNumber()==other.asNumber();if(isBoolean())return asBoolean()==other.asBoolean();if(isText())return asText()==other.asText();if(isVector())return asVector().same(other.asVector());return asReference()==other.asReference();}
+
+// Small nonnegative integer used only for exact binary64 -> fixed decimal formatting.
+// No external big-number dependency; finite doubles need at most 1075 binary digits.
+class BigNat {
+ std::vector<std::uint32_t> words;
+ void normalize(){while(!words.empty()&&words.back()==0)words.pop_back();}
+public:
+ explicit BigNat(std::uint64_t n){if(n){words.push_back(static_cast<std::uint32_t>(n));if(n>>32)words.push_back(static_cast<std::uint32_t>(n>>32));}}
+ bool zero()const{return words.empty();}
+ bool bit(int index)const{return index>=0&&static_cast<std::size_t>(index/32)<words.size()&&((words[index/32]>>(index%32))&1)!=0;}
+ void addOne(){std::uint64_t carry=1;for(std::size_t i=0;i<words.size()&&carry;++i){carry+=words[i];words[i]=static_cast<std::uint32_t>(carry);carry>>=32;}if(carry)words.push_back(static_cast<std::uint32_t>(carry));}
+ void multiply(std::uint32_t value){std::uint64_t carry=0;for(auto& word:words){carry+=static_cast<std::uint64_t>(word)*value;word=static_cast<std::uint32_t>(carry);carry>>=32;}if(carry)words.push_back(static_cast<std::uint32_t>(carry));normalize();}
+ void left(int bits){if(words.empty()||bits==0)return;std::size_t whole=bits/32;unsigned part=bits%32;if(whole)words.insert(words.begin(),whole,0);if(part){std::uint64_t carry=0;for(std::size_t i=whole;i<words.size();++i){std::uint64_t next=(static_cast<std::uint64_t>(words[i])<<part)|carry;words[i]=static_cast<std::uint32_t>(next);carry=next>>32;}if(carry)words.push_back(static_cast<std::uint32_t>(carry));}}
+ void rightRounded(int bits){if(bits<=0)return;bool up=bit(bits-1);std::size_t whole=bits/32;unsigned part=bits%32;if(whole>=words.size())words.clear();else{words.erase(words.begin(),words.begin()+whole);if(part){std::uint32_t carry=0;for(std::size_t i=words.size();i-->0;){std::uint32_t next=words[i]<<(32-part);words[i]=(words[i]>>part)|carry;carry=next;}}normalize();}if(up)addOne();}
+ std::uint32_t divide(std::uint32_t divisor){std::uint64_t rem=0;for(std::size_t i=words.size();i-->0;){std::uint64_t n=(rem<<32)|words[i];words[i]=static_cast<std::uint32_t>(n/divisor);rem=n%divisor;}normalize();return static_cast<std::uint32_t>(rem);}
+ std::string decimal()const{if(zero())return "0";auto copy=*this;std::vector<std::uint32_t> parts;while(!copy.zero())parts.push_back(copy.divide(1000000000));std::string out=std::to_string(parts.back());for(std::size_t i=parts.size()-1;i-->0;){auto p=std::to_string(parts[i]);out.append(9-p.size(),'0');out+=p;}return out;}
+};
+inline double roundAway(double n,int digits){if(std::abs(n)>=1e16)return n;double factor=std::pow(10.0,digits),scaled=n*factor,abs=std::abs(scaled),whole=std::floor(abs);if(abs-whole>=.5)++whole;return (scaled<0?-whole:whole)/factor;}
+inline Text fixed(double n,int digits){double rounded=roundAway(n,digits),absolute=std::abs(rounded);std::uint64_t bits;std::memcpy(&bits,&absolute,8);int exponent=static_cast<int>((bits>>52)&0x7ff);std::uint64_t mantissa=bits&0xfffffffffffffULL;if(exponent)mantissa|=1ULL<<52;int shift=(exponent?exponent-1023:-1022)-52;BigNat value(mantissa);for(int i=0;i<digits;++i)value.multiply(10);if(shift>=0)value.left(shift);else value.rightRounded(-shift);auto text=value.decimal();if(digits){if(text.size()<=static_cast<std::size_t>(digits))text.insert(0,digits+1-text.size(),'0');text.insert(text.size()-digits,1,'.');}if(rounded<0&&!value.zero())text.insert(0,1,'-');return fromUtf8(text);}
+inline bool numeric(const Text& source,bool whole=false){
+ std::size_t i=0,digits=0;if(i<source.size()&&(source[i]==u'+'||source[i]==u'-'))++i;while(i<source.size()&&source[i]>=u'0'&&source[i]<=u'9'){++i;++digits;}
+ if(!whole&&i<source.size()&&(source[i]==u'.'||source[i]==u',')){++i;while(i<source.size()&&source[i]>=u'0'&&source[i]<=u'9'){++i;++digits;}}if(!digits)return false;
+ if(!whole&&i<source.size()&&(source[i]==u'e'||source[i]==u'E')){++i;if(i<source.size()&&(source[i]==u'+'||source[i]==u'-'))++i;std::size_t start=i;while(i<source.size()&&source[i]>=u'0'&&source[i]<=u'9')++i;if(i==start)return false;}return i==source.size();
+}
+inline double parseNumber(Text text){std::replace(text.begin(),text.end(),u',',u'.');std::istringstream in(utf8(text));in.imbue(std::locale::classic());double result=0;in>>result;if(in.fail()&&result!=0)throw Problem("Inserisci un numero finito.");return finite(result);}
+inline Text numericInputText(const Text& value){std::size_t end=value.size();while(end>0&&value[end-1]==0)--end;while(end>0&&(value[end-1]==32||(value[end-1]>=9&&value[end-1]<=13)))--end;return value.substr(0,end);}
+inline Value parseInput(const Text& raw){if(raw.size()>32768)throw Problem("Il valore inserito è troppo lungo (massimo 32768 caratteri).");Text source=trim(raw),number=numericInputText(source);if(numeric(number)){try{return Value::number(parseNumber(number));}catch(const Problem&){if(number!=source)return Value::text(raw);throw;}}Text lower=asciiLower(source);if(lower==u"vero"||lower==u"true")return Value::logical(true);if(lower==u"falso"||lower==u"false")return Value::logical(false);if(lower==u"nan"||lower==u"infinity"||lower==u"+infinity"||lower==u"-infinity"||lower==u"infinito")throw Problem("Inserisci un numero finito.");return Value::text(raw);}
+inline Value unary(const std::string& op,const Value& value){if(op=="not")return Value::logical(!value.asBoolean());return Value::number(op=="-"?-value.asNumber():value.asNumber());}
+inline Value binary(const std::string& op,const Value& a,const Value& b){
+ if(op=="&"||(op=="+"&&(a.isText()||b.isText())))return Value::text(a.format()+b.format());
+ if(op=="="||op=="=="||op=="!="||op=="<>")return Value::logical((op=="!="||op=="<>")?!a.same(b):a.same(b));
+ if(op=="<"||op=="<="||op==">"||op==">="){if(a.isText()&&b.isText()){const auto& x=a.asText();const auto& y=b.asText();return Value::logical(op=="<"?x<y:op=="<="?x<=y:op==">"?x>y:x>=y);}double x=a.asNumber(),y=b.asNumber();return Value::logical(op=="<"?x<y:op=="<="?x<=y:op==">"?x>y:x>=y);}
+ double x=a.asNumber(),y=b.asNumber();if(op=="+")return Value::number(x+y);if(op=="-")return Value::number(x-y);if(op=="*")return Value::number(x*y);if(op=="/"){if(y==0)throw Problem("Divisione per zero.");return Value::number(x/y);}if(op=="%"){if(y==0)throw Problem("Resto con divisore zero.");return Value::number(std::fmod(x,y));}if(op=="^")return Value::number(std::pow(x,y));throw Problem("Operatore non riconosciuto.");
+}
+inline Value intrinsic(const std::string& name,const std::vector<Value>& args){
+ if(args.empty())throw Problem("La funzione richiede un argomento.");const auto& first=args[0];auto require=[&](std::size_t minimum,std::size_t maximum){if(args.size()<minimum||args.size()>maximum)throw Problem("Numero di argomenti non valido.");};
+ if(name=="array"||name=="vettore"){require(1,2);int length=integer(first,0,1024,"La dimensione");Value initial=args.size()==2?args[1]:Value::number(0);Vector::scalar(initial);return Value::vector(std::vector<Value>(length,initial));}
+ if(name=="len"||name=="size"){require(1,1);if(first.isVector())return Value::number(first.asVector().items.size());if(name=="len"&&first.isText())return Value::number(characters(first.asText()).size());throw Problem("len richiede un testo o un vettore.");}
+ if(name=="sum"||name=="somma"||((name=="min"||name=="max")&&args.size()==1)){require(1,1);const auto& items=first.asVector().items;if(items.empty()&&name!="sum"&&name!="somma")throw Problem("Il vettore è vuoto.");double result=0;for(std::size_t i=0;i<items.size();++i){double n=items[i].asNumber();result=name=="min"?(i?std::min(result,n):n):name=="max"?(i?std::max(result,n):n):finite(result+n);}return Value::number(result);}
+ if(name=="char"){require(2,2);auto chars=characters(first.asText());int i=integer(args[1],0,2147483647,"L’indice");if(static_cast<std::size_t>(i)>=chars.size())throw Problem("Indice fuori dal testo.");return Value::text(character(chars[i]));}
+ if(name=="tocode"){require(1,1);auto chars=characters(first.asText());if(chars.size()!=1)throw Problem("tocode richiede esattamente un carattere.");return Value::number(chars[0]);}
+ if(name=="int"&&args.size()==2){if(asciiLower(args[1].asText())!=u"passo")throw Problem("Il secondo argomento di int deve essere passo.");int n=integer(first,-2147483647-1,2147483647,"Il passo");if(n==0)throw Problem("Il passo deve essere diverso da zero.");return Value::number(n);}
+ if(name=="tointeger"||name=="toreal"){require(1,1);Text source=trim(first.asText());bool whole=name=="tointeger";if(!numeric(source,whole))throw Problem("Scrivi un testo che contenga un numero valido.");double n=parseNumber(source);if(whole&&(n< -2147483648.0||n>2147483647.0))throw Problem("tointeger accetta valori da -2147483648 a 2147483647.");return Value::number(n);}
+ if(name=="round")require(1,2);else if(name=="tofixed")require(2,2);else if(name=="min"||name=="max")require(2,64);else require(1,1);
+ double n=first.asNumber();
+ if(name=="abs")return Value::number(std::abs(n));if(name=="sqrt"){if(n<0)throw Problem("La radice richiede un numero non negativo.");return Value::number(std::sqrt(n));}if(name=="floor")return Value::number(std::floor(n));if(name=="round")return Value::number(roundAway(n,args.size()==1?0:integer(args[1],0,15,"Le cifre decimali")));
+ if(name=="min"||name=="max"){for(std::size_t i=1;i<args.size();++i)n=name=="min"?std::min(n,args[i].asNumber()):std::max(n,args[i].asNumber());return Value::number(n);}
+ if(name=="sin")return Value::number(std::sin(n));if(name=="cos")return Value::number(std::cos(n));if(name=="tan")return Value::number(std::tan(n));if(name=="arcsin"||name=="arccos"){if(n< -1||n>1)throw Problem("Il dominio richiede un numero tra -1 e 1.");return Value::number(name=="arcsin"?std::asin(n):std::acos(n));}if(name=="arctan")return Value::number(std::atan(n));if(name=="int")return Value::number(std::trunc(n));if(name=="sgn")return Value::number(n<0?-1:n>0?1:0);
+ if(name=="ln"||name=="log"||name=="log10"){if(n<=0)throw Problem("Il logaritmo richiede un numero maggiore di 0.");return Value::number(name=="log10"?std::log10(n):std::log(n));}
+ if(name=="random"){int bound=integer(first,1,2147483647,"Il limite di random");static std::mt19937_64 rng(std::random_device{}());return Value::number(std::uniform_int_distribution<int>(0,bound-1)(rng));}
+ if(name=="tochar")return Value::text(character(integer(first,0,0x10ffff,"Il codice Unicode")));if(name=="tostring")return Value::text(first.format());if(name=="tofixed")return Value::text(fixed(n,integer(args[1],0,15,"Le cifre decimali")));throw Problem("Funzione sconosciuta.");
+}
+struct TypeSpec {int kind=0;bool array=false;int length=0;};
+inline Value checkType(Value v,int kind,bool array){if(array){for(const auto& item:v.asVector().items)checkType(item,kind,false);return v;}bool valid=!v.isNull()&&!v.isVector()&&!v.isReference();if(kind==1)valid=v.isNumber()&&v.asNumber()==std::trunc(v.asNumber());else if(kind==2)valid=v.isNumber();else if(kind==3)valid=v.isText();else if(kind==4)valid=v.isBoolean();else if(kind==5)valid=false;if(!valid)throw Problem("Il valore non corrisponde al tipo dichiarato.");return v;}
+inline Value convertScalar(Value v,int kind){return kind==1&&v.isNumber()?Value::number(std::trunc(v.asNumber())):checkType(v,kind,false);}
+inline Value convert(Value v,const TypeSpec* declaration,const TypeSpec* parameter){if(declaration){if(declaration->array){const auto& vector=v.asVector();if(vector.items.size()!=static_cast<std::size_t>(declaration->length))throw Problem("La dimensione del vettore dichiarato non può cambiare.");std::vector<Value> items;for(const auto& item:vector.items)items.push_back(convertScalar(item,declaration->kind));v=Value::vector(std::move(items));}else v=convertScalar(v,declaration->kind);}if(parameter)v=checkType(v,parameter->kind,parameter->array);return v;}
+inline Value initial(int kind,bool array,int length){if(length<0||length>1024)throw Problem("La dimensione deve essere un intero da 0 a 1024.");Value value=kind==3?Value::text(u""):kind==4?Value::logical(false):Value::number(0);return array?Value::vector(std::vector<Value>(length,value)):value;}
+} // namespace frociart_support
+// CppExecution.hpp
+// Execution state for emitted C++ instructions. Standalone; no graph interpreter.
+#include <map>
+#include <set>
+#include <optional>
+namespace frociart_support {
+struct ArrayCell {Value value;int kind;ArrayCell(Value v,int type):value(std::move(v)),kind(type){}};
+struct ArrayArgument {std::shared_ptr<ArrayCell> cell;Value snapshot;explicit ArrayArgument(std::shared_ptr<ArrayCell> c):cell(std::move(c)),snapshot(cell->value){}};
+// Generated symbols are canonicalized by the frontend before reaching this map.
+using Variables=std::map<Text,Value>;
+inline Text symbolKey(const Text& name){return asciiLower(name);}
+inline Value find(const Variables& variables,const Text& name){auto i=variables.find(symbolKey(name));return i==variables.end()?Value():i->second;}
+struct Frame {
+ std::optional<Text> scope;Variables variables;std::optional<Variables> transaction;
+ std::map<int,std::vector<Value>> retained;Value assignment;
+ std::map<Text,std::shared_ptr<ArrayCell>> bindings,newArrays;
+ std::map<std::shared_ptr<ArrayCell>,std::shared_ptr<ArrayCell>,std::owner_less<std::shared_ptr<ArrayCell>>> overlays;
+ std::set<Text> wholeWrites;
+ explicit Frame(std::optional<Text> s):scope(std::move(s)){}
+};
+class Runtime {
+ std::vector<std::unique_ptr<Frame>> frames;
+ Frame& frame(){if(frames.empty())throw Problem("Nessuna funzione attiva.");return *frames.back();}
+ Variables& transaction(){auto& f=frame();if(!f.transaction)throw Problem("Assegnazione non inizializzata.");return *f.transaction;}
+ std::shared_ptr<ArrayCell> overlay(Frame& f,const std::shared_ptr<ArrayCell>& cell,Value value){auto i=f.overlays.find(cell);if(i!=f.overlays.end())return i->second;auto staged=std::make_shared<ArrayCell>(std::move(value),cell->kind);f.overlays.emplace(cell,staged);return staged;}
+ void checkCell(const std::shared_ptr<ArrayCell>& cell,const Value& value){if(value.asVector().items.size()!=cell->value.asVector().items.size())throw Problem("Un vettore per riferimento conserva la dimensione originale.");checkType(value,cell->kind,true);}
+ void propagate(const std::shared_ptr<ArrayCell>& cell){
+  for(auto& ptr:frames){auto& f=*ptr;for(const auto& binding:f.bindings)if(binding.second==cell){f.variables[binding.first]=cell->value;if(f.transaction&&!f.wholeWrites.count(binding.first)){auto staged=f.overlays.find(cell);(*f.transaction)[binding.first]=staged==f.overlays.end()?cell->value:staged->second->value;}}
+   if(f.transaction){for(const auto& pair:f.newArrays)if(pair.second==cell)(*f.transaction)[pair.first]=cell->value;for(const auto& pair:f.overlays)if(pair.second==cell)for(const auto& binding:f.bindings)if(binding.second==pair.first&&!f.wholeWrites.count(binding.first))(*f.transaction)[binding.first]=cell->value;}
+  }
+ }
+ static std::size_t valueSize(const Value& v){if(v.isNull())return 8;if(v.isReference())return valueSize(v.asReference()->snapshot);if(v.isText())return v.asText().size();if(v.isVector()){std::size_t size=v.asVector().items.size()*8;for(const auto& x:v.asVector().items)if(x.isText())size+=x.asText().size();return size;}return 8;}
+public:
+ Variables lastVariables;std::optional<Variables> errorVariables;int steps=0,maxSteps=10000;std::size_t outputSize=0;bool references=false;
+ void guard(){if(steps>=maxSteps)throw Problem("Limite di esecuzione raggiunto. Controlla la condizione del ciclo.");}
+ void step(){guard();++steps;}
+ bool test(const std::function<Value()>& expression){step();return expression().asBoolean();}
+ void guardCall(){if(frames.size()>=128)throw Problem("Troppe chiamate annidate: massimo 128 livelli.");}
+ void enter(std::optional<Text> scope,const std::vector<Text>& names,const std::vector<Value>& values,bool refs=false){guardCall();if(names.size()!=values.size())throw Problem("Parametri della funzione non validi.");references|=refs;auto f=std::make_unique<Frame>(std::move(scope));for(std::size_t i=0;i<names.size();++i){Value value=values[i];if(value.isReference()){auto cell=value.asReference()->cell;f->bindings[symbolKey(names[i])]=cell;value=cell->value;}f->variables[symbolKey(names[i])]=value;}frames.push_back(std::move(f));}
+ void captureError(){if(!errorVariables&&!frames.empty())errorVariables=frame().variables;}
+ void leave(){auto& f=frame();if(!f.scope)lastVariables=f.variables;frames.pop_back();}
+ Value invoke(std::optional<Text> scope,const std::vector<Text>& names,const std::vector<Value>& values,const std::function<Value()>& body,bool refs=false){enter(std::move(scope),names,values,refs);try{checkMemory();Value result=body();leave();return result;}catch(...){captureError();leave();throw;}}
+ Value requireValue(Value value){if(value.isNull())throw Problem("La funzione non ha restituito un valore.");return value;}
+ Value value(Value v,const Text& name){if(!v.isNull())return v;if(symbolKey(name)==u"pi"||name==u"π")return Value::number(std::acos(-1.0));throw Problem("La variabile «"+utf8(name)+"» non ha ancora un valore.");}
+ Value lookup(const Text& name){auto& f=frame();return value(find(f.transaction?*f.transaction:f.variables,name),name);}
+ Value current(const Text& name){auto& f=frame();return find(f.transaction?*f.transaction:f.variables,name);}
+ Value variable(const Text& name){return find(frame().variables,name);}
+ Value staged(const Text& name){return find(transaction(),name);}
+ Value reference(Text name,const TypeSpec* declaration,const TypeSpec* parameter){name=symbolKey(name);auto& f=frame();Value v=lookup(name);v.asVector();int kind=declaration?declaration->kind:parameter?parameter->kind:0;
+  if(f.transaction&&(f.wholeWrites.count(name)||!f.variables.count(name))){auto i=f.newArrays.find(name);if(i==f.newArrays.end())i=f.newArrays.emplace(name,std::make_shared<ArrayCell>(v,kind)).first;return Value::reference(std::make_shared<ArrayArgument>(i->second));}
+  auto binding=f.bindings.find(name);if(binding==f.bindings.end()){auto cell=std::make_shared<ArrayCell>(requireValue(find(f.variables,name)),kind);cell->value.asVector();binding=f.bindings.emplace(name,cell).first;}auto cell=binding->second;
+  if(f.transaction){auto staged=f.overlays.find(cell);if(staged!=f.overlays.end())return Value::reference(std::make_shared<ArrayArgument>(staged->second));if(&v.asVector()!=&cell->value.asVector())return Value::reference(std::make_shared<ArrayArgument>(overlay(f,cell,v)));}
+  return Value::reference(std::make_shared<ArrayArgument>(cell));
+ }
+ Value checkReference(const Value& argument,int kind){auto a=argument.asReference();checkType(a->snapshot,kind,true);auto cell=a->cell;if(cell->kind!=0&&kind!=0&&cell->kind!=kind)throw Problem("Il tipo del vettore per riferimento deve coincidere con quello originale.");checkType(cell->value,kind,true);if(cell->kind==0&&kind!=0)cell->kind=kind;return cell->value;}
+ void checkMemory(){std::size_t size=outputSize,slots=0;for(const auto& ptr:frames){const auto& f=*ptr;auto add=[&](const Variables& vars){slots+=vars.size();for(const auto& p:vars)size+=valueSize(p.second);};add(f.variables);if(f.transaction)add(*f.transaction);for(const auto& pair:f.retained)for(const auto& v:pair.second)size+=valueSize(v);if(!f.assignment.isNull())size+=valueSize(f.assignment);if(size>2097152||slots>16384)throw Problem("La memoria dei valori supera il limite di esecuzione.");}}
+ void begin(){auto& f=frame();f.transaction=f.variables;if(references){f.overlays.clear();f.newArrays.clear();f.wholeWrites.clear();}}
+ Value stage(Text name,Value value,bool check=true,bool indexed=false){name=symbolKey(name);auto& f=frame();auto& t=transaction();if(!references)t[name]=value;else if(!indexed){t[name]=value;f.wholeWrites.insert(name);f.newArrays.erase(name);}else if(f.wholeWrites.count(name)&&f.newArrays.count(name)){auto cell=f.newArrays.at(name);checkCell(cell,value);cell->value=value;propagate(cell);}else if(!f.wholeWrites.count(name)&&f.bindings.count(name)){auto cell=overlay(f,f.bindings.at(name),requireValue(find(t,name)));checkCell(cell,value);cell->value=value;propagate(cell);}else t[name]=value;if(check)checkMemory();return value;}
+ void commit(bool check=false){if(check)checkMemory();auto& f=frame();auto& t=transaction();if(references){for(const auto& p:f.overlays)checkCell(p.first,p.second->value);for(const auto& p:f.newArrays)checkCell(p.second,p.second->value);for(const auto& name:f.wholeWrites)f.bindings.erase(name);for(const auto& p:f.overlays){p.first->value=p.second->value;propagate(p.first);}for(const auto& p:f.newArrays)f.bindings[p.first]=p.second;}f.variables=std::move(t);f.transaction.reset();f.overlays.clear();f.newArrays.clear();f.wholeWrites.clear();}
+ void rollback(){auto& f=frame();f.transaction.reset();f.overlays.clear();f.newArrays.clear();f.wholeWrites.clear();}
+ Value hold(int key,Value value){frame().retained[key].push_back(value);return value;}
+ Value release(int key,Value value){frame().retained.erase(key);return value;}
+ Value call(int key,const std::function<Value()>& invocation){Value result=invocation();release(key,result);hold(-1,result);try{checkMemory();release(-1,result);return result;}catch(...){release(-1,result);throw;}}
+ Value at(Value target,const std::function<Value()>& index){target.asVector();Value i=index();return target.asVector().at(target.asVector().index(i));}
+ Value atName(const Text& name,const std::function<Value()>& index){lookup(name).asVector();Value i=index(),v=lookup(name);return v.asVector().at(v.asVector().index(i));}
+ Value setAfter(Value value,Value target,const std::function<Value()>& index){auto& f=frame();f.assignment=value;try{target.asVector();Value i=index();auto result=target.asVector().set(target.asVector().index(i),value);f.assignment=Value();return result;}catch(...){f.assignment=Value();throw;}}
+ Value setAfterName(Value value,const Text& name,const std::function<Value()>& index){lookup(name).asVector();auto& f=frame();f.assignment=value;try{Value i=index(),v=lookup(name);auto result=v.asVector().set(v.asVector().index(i),value);f.assignment=Value();return result;}catch(...){f.assignment=Value();throw;}}
+ Value unary(const std::string& op,const Value& value){return frociart_support::unary(op,value);}
+ Value binary(const std::string& op,const Value& a,const Value& b){return frociart_support::binary(op,a,b);}
+ Value intrinsic(const std::string& name,const std::vector<Value>& arguments){return frociart_support::intrinsic(name,arguments);}
+};
+} // namespace frociart_support
+// CppTextFiles.hpp
+#include <optional>
+namespace frociart_support {
+struct FileJournal {virtual ~FileJournal()=default;virtual Text id()const=0;virtual void append(const std::string& bytes)=0;virtual void close()=0;virtual bool saved()=0;};
+class TextFiles {
+ std::optional<Text> input,output;std::size_t position=0,outputBytes=0;
+ std::shared_ptr<FileJournal> journal;
+public:
+ static constexpr std::size_t maxBytes=4194304,maxCharacters=2097152,maxLine=32768;
+ std::optional<Text> readName,writeName;bool recoveryCopyRemains=false;
+ std::function<std::shared_ptr<FileJournal>(const Text&)> journalFactory;
+ bool hasRead()const{return input.has_value();}bool hasWrite()const{return output.has_value();}
+ const Text& draft()const{if(!output)throw Problem("Apri prima un file in scrittura.");return *output;}
+ Text journalId()const{return journal?journal->id():Text();}
+ void closeJournal(){if(journal)journal->close();}
+ static void validate(const Text& text){if(text.size()>maxCharacters)throw Problem("Il file supera 2 milioni di caratteri.");if(utf8(text).size()>maxBytes)throw Problem("Il file supera 4 MiB.");}
+ static Text fileName(const Value& value){Text name=value.asText();if(trim(name).empty()||name.size()>256)throw Problem("Il nome del file deve essere un testo da 1 a 256 caratteri.");for(auto c:name)if(c<32||(c>=127&&c<=159))throw Problem("Il nome del file non può contenere caratteri di controllo.");characters(name);return name;}
+ static Text decode(const std::string& bytes){if(bytes.size()>maxBytes)throw Problem("Il file supera 4 MiB.");Text text;auto byte=[&](std::size_t i){return static_cast<unsigned char>(bytes[i]);};
+  if(bytes.size()>=2&&((byte(0)==255&&byte(1)==254)||(byte(0)==254&&byte(1)==255))){bool little=byte(0)==255;if((bytes.size()-2)%2)throw Problem("Il file UTF-16 non è valido.");text.reserve((bytes.size()-2)/2);for(std::size_t i=2;i<bytes.size();i+=2)text.push_back(static_cast<char16_t>(little?byte(i)|(byte(i+1)<<8):(byte(i)<<8)|byte(i+1)));}
+  else{text=fromUtf8(bytes.size()>=3&&byte(0)==239&&byte(1)==187&&byte(2)==191?bytes.substr(3):bytes);}validate(text);return text;
+ }
+ void openRead(Text name,Text text){if(hasRead())throw Problem("Un file è già aperto in lettura. Chiudilo prima di aprirne un altro.");validate(text);input=std::move(text);position=0;readName=std::move(name);}
+ void openWrite(const Text& name){if(hasWrite())throw Problem("Un file è già aperto in scrittura. Chiudilo e salvalo prima di aprirne un altro.");auto next=journalFactory?journalFactory(name):nullptr;journal=std::move(next);output=Text();outputBytes=0;writeName=name;recoveryCopyRemains=false;}
+ bool eof()const{if(!input)throw Problem("Apri prima un file in lettura. EOF() controlla quel file.");return position>=input->size();}
+ Text peekLine()const{if(eof())throw Problem("Il file è terminato. Usa non EOF() prima di leggere.");std::size_t end=position;while(end<input->size()&&(*input)[end]!=u'\r'&&(*input)[end]!=u'\n'){if(end-position>=maxLine)throw Problem("Una riga del file supera 32768 caratteri.");++end;}return input->substr(position,end-position);}
+ void commitRead(){auto line=peekLine();position+=line.size();if(position<input->size()&&(*input)[position]==u'\r'){++position;if(position<input->size()&&(*input)[position]==u'\n')++position;}else if(position<input->size()&&(*input)[position]==u'\n')++position;}
+ void write(Text text,bool newline){if(!hasWrite())throw Problem("Apri prima un file in scrittura.");if(newline)text+=u'\n';auto bytes=utf8(text);if(output->size()+text.size()>maxCharacters||outputBytes+bytes.size()>maxBytes)throw Problem("Il file generato supera il limite di 4 MiB o 2 milioni di caratteri.");if(journal)journal->append(bytes);output->append(text);outputBytes+=bytes.size();}
+ void closeRead(){if(!input)throw Problem("Apri prima un file in lettura.");input.reset();readName.reset();position=0;}
+ void saved(){if(!output)throw Problem("Apri prima un file in scrittura.");if(journal){recoveryCopyRemains=!journal->saved();journal.reset();}output.reset();writeName.reset();outputBytes=0;}
+};
+} // namespace frociart_support
+// CppHostStorage.hpp
+#include <filesystem>
+#include <fstream>
+#include <cerrno>
+#include <atomic>
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <process.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <pthread.h>
+#endif
+namespace frociart_support {
+namespace fs=std::filesystem;
+inline fs::path hostPath(const Text& name){return fs::path(name);}
+inline Text absolutePathText(const fs::path& path){return fs::absolute(path).u16string();}
+inline std::string uniqueToken(){static std::random_device source;const char* hex="0123456789abcdef";std::string value;for(int i=0;i<4;++i){auto n=static_cast<std::uint32_t>(source());for(int bits=28;bits>=0;bits-=4)value+=hex[(n>>bits)&15];}return value;}
+class NativeWriter {
+#ifdef _WIN32
+ HANDLE handle=INVALID_HANDLE_VALUE;
+ explicit NativeWriter(HANDLE value):handle(value){}
+#else
+ int handle=-1;
+ explicit NativeWriter(int value):handle(value){}
+#endif
+public:
+ NativeWriter(const NativeWriter&)=delete;NativeWriter& operator=(const NativeWriter&)=delete;
+ ~NativeWriter(){try{close();}catch(...){}}
+ static std::unique_ptr<NativeWriter> create(const fs::path& path){
+#ifdef _WIN32
+  HANDLE handle=CreateFileW(path.c_str(),GENERIC_WRITE,FILE_SHARE_READ,nullptr,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,nullptr);if(handle==INVALID_HANDLE_VALUE){auto error=GetLastError();if(error==ERROR_FILE_EXISTS||error==ERROR_ALREADY_EXISTS)return nullptr;throw Problem("Non riesco a creare il file nella cartella di destinazione.");}
+#else
+  int handle=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC,0600);if(handle<0){if(errno==EEXIST)return nullptr;throw Problem("Non riesco a creare il file nella cartella di destinazione.");}
+#endif
+  return std::unique_ptr<NativeWriter>(new NativeWriter(handle));
+ }
+ void append(const std::string& bytes){std::size_t at=0;
+#ifdef _WIN32
+  if(handle==INVALID_HANDLE_VALUE)throw Problem("La bozza è chiusa: riprova il salvataggio.");LARGE_INTEGER zero{},before{};if(!SetFilePointerEx(handle,zero,&before,FILE_CURRENT))throw Problem("Non riesco a leggere la posizione della bozza.");
+  try{while(at<bytes.size()){DWORD written=0;if(!WriteFile(handle,bytes.data()+at,static_cast<DWORD>(std::min<std::size_t>(bytes.size()-at,65536)),&written,nullptr)||written==0)throw Problem("Scrittura della bozza interrotta.");at+=written;}if(!FlushFileBuffers(handle))throw Problem("Non riesco a confermare la scrittura della bozza.");}
+  catch(...){if(SetFilePointerEx(handle,before,nullptr,FILE_BEGIN)){SetEndOfFile(handle);FlushFileBuffers(handle);}throw;}
+#else
+  if(handle<0)throw Problem("La bozza è chiusa: riprova il salvataggio.");off_t before=lseek(handle,0,SEEK_CUR);if(before<0)throw Problem("Non riesco a leggere la posizione della bozza.");
+  try{while(at<bytes.size()){auto written=::write(handle,bytes.data()+at,bytes.size()-at);if(written<0&&errno==EINTR)continue;if(written<=0)throw Problem("Scrittura della bozza interrotta.");at+=static_cast<std::size_t>(written);}if(::fsync(handle)!=0)throw Problem("Non riesco a confermare la scrittura della bozza.");}
+  catch(...){if(::ftruncate(handle,before)==0){::lseek(handle,before,SEEK_SET);::fsync(handle);}throw;}
+#endif
+ }
+ void close(){
+#ifdef _WIN32
+  if(handle!=INVALID_HANDLE_VALUE){auto value=handle;handle=INVALID_HANDLE_VALUE;if(!CloseHandle(value))throw Problem("Non riesco a chiudere la bozza.");}
+#else
+  if(handle>=0){int value=handle;handle=-1;if(::close(value)!=0)throw Problem("Non riesco a chiudere la bozza.");}
+#endif
+ }
+};
+inline void syncDirectory(const fs::path& path){
+#ifndef _WIN32
+ int fd=::open(path.c_str(),O_RDONLY|O_DIRECTORY|O_CLOEXEC);if(fd<0)throw Problem("Non riesco a confermare il salvataggio nella cartella.");int result=::fsync(fd);int closed=::close(fd);if(result!=0||closed!=0)throw Problem("Non riesco a confermare il salvataggio nella cartella.");
+#else
+ (void)path;
+#endif
+}
+class NativeJournal final:public FileJournal {
+ fs::path path;std::unique_ptr<NativeWriter> writer;
+public:
+ explicit NativeJournal(const Text& target){auto parent=fs::absolute(hostPath(target)).parent_path();std::error_code error;if(!fs::is_directory(parent,error)||error)throw Problem("La cartella di destinazione non è disponibile.");for(int i=0;i<32;++i){auto next=parent/hostPath(fromUtf8(".frociart-recovery-"+uniqueToken()+".txt"));auto handle=NativeWriter::create(next);if(handle){path=std::move(next);writer=std::move(handle);writer->append("");syncDirectory(parent);return;}}throw Problem("Non riesco a creare una bozza univoca.");}
+ Text id()const override{return path.u16string();}
+ void append(const std::string& bytes)override{writer->append(bytes);}
+ void close()override{writer->close();}
+ bool saved()override{close();std::error_code error;bool exists=fs::exists(path,error);if(error)return false;if(!exists)return true;return fs::remove(path,error)&&!error;}
+};
+inline Text readTextPath(const Text& name){try{auto path=hostPath(name);std::error_code error;if(!fs::is_regular_file(path,error)||error)throw Problem("Il file di testo non è disponibile.");std::ifstream input(path,std::ios::binary);if(!input)throw Problem("Non riesco ad aprire il file in lettura.");std::string bytes;char buffer[65536];while(input){input.read(buffer,sizeof(buffer));auto count=input.gcount();if(count>0){if(bytes.size()+static_cast<std::size_t>(count)>TextFiles::maxBytes)throw Problem("Il file supera 4 MiB.");bytes.append(buffer,static_cast<std::size_t>(count));}}if(!input.eof())throw Problem("Lettura del file interrotta.");return TextFiles::decode(bytes);}catch(const Problem&){throw;}catch(const std::exception&){throw Problem("Non riesco a leggere il file richiesto.");}}
+inline void commitJournal(const fs::path& source,const fs::path& target,bool replace){
+#ifdef _WIN32
+ DWORD flags=MOVEFILE_WRITE_THROUGH|(replace?MOVEFILE_REPLACE_EXISTING:0);if(!MoveFileExW(source.c_str(),target.c_str(),flags))throw Problem("File non salvato. La bozza di recupero è conservata.");
+#else
+ if(replace){if(::rename(source.c_str(),target.c_str())!=0)throw Problem("File non salvato. La bozza di recupero è conservata.");syncDirectory(target.parent_path());}
+ else{if(::link(source.c_str(),target.c_str())!=0)throw Problem("File non salvato. La bozza di recupero è conservata.");syncDirectory(target.parent_path());if(::unlink(source.c_str())!=0)throw Problem("File salvato; la copia di recupero non è stata rimossa.");syncDirectory(target.parent_path());}
+#endif
+}
+class ConsoleEncoding {
+#ifdef _WIN32
+ UINT input=0,output=0;
+#endif
+public:
+ ConsoleEncoding(){
+#ifdef _WIN32
+  DWORD mode=0;if(GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),&mode)){input=GetConsoleCP();SetConsoleCP(CP_UTF8);}if(GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE),&mode)||GetConsoleMode(GetStdHandle(STD_ERROR_HANDLE),&mode)){output=GetConsoleOutputCP();SetConsoleOutputCP(CP_UTF8);}
+#endif
+ }
+ ~ConsoleEncoding(){
+#ifdef _WIN32
+  if(input)SetConsoleCP(input);if(output)SetConsoleOutputCP(output);
+#endif
+ }
+};
+inline bool runWithStack(const std::function<bool()>& action){
+ struct Work{std::function<bool()> action;std::atomic<bool> result{false};explicit Work(std::function<bool()> f):action(std::move(f)){} };Work work(action);
+#ifdef _WIN32
+ struct Entry{static unsigned __stdcall start(void* pointer){auto& work=*static_cast<Work*>(pointer);work.result.store(work.action(),std::memory_order_release);return 0;}};
+ auto handle=reinterpret_cast<HANDLE>(_beginthreadex(nullptr,16*1024*1024,Entry::start,&work,STACK_SIZE_PARAM_IS_A_RESERVATION,nullptr));if(!handle)throw Problem("Non riesco a preparare lo spazio per le chiamate di funzione.");if(WaitForSingleObject(handle,INFINITE)!=WAIT_OBJECT_0)std::terminate();CloseHandle(handle);
+#else
+ struct Entry{static void* start(void* pointer){auto& work=*static_cast<Work*>(pointer);work.result.store(work.action(),std::memory_order_release);return nullptr;}};
+ pthread_attr_t attributes;if(pthread_attr_init(&attributes)!=0)throw Problem("Non riesco a preparare l’esecuzione.");if(pthread_attr_setstacksize(&attributes,16*1024*1024)!=0){pthread_attr_destroy(&attributes);throw Problem("Non riesco a preparare lo spazio per le chiamate di funzione.");}pthread_t thread;int result=pthread_create(&thread,&attributes,Entry::start,&work);pthread_attr_destroy(&attributes);if(result!=0)throw Problem("Non riesco ad avviare l’esecuzione.");if(pthread_join(thread,nullptr)!=0)std::terminate();
+#endif
+ return work.result.load(std::memory_order_acquire);
+}
+} // namespace frociart_support
+// CppTurtle.hpp
+namespace frociart_support {
+class Turtle {
+ static std::string number(double value){if(value==0)return "0";std::ostringstream out;out.imbue(std::locale::classic());out<<std::setprecision(17)<<value;return out.str();}
+public:
+ struct Segment{double x1,y1,x2,y2;std::string color;};
+ double x=0,y=0,heading=90;std::string color="#000000";bool used=false;std::vector<Segment> segments;
+ static std::string parseColor(const Value& value){auto text=asciiLower(trim(value.asText()));static const char* names[][3]={{"nero","black","#000000"},{"bianco","white","#FFFFFF"},{"grigio","gray","#808080"},{"rosso","red","#FF0000"},{"arancione","orange","#FF8C00"},{"giallo","yellow","#FFFF00"},{"verde","green","#008000"},{"lime","lime","#00FF00"},{"turchese","teal","#008080"},{"ciano","cyan","#00FFFF"},{"blu","blue","#0000FF"},{"azzurro","skyblue","#00BFFF"},{"viola","purple","#800080"},{"magenta","magenta","#FF00FF"},{"rosa","pink","#FF69B4"},{"marrone","brown","#A52A2A"}};for(const auto& row:names)if(text==fromUtf8(row[0])||text==fromUtf8(row[1]))return row[2];if(text==u"grey")return "#808080";bool valid=(text.size()==4||text.size()==7)&&text[0]==u'#';for(std::size_t i=1;i<text.size();++i)valid&=(text[i]>=u'0'&&text[i]<=u'9')||(text[i]>=u'a'&&text[i]<=u'f');if(!valid)throw Problem("Colore non riconosciuto. Usa un nome o #RRGGBB.");if(text.size()==4)text=Text{u'#',text[1],text[1],text[2],text[2],text[3],text[3]};for(auto& c:text)if(c>=u'a'&&c<=u'f')c-=32;return utf8(text);}
+ void apply(int kind,const Value& value,bool flag){if(kind==12||kind==13){double n=value.asNumber();if(kind==12){double rad=heading*std::acos(-1.0)/180,cos=heading==90||heading==270?0:heading==0?1:heading==180?-1:std::cos(rad),sin=heading==0||heading==180?0:heading==90?1:heading==270?-1:std::sin(rad),nx=x+n*cos,ny=y+n*sin;if(!std::isfinite(nx)||!std::isfinite(ny)||std::abs(nx)>1000000||std::abs(ny)>1000000)throw Problem("Il disegno supera le coordinate tra -1000000 e 1000000.");bool line=flag&&(nx!=x||ny!=y);if(line&&segments.size()>=10000)throw Problem("Il disegno supera 10000 tratti.");if(line)segments.push_back({x,y,nx,ny,color});x=nx;y=ny;}else{double angle=std::fmod(n,360.0);heading=std::fmod(std::fmod(heading+(flag?angle:-angle),360.0)+360,360.0);}}
+  else if(kind==14||kind==15){x=y=0;heading=90;if(kind==15)segments.clear();}else if(kind==16)color=parseColor(value);else throw Problem("Comando tartaruga non riconosciuto.");used=true;
+ }
+ std::string svg()const{double minX=std::min(0.0,x),maxX=std::max(0.0,x),minY=std::min(0.0,y),maxY=std::max(0.0,y);for(const auto& s:segments){minX=std::min(minX,std::min(s.x1,s.x2));maxX=std::max(maxX,std::max(s.x1,s.x2));minY=std::min(minY,std::min(s.y1,s.y2));maxY=std::max(maxY,std::max(s.y1,s.y2));}double margin=std::max(10.0,std::max(maxX-minX,maxY-minY)*.05),width=std::max(1.0,maxX-minX)+2*margin,height=std::max(1.0,maxY-minY)+2*margin;std::string out="<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\""+number(minX-margin)+" "+number(-maxY-margin)+" "+number(width)+" "+number(height)+"\"><title>Disegno tartaruga — Frociart</title><rect x=\""+number(minX-margin)+"\" y=\""+number(-maxY-margin)+"\" width=\""+number(width)+"\" height=\""+number(height)+"\" fill=\"white\"/>";for(const auto& s:segments)out+="<line x1=\""+number(s.x1)+"\" y1=\""+number(-s.y1)+"\" x2=\""+number(s.x2)+"\" y2=\""+number(-s.y2)+"\" stroke=\""+s.color+"\" stroke-width=\"2\" stroke-linecap=\"round\" vector-effect=\"non-scaling-stroke\"/>";return out+"</svg>";}
+};
+} // namespace frociart_support
+// CppHostRuntime.hpp
+#include <iostream>
+namespace frociart_support {
+class HostRuntime:public Runtime {
+ bool skipConsoleLF=false;
+ bool wantsText(const TypeSpec* declaration,const TypeSpec* parameter,bool indexed){auto spec=declaration?declaration:parameter;return spec&&spec->kind==3&&(indexed||!spec->array);}
+ void acceptInput(const Text& name,Value value,bool indexed){begin();try{stage(name,std::move(value),true,indexed);commit();}catch(...){rollback();throw;}}
+ std::optional<Text> consoleRead(const Text& prompt){std::cout<<utf8(prompt)<<std::flush;if(!std::cout)throw Problem("Non riesco a mostrare la richiesta di input.");std::string bytes;while(true){int next=std::cin.get();if(skipConsoleLF){skipConsoleLF=false;if(next=='\n')continue;}if(next==std::char_traits<char>::eof()){if(std::cin.bad())throw Problem("Lettura della console interrotta.");if(bytes.empty())return std::nullopt;return fromUtf8(bytes);}if(next=='\n')return fromUtf8(bytes);if(next=='\r'){skipConsoleLF=true;return fromUtf8(bytes);}bytes.push_back(static_cast<char>(next));if(bytes.size()>4194304)throw Problem("L’input supera lo spazio disponibile.");}}
+ bool savePath(const Text& name,const Text&){auto target=fs::absolute(hostPath(name));std::error_code error;bool exists=fs::exists(target,error);if(error)throw Problem("Non riesco a controllare la destinazione.");if(exists){auto answer=reader(u"Il file «"+name+u"» esiste. Sostituirlo? [s/N] ");if(!answer||asciiLower(trim(*answer))!=u"s")return false;}
+  auto source=files.journalId();if(source.empty())throw Problem("La bozza di recupero non è disponibile.");files.closeJournal();commitJournal(hostPath(source),target,exists);return true;
+ }
+ void showDrawing(){if(!drawing.used)return;auto parent=fs::current_path();for(int i=0;i<32;++i){auto path=parent/hostPath(fromUtf8("Frociart_disegno_"+uniqueToken()+".svg"));auto writer=NativeWriter::create(path);if(!writer)continue;writer->append(drawing.svg());writer->close();syncDirectory(parent);lastDrawingPath=path.u16string();std::cerr<<"Disegno SVG salvato: "<<utf8(*lastDrawingPath)<<'\n';return;}throw Problem("Non riesco a creare un nome univoco per il disegno SVG.");}
+public:
+ using Reader=std::function<std::optional<Text>(const Text&)>;
+ using Writer=std::function<void(const Text&,bool)>;
+ using FileReader=std::function<Text(const Text&)>;
+ using FileSaver=std::function<bool(const Text&,const Text&)>;
+ Reader reader;Writer writer;FileReader fileReader;FileSaver fileSaver;
+ TextFiles files;Turtle drawing;std::vector<Text> output;std::vector<bool> outputNewlines;
+ std::optional<Text> recoveryPath,lastDrawingPath;
+ HostRuntime(){setHost();}
+ void setHost(Reader nextReader={},Writer nextWriter={},FileReader nextFileReader={},FileSaver nextFileSaver={}){
+  if(files.hasWrite())throw Problem("Chiudi prima il file in scrittura.");reader=nextReader?std::move(nextReader):Reader([this](const Text& prompt){return consoleRead(prompt);});writer=std::move(nextWriter);fileReader=nextFileReader?std::move(nextFileReader):FileReader(readTextPath);
+  if(nextFileSaver){fileSaver=std::move(nextFileSaver);files.journalFactory={};}else{fileSaver=[this](const Text& name,const Text& text){return savePath(name,text);};files.journalFactory=[this](const Text& name){auto journal=std::make_shared<NativeJournal>(name);recoveryPath=journal->id();return journal;};}
+ }
+ Value read(const Text& name,Text prompt,const TypeSpec* declaration,const TypeSpec* parameter,Value vector={},const std::function<Value()>& indexExpression={}){
+  guard();Text display=name;std::optional<int> index;if(indexExpression){vector.asVector();Value i=indexExpression();if(references)vector=lookup(name);index=vector.asVector().index(i);display+=u"["+formatNumber(*index)+u"]";}guard();if(trim(prompt).empty()||prompt==u"Inserisci un valore per x")prompt=u"Inserisci un valore per "+display;
+  while(true){auto raw=reader(prompt+u": ");if(!raw)throw Problem("Input terminato prima di ricevere un valore valido.");try{auto value=wantsText(declaration,parameter,index.has_value())?Value::text(*raw):parseInput(*raw);if(index)value=(references?lookup(name):vector).asVector().set(*index,value);value=convert(value,declaration,parameter);acceptInput(name,value,index.has_value());return value;}catch(const Problem& error){std::cerr<<error.what()<<'\n';}}
+ }
+ void emit(const Value& value,bool newline=true){auto text=value.format();if(outputSize+text.size()>262144)throw Problem("Il risultato supera 256 KiB.");output.push_back(text);outputNewlines.push_back(newline);outputSize+=text.size();if(writer)writer(text,newline);else{std::cout<<utf8(text)<<(newline?"\n":"")<<std::flush;if(!std::cout)throw Problem("Scrittura della console interrotta.");}}
+ Value intrinsic(const std::string& name,const std::vector<Value>& arguments){if(name=="eof"){if(!arguments.empty())throw Problem("EOF non accetta argomenti.");return Value::logical(files.eof());}return frociart_support::intrinsic(name,arguments);}
+ void requireClosed(bool reading){if(reading?files.hasRead():files.hasWrite())throw Problem("Chiudi il file precedente prima di aprirne un altro.");}
+ void requireWrite(){if(!files.hasWrite())throw Problem("Apri prima un file in scrittura.");}
+ void openFile(bool reading,const Value& value){requireClosed(reading);auto name=TextFiles::fileName(value);if(reading)files.openRead(name,fileReader(name));else files.openWrite(name);}
+ Value readFile(const Text& name,const TypeSpec* declaration,const TypeSpec* parameter,Value vector={},const std::function<Value()>& indexExpression={}){
+  std::optional<int> index;if(indexExpression){vector.asVector();Value i=indexExpression();if(references)vector=lookup(name);index=vector.asVector().index(i);}auto raw=files.peekLine();auto value=wantsText(declaration,parameter,index.has_value())?Value::text(raw):parseInput(raw);if(index)value=(references?lookup(name):vector).asVector().set(*index,value);value=convert(value,declaration,parameter);acceptInput(name,value,index.has_value());files.commitRead();return value;
+ }
+ void writeFile(const Value& value,bool newline){files.write(value.format(),newline);}
+ void closeFile(bool reading){if(reading){files.closeRead();return;}requireWrite();if(!fileSaver(*files.writeName,files.draft()))throw Problem("Salvataggio annullato: la bozza resta disponibile.");files.saved();if(!files.recoveryCopyRemains)recoveryPath.reset();}
+ void finishFiles(){if(files.hasWrite())closeFile(false);if(files.hasRead())closeFile(true);}
+ void turtle(int kind,const Value& value,bool flag){drawing.apply(kind,value,flag);}
+ bool run(const std::function<Value()>& main,bool saveDrawing=true){ConsoleEncoding encoding;auto execute=[&](){bool result=false;try{main();if(saveDrawing)showDrawing();result=true;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';}catch(...){std::cerr<<"Esecuzione interrotta.\n";}
+  try{files.closeJournal();}catch(const std::exception& error){std::cerr<<error.what()<<'\n';result=false;}if(recoveryPath){std::error_code error;if(fs::exists(hostPath(*recoveryPath),error)&&!error)std::cerr<<"Bozza recuperabile: "<<utf8(*recoveryPath)<<'\n';}return result;
+ };try{return runWithStack(execute);}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return false;}}
+};
+} // namespace frociart_support

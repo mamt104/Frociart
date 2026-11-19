@@ -1,0 +1,20 @@
+package it.frociart.app;
+import java.util.*;import java.nio.file.*;import java.nio.charset.StandardCharsets;import static it.frociart.app.FlowModel.*;
+public final class ReferenceFormatTests {
+ static int checks;static void check(boolean b,String s){checks++;if(!b)throw new AssertionError(s);}
+ static String run(Document d){FlowEngine.Runner r=new FlowEngine.Runner(d);for(int i=0;i<500&&r.state!=FlowEngine.State.COMPLETED&&r.state!=FlowEngine.State.ERROR;i++)r.step();check(r.state==FlowEngine.State.COMPLETED,"Reference program completes: "+r.errorMessage);return r.outputText();}
+ public static void main(String[] args)throws Exception{
+  Path root=Paths.get(args[0]);String code="FUNZIONE bump(v: RIF INTERO[])\nv[0]=7\nFINE FUNZIONE\na=[1,2]\nCHIAMA bump(a)\nSTAMPA a";
+  Document d=FlowPseudocode.decode(code);check(d.version==3&&d.functions.get(0).parameters.get(0).byReference,"Format 3 and RIF signature");check(run(d).equals("[7, 2]"),"RIF executes");check(run(FlowPseudocode.decode(FlowPseudocode.encode(d))).equals("[7, 2]"),"Signature round trip");
+  Document library=FlowFunctionTransfer.export(d,d.functions.get(0).id);check(library.version==3&&library.functions.get(0).parameters.get(0).byReference,"Library format 3");
+  Document blank=new Document();Node start=new Node(START,"Inizio",0,0),end=new Node(END,"Fine",0,200);blank.nodes.add(start);blank.nodes.add(end);blank.edges.add(new Edge(start.id,end.id,"next"));
+  FlowFunctionTransfer.Plan plan=FlowFunctionTransfer.prepare(blank,library,library.functions.get(0).id);check(plan.project.version==3&&plan.project.functions.get(0).parameters.get(0).byReference,"Function import preserves reference mode");
+  Function renamed=d.functions.get(0).copy();renamed.parameters.get(0).name="dati";Map<String,String> renames=new HashMap<>();renames.put("v","dati");Document edited=FlowFunctionEditing.save(d,renamed,renames);check(edited.version==3&&run(edited).equals("[7, 2]"),"Parameter rename retains reference behavior");
+  Document downgraded=d.copy();downgraded.version=2;boolean rejected=false;try{FlowCodec.encode(downgraded);}catch(IllegalArgumentException e){rejected=true;}check(rejected,"Older format cannot silently discard reference mode");
+  for(String broken:new String[]{"FUNZIONE f(v: RIF INTERO)\nFINE FUNZIONE\nSTAMPA 1","FUNZIONE f(v: RIF INTERO[])\nFINE FUNZIONE\na=[1]\nCHIAMA f(a[0])","FUNZIONE f(v: RIF INTERO[])\nFINE FUNZIONE\nCHIAMA f(vettore(1))","FUNZIONE f(v: RIF INTERO[])\nv=[1]\nFINE FUNZIONE\na=[2]\nCHIAMA f(a)"}){rejected=false;try{FlowPseudocode.decode(broken);}catch(IllegalArgumentException e){rejected=true;}check(rejected,"Invalid references rejected atomically");}
+  String xml=new String(Files.readAllBytes(root.resolve("reference-simple.fprg")),StandardCharsets.UTF_8);Document imported=FlowgorithmImport.decode(xml);check(imported.version==3&&imported.functions.get(0).parameters.get(0).byReference,"FPRG array parameter imports by reference");FlowEngine.Runner runner=new FlowEngine.Runner(imported);for(int i=0;i<300&&runner.state!=FlowEngine.State.COMPLETED&&runner.state!=FlowEngine.State.ERROR;i++)runner.step();check(runner.state==FlowEngine.State.COMPLETED&&runner.variables.get("a").element(0).asNumber()==7,"Imported FPRG changes original");
+  for(String prefix:new String[]{"rif\t","ReF   ","RIF \t "}){Document spaced=FlowPseudocode.decode(code.replace("RIF ",prefix));check(spaced.functions.get(0).parameters.get(0).byReference&&run(spaced).equals("[7, 2]"),"Whitespace and case in reference prefix");}
+  check(FlowFunctions.projectVersion(Arrays.asList((Function)null))==2,"Incomplete draft version safe");Function broken=d.functions.get(0).copy();broken.parameters=null;check(FlowFunctions.projectVersion(Arrays.asList(broken))==2,"Incomplete parameter list version safe");
+  String before=FlowCodec.encode(d);check(FlowCodec.decode(before).functions.get(0).parameters.get(0).byReference,"Codec retains mode");check(before.equals(FlowCodec.encode(d.copy())),"Clone retains exact serialized metadata");System.out.println("REFERENCE_FORMAT_ANDROID PASS checks="+checks);
+ }
+}

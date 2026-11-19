@@ -1,0 +1,290 @@
+FROCIART ANDROID 1.2.1 — MAPPA DELLA COPERTURA
+Aggiornamento finale: 18 ottobre 2026, 14:12 UTC (16:12 Europe/Rome).
+
+Questa mappa affianca CHECKLIST.txt senza trasformare automaticamente le
+48 voci in prove superate. Risultati della candidata Android 1.2.1/code4,
+salvo quando indicata esplicitamente un'altra versione.
+
+STATI
+UI CAMPIONE: azioni specificate riuscite sulla UI Android reale; non
+matrice completa. PARZIALE: soltanto parte del percorso o varianti.
+COMPONENTE: Android con fixture/MotionEvent diretti o chiamate controller.
+HOST: JVM/modello/SharedPreferences adattato, nessuna UI o disco Android.
+NOT_RUN: nessun esito corrente sufficiente. BLOCKED_ENV: ambiente osservato.
+Una fase prevista o compilata non è una prova passata.
+I marker Jxx dentro UiProbe non coincidono sempre con CHECKLIST.txt:
+qui la mappatura deriva dalle azioni effettive, non dal numero stampato.
+
+EVIDENZE LETTE
+C: tests/connections/results/candidate-first-native.log.
+   Android35 density1.125. 118 controlli precedenti canvas rieseguiti,
+   64 nuovi funzionali e geometria del + allegato PASS.
+   La prima riga PASS aggrega i118, non vanno sommati due volte.
+   Gate successivo pulsazione fermato sotto System UI ANR: contesto e
+   immagine in first-attempt-context.txt e candidate-first-system-ui-anr.png.
+   Riprova pulse distinta in L, ora riuscita con focus reale.
+H: tests/results/update-1.2.1/engine-host.log.
+   170 motore +11 capacità PASS; fixture desktop originali assenti.
+   Tempi JVM non rappresentano prestazioni del telefono.
+D: tests/drafts/results/draft-results.json e draft-tests.log.
+   245 FlowDraftStore PASS con SharedPreferences simulato host.
+U: tests/results/update-1.2.1/native/upgrade-seed-portrait-instrumentation.log
+   e upgrade-check-portrait-instrumentation.log: 7+6 controlli PASS.
+   Sorgenti1.2.0 e1.2.1 con stessa firma QA temporanea: editor legacy reale,
+   install-r, progetto identico, recupero/applicazione bozza al nodo corretto.
+P: tests/results/update-1.2.1/native/journey-captures/portrait/
+   40-start-visible-plus.png e41-direct-plus-picker.png.
+   Catture candidate ispezionate: Inizio+ visibile e picker immediato
+   Input/Operazione/Decisione/Output/Fine, senza un secondo Inizio.
+J: tests/results/update-1.2.1/native/journey-portrait-fixture-fixed.log.
+   97 controlli PASS, errors=0; percorso UI completo previsto dal probe.
+   Il tentativo precedente ha 53 assert PASS e un errore fixture: nome
+   falso di 61 caratteri correttamente limitato a 60. Non sommare quei
+   53 ai 97 della riprova; produzione identica, fixture corretta a 58.
+B: tests/results/update-1.2.1/native/drafts-portrait.log.
+   33 controlli PASS, errors=0: bozze indipendenti, cambio progetto,
+   Applica/Scarta e ricreazione Activity con il campo in corso recuperato.
+E: tests/results/update-1.2.1/native/project-delete-portrait.log.
+   23 controlli PASS, errors=0. Preparazione pratica via controller;
+   poi rename/menu/Tieni/Elimina nativi e controllo dopo ricreazione.
+F: tests/results/update-1.2.1/native/files-portrait.log.
+   19 righe PASS, 7 FAIL e 1 errore di esecuzione; marker 26/errors=8.
+   NON PASS. Timeout DocumentsUI; .frociart e due
+   PDF reali comunque recuperati. PNG non completato; SVG, condivisione,
+   importazione e cancel-save non raggiunti. Il PDF singolo supera la
+   sequenza di salvataggio. Nessuna conclusione generale che SAF funzioni.
+Q: tests/pdf/results/planner-host.log e planner-provenance.json.
+   Bug A4 reale osservato nei file F: Output/testo divisi tra pagine.
+   Correzione isolata FlowExporter + FlowPdfPages. 6018 assert host su
+   35 casi PASS e compilazione Android/DEX/zipalign PASS. Rendering dei
+   PDF corretti prodotti nel gate I/O I; ispezione visuale V riuscita,
+   distinta dai timeout dell'ambiente.
+I: tests/results/update-1.2.1/native/io-final.log.
+   44 controlli PASS su Android con exporter/planner corretti. Storage QA
+   isolato, file reali e provider installato; nessun DocumentsUI/chooser.
+   Artefatti in native/io-final-artifacts/. La provenienza finale è in
+   native/final-provenance.json e candidate-final-source-sha256.json:
+   APK QA finale a3bfecdf629639aac58593b29bd5c191a3e2364e75603faebdca3d0e20fb5502;
+   unsigned finale 2582e488eb870c02e3ecc587851f4d662173cdecd2df931055a7f30406cff4d1.
+   Gli hash in io-provenance.json senza final sono iniziali, non quelli di I.
+V: tests/results/update-1.2.1/native/export-review-final/LEGGIMI.txt
+   e file-analysis.json. Poppler: tre processi con exit 0; ispezione
+   personale di root di tutte le sette pagine. Pari/Dispari A4: due pagine
+   con Output interi nella seconda, nessun frammento nella prima. Campione
+   alto: quattro pagine con blocchi/testo interi. PDF singolo: completo.
+   Risultato PASS per i campioni; il fallback denso resta verificato host.
+   Avvio a freddo finale PASS: native/final-cold-launch.log e screenshot.
+L: tests/results/update-1.2.1/native/canvas-pulse.log.
+   5 controlli PASS: precondizioni reali di focus/visibilità, + di Inizio,
+   pulsazione in Gruppo, motion ridotte con + ancora disponibile e Run
+   senza affordance di modifica. Non sono prove FPS.
+S: tests/results/update-1.2.1/native/state-regressions.log.
+   17 assert PASS, poi il controllo 18 fallisce sul focus del dialogo
+   prima di Back. I casi 1/2/3 sono conclusi: coordinate limite e salvataggio,
+   scollegamento di un arco invalido da Fine, Verifica tardiva.
+   Nel caso 4 passa anche X. Back/Home non raggiunti: suite NON PASS
+   completa. Precondizione di focus fallita, causa non determinata:
+   non viene attribuita con certezza né all'ambiente né all'app.
+
+Il primo journey terminava prima del percorso per clearDraft in un harness
+obsoleto: errore del test, non regressione dell'app. J è la riprova riuscita.
+J/B/E sono sul primo candidato 1.2.1; poi sono cambiati soltanto alcuni
+microtesti e l'esportazione A4. La build corretta del PDF è una nuova
+candidata: i suoi gate di esportazione e rendering sono I e V.
+Le suite storiche1.1/1.2, learning eI/O restano storia; non sono rieseguite
+automaticamente perché il sorgente è ancora presente.
+
+LIMITI COMUNI
+Un emulatoreAndroid35 software; nessun telefono fisico, desktopWindows,
+display144Hz o misura FPS validata. I helper talvolta guidano il focus
+camera e impostano testi con setText; tap/drag/SAF/Back sono reali dove
+specificato. Le varianti320dp/font1.3, tema opposto e rotazione restano
+NOT_RUN finché documentate da propri risultati correnti.
+L'upgrade QA verifica migrazione software; la firma originale release
+resta BLOCKED. Non consegnare l'APK QA come aggiornamento della release.
+
+MAPPA48 — STATO E PORTATA EFFETTIVA
+
+J01 | PARZIALE UI | Home finale avviata a freddo e screenshot ispezionato.
+Il percorso completo Home/Impara/laboratorio della fase study non rieseguito.
+
+J02 | UI CAMPIONE | J e P: Nuovo progetto, Inizio +, picker immediato.
+Il percorso continua creando il flusso e provando entrambi i rami.
+
+J03 | UI CAMPIONE + COMPONENTE | C e J: + singolo in Gruppo.
+J: nuovo progetto dalla UI partendo in Gruppo, tap+; ritorno in Gruppo
+con Start singolo e altro tap+ riusciti sullo stesso progetto.
+
+J04 | PARZIALE UI | J costruisce da zero un flusso ramificato di sei
+nodi e lo esegue con due input. La specifica sequenza lineare 4→5 resta
+non percorsa; full usa Somma veloce come fixture.
+
+J05 | UI CAMPIONE | J: Input inserito Start→Input→Output→Fine,
+continuazione conservata, singolo Undo elimina Input/ripristina freccia;
+Redo ripristina insieme Input e continuazione. Variante Input, non Operazione.
+
+J06 | PARZIALE UI | J aggiunge Output sul falso libero e conserva
+Output sul vero; non esegue inserimenti su entrambi i rami già occupati.
+
+J07 | PARZIALE UI | J: Decisione inserita dopo Input, scelta esplicita
+vero e Output precedente preservato. Annullamento picker non coperto.
+
+J08 | NOT_RUN | Fine su uscita occupata con conferma/annulla/Undo.
+Creare Fine dopo Output libero non copre questo scenario.
+
+J09 | UI CAMPIONE + COMPONENTE | J: lista ricercabile di destinazioni
+e collegamento a Fine esistente PASS. C copre il target sul canvas.
+
+J10 | PARZIALE UI + COMPONENTE | J: Tieni/Cambia/Undo PASS; C: stessa
+destinazione no-op. Il secondo collegamento identico non è ripetuto via UI.
+
+J11 | UI CAMPIONE + COMPONENTE | J: tap freccia/Scollega/Undo PASS,
+seguiti da Verifica e Run del flusso ripristinato. C: ID esatto.
+S: collegamento illegale da Fine scollegato e ripristinato con Undo PASS.
+
+J12 | PARZIALE COMPONENTE | C: drag+vuoto richiede add con ultime coordinate,
+nessuna mutazione prematura. Sequenza drag→blocco dal picker non
+rieseguita nel percorso study corrente.
+
+J13 | PARZIALE COMPONENTE | C: Start/Decisione, magnete, branch, commit,
+nessuna sostituzione silenziosa. Drag+pannello completo non percorso in UI.
+
+J14 | PARZIALE COMPONENTE | C: Inizio/self/CANCEL/pinch/rilascio residuo.
+S: X chiude la riconnessione senza modo pendente PASS; Back/Home non
+raggiunti perché fallisce la precondizione di focus del dialogo.
+
+J15 | PARZIALE UI | J: nomi vero 60 e falso 58 caratteri interamente
+leggibili nei pannelli, colori Viola/Arancione. Stesso colore e variante
+320 dp / font 1,3 non rieseguiti.
+Sul canvas resta ellissi: wrapping completo si riferisce ai pannelli.
+
+J16 | PARZIALE UI/HOST/COMPONENTE | J: merge su Fine e due risultati
+con input 3 e -2. H: cicli del motore; C: routing/ID. Nessun ciclo costruito
+ed eseguito via UI nella prova corrente.
+
+J17 | PARZIALE COMPONENTE | C118: tap/pan/pinch/rilascio/fit/zoom.
+Full controlla bounds selezione; esito corrente full assente.
+
+J18 | PARZIALE COMPONENTE | C118: riquadro ultimoMOVE, gruppo, drag
+singola transazione, CANCEL/pinch. Non tutti i gesti percorsi dal dock UI.
+
+J19 | PARZIALE COMPONENTE | C118: duplica ID/archi interni/colori,
+elimina incidenti/transazioni. Menu+Undo/Redo e duplicazione Start non provati.
+
+J20 | NOT_RUN | Ordina/Undo/Redo/manuale/persistenza.
+La fase study/editorEnhancements con fixture starter non è stata rieseguita.
+
+J21 | PARZIALE COMPONENTE/HOST | C: limite/fit/geometria; H:500nodi.
+Percorso150+nodi aggiungi/collega/ordina/export in transizione non concluso.
+
+J22 | PARZIALE UI | J: Input/Decisione/Output; B: Operazione/Output.
+Inizio/Fine modificati, tutti i campi e relativa tastiera non coperti
+integralmente dai percorsi correnti.
+
+J23 | UI CAMPIONE + HOST | B: X conserva, Applica aggiorna il nodo,
+Scarta ripristina contenuto applicato; D indipendenza, U migrazione.
+
+J24 | PARZIALE UI + HOST | B: bozza dopo cambio progetto e ricreazione
+Activity PASS. D: store ricostruito. Force-stop/reboot non provati.
+
+J25 | UI CAMPIONE + HOST | B e D: due bozze; applicare/scartare una
+conserva l'altra. Verificato riaprendo entrambi gli editor reali.
+
+J26 | PARZIALE UI + HOST | B: ricreazione Activity con Operazione
+aperta recupera il testo. D: sei campi esatti. Non tutte combinazioni
+rotazione/Decisione/colori/tema sono state rieseguite.
+
+J27 | PARZIALE HOST | H sintassi/limiti/input invalido.
+Campi/nome ramo vuoti e limiti nel relativo editor non percorsi in UI.
+
+J28 | PARZIALE UI/COMPONENTE | U rinomina e progetto dopo install-r;
+B alterna progetti da lista; F rinomina; I elenco e salvataggio reali.
+Undo separato non provato end-to-end.
+
+J29 | PARZIALE UI | E prova Tieni/Elimina sul corrente QA. Il caso
+altro progetto e fallimento filesystem restano non percorsi via UI.
+
+J30 | UI CAMPIONE CON SETUP CONTROLLER | E: pratica predisposta dal
+controller, poi menu nativi Tieni/Elimina, nuovo starter con quattro nodi,
+Ordina ON/Gruppo OFF/lezione vuota, nessuna resurrezione dopo ricreazione.
+Non è una nuova esecuzione dell'intero percorso didattico Impara.
+
+J31 | PARZIALE UI/COMPONENTE/HOST, TIMEOUT SAF | F salva il .frociart reale
+ma DocumentsUI supera il timeout. Il successivo import/comparazione completa
+non è raggiunto. I esporta/rilegge il file reale e verifica nome/colore
+del ramo; H verifica codec. Non dichiarare roundtrip SAF PASS.
+
+J32 | NOT_RUN | Cancel-save/open e successivo formato.
+F termina prima di raggiungere cancel-save; cancel-open non percorso.
+
+J33 | PARZIALE HOST/COMPONENTE | H codec malformato/limiti/versione;
+I rifiuta UTF-8 invalido, file oltre 4 MB e progetti invalidi preservando
+il precedente salvataggio. Import via SAF e recupero UI non percorsi.
+
+J34 | FAIL INIZIALE A4; CORREZIONE HOST/I/O/VISUALE PASS NEI CAMPIONI
+F produce PDF singolo e A4 reali. A4 taglia i nodi Output: bug reale,
+distinto dai timeout SAF. Q corregge il planner con prove di copertura;
+I genera PDF Android corretti, PNG con colori e limiti, SVG vettoriale,
+PDF singolo e multipagina fino al limite. Lettura e colori verificati
+nei componenti; V conferma nodi/testo interi in tutte le sette pagine
+dei tre PDF. Il layout denso con sovrapposizione è verificato solo host.
+C copre SVG/bitmap. In F, PNG non completato e SVG non raggiunto.
+
+J35 | COMPONENTE PASS; CHOOSER NOT_RUN
+I verifica ShareProvider reale: MIME PNG, nome, dimensione, byte, sola
+lettura e rifiuto percorsi vietati. F non raggiunge il chooser: nessuna
+condivisione utente end-to-end conclusa o file inviato a persone/servizi.
+
+J36 | UI CAMPIONE + COMPONENTE | U7+6 PASS: save, draft legacy, install-r stessaQA,
+documento/ID, migrazione/applica. saveNow invocato: timerautosave non misurato.
+I verifica scrittura atomica, recupero backup e file invariato dopo save
+invalido. Aggiornamento con certificato originale BLOCKED, non certificato.
+
+J37 | PARZIALE UI/HOST | J verifica il flusso costruito e mostra
+Pronto da provare. H grafo/sintassi/variabili. Il ciclo UI
+segnalazione→correzione dei tre errori non è percorso integralmente.
+
+J38 | COMPONENTE PASS | S, caso 3: Verifica ritardata con latch lascia
+Home/editor nuovi intatti. Due assert PASS, prova controller con fixture;
+non percorso umano e nessuna promessa di prestazioni.
+
+J39 | PARZIALE UI/HOST | J Esegui/Ricomincia e due risultati PASS.
+H motore. La sequenza completa Un passo/Pausa/Riprendi non rieseguita.
+
+J40 | PARZIALE UI/HOST | J input 3/-2 con Invio UI, ramo corretto e
+risultati distinti PASS. H input/retry. Le varianti vuoto/decimale/testo,
+tastiera reale e invio IME non rieseguite tutte nello stesso percorso.
+
+J41 | NOT_RUN | Dettagli/tutte velocità/chiudi/modifica/riapri.
+Nessuna fase corrente percorre integralmente questa sequenza.
+
+J42 | PARZIALE HOST | H divisionezero e stop10.000passi.
+Full errore/Reset UI atteso; cicloal limite non percorso via UI.
+
+J43 | NOT_RUN | Tastiera/tema/rotazione durante Input e background Run.
+La fase full e il background durante esecuzione auto non sono rieseguiti.
+
+J44 | NOT_RUN | Lezione completa/riprova/ripasso/XP.
+Study lezione 1 non rieseguito. Le 3.415 prove didattiche 1.2.0 sono storia.
+
+J45 | NOT_RUN | Ripresa quiz/24 lezioni.
+Study domanda risolta/ricreazione/percorso24 non rieseguito.
+
+J46 | PARZIALE HOST | H esempi base. Report misure coperto dal learning
+storico non rieseguito. Study pratica/trucco e Report completo UI non ripetuti.
+
+J47 | PARZIALE UI/COMPONENTE
+J/B/E mostrano tema chiaro e status bar coerente nei percorsi correnti.
+C: export indipendente da tema/readonly. L: pulsazione attiva e ridotta
+PASS dopo il primo tentativo coperto da System UI ANR. Matrice completa
+Scuro/Segui telefono/motion su ogni pannello non rieseguita.
+
+J48 | PARZIALE COMPONENTE | C azioni accessibili Add/Connect/edge,
+priorità dei tocchi e readonly. Non TalkBack fisico con utente. S: X PASS;
+Back/Home non raggiunti. Non intera gerarchia Back di tutte le pagine.
+
+CHIUSURA DEL COLLAUDO
+I gate correnti sono conclusi con i risultati e limiti sopra. I fallimenti
+iniziali e le riprove restano distinti; le varianti NOT_RUN non vengono
+promosse a PASS per deduzione. Questa mappa non prova l'assenza di tutti
+i bug e non misura 144 FPS.

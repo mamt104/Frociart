@@ -1,0 +1,1601 @@
+Dove trovare i comandi
+
+Progetto: apri, salva, recupera, esporta, stampa ed esempi.
+
+Modifica: annulla, cerca, rinomina variabili, funzioni e cicli.
+
+Esegui: verifica, prova, avanza, variabili, console e dati di test.
+
+Codice: pseudocodice, Genera codice e modelli personali.
+
+Vista: layout, pannelli, griglia, riordino, stile, tema e animazioni.
+
+Aiuto: guida, comandi rapidi e autore.
+
+I comandi frequenti restano anche sul foglio. Ogni layout mantiene tutte le funzioni.
+
+
+
+SUL FOGLIO CON LA TASTIERA
+
+PagGiù e PagSu scelgono il blocco successivo o precedente seguendo i collegamenti.
+
+Home ed End raggiungono il primo e l’ultimo blocco, comprese le parti scollegate.
+
+Invio modifica il blocco selezionato; su un ciclo ridotto lo espande.
+
+Durante Collega, scegli il blocco di arrivo con PagGiù/PagSu e premi Invio.
+
+Maiusc+F10 apre i comandi della selezione. Canc elimina; Ctrl+Z annulla.
+
+Le frecce continuano a spostare i blocchi selezionati, senza cambiare i collegamenti.
+
+Il blocco scelto fuori vista viene inquadrato con la normale animazione.
+
+Gli strumenti di accessibilità possono leggere e selezionare blocchi e frecce,
+
+compresi il nome del ramo e il blocco di arrivo. Attivare una freccia raggiunge
+
+il suo arrivo; selezionarla permette di gestirla con il menu o con Canc.
+
+
+
+PROVA DAL CODICE
+
+In Codice > Genera codice, la finestra del linguaggio scelto offre Esegui,
+
+Avanti, Pausa e Ricomincia. La prova segue lo stesso flowchart della finestra
+
+principale: non esegue il file esportato. Le righe associate al blocco attivo
+
+si evidenziano anche dentro le funzioni. Segui blocco accompagna la lettura;
+
+disattivalo per mantenere la tua posizione mentre la prova continua.
+
+Inserisci i valori richiesti direttamente nella finestra; per i file usa
+
+Scegli file o Salva file. F5 esegue/mette in pausa, F11 avanza. Chiudere la
+
+finestra mette in pausa conservando valori e input ancora da inviare.
+
+I modelli personali possono seguire la prova solo se collegano righe e blocchi.
+
+
+
+FROCIART — DISEGNA, CONTROLLA, PROVA
+
+Guida rapida — v1
+
+
+
+Frociart è un programma per Windows 10/11. Il pacchetto classico richiede .NET Framework 4.8. Il pacchetto autonomo include il runtime necessario. L’installer leggero verifica i componenti prima di installare. Permette
+
+di costruire diagrammi di flusso, controllarne struttura e sintassi e
+
+simularne l'esecuzione con dati reali. Il lavoro si svolge sul computer.
+
+
+
+I TUOI FLOWCHART
+
+
+
+La Home mostra i progetti aperti o salvati di recente. Usa Nuovo flowchart,
+
+Apri file oppure Importa pseudocodice. Progetto > Home riapre la schermata
+
+iniziale conservando il diagramma corrente. La sezione Impara è sospesa.
+
+
+
+Aprendo un diagramma, la vista parte da Inizio quando mostrarlo interamente
+
+renderebbe troppo piccoli i testi. Inquadra adatta il foglio allo spazio disponibile. Se un diagramma molto esteso non entra interamente nella vista, un messaggio invita a scorrere o cercare un blocco; il progetto resta completo.
+
+Se il carattere del dispositivo è più grande e introduce sovrapposizioni,
+
+Frociart adatta la spaziatura dei percorsi coinvolti conservandone la disposizione
+
+relativa. Ctrl+Z ripristina le posizioni; il file originale cambia solo con Salva.
+
+Le note libere mantengono la propria posizione. I limiti del foglio possono
+
+richiedere un carattere più piccolo o un diagramma suddiviso in funzioni.
+
+
+
+TAGLIA UN COLLEGAMENTO
+
+
+
+Tieni premuto il tasto destro e attraversa una o più frecce: una scia
+
+mostra il taglio. Rilascia per scollegare le frecce attraversate. Le caselle
+
+e le loro posizioni restano sul foglio. Ctrl+Z ripristina tutto il gesto;
+
+Esc, prima del rilascio, annulla senza modificare il diagramma. Un clic
+
+destro fermo apre il menu. Puoi anche selezionare una freccia e premere Canc.
+
+
+
+ALLINEA I BLOCCHI
+
+
+
+Griglia: ON/OFF è accanto allo zoom. Con ON, nuovi blocchi e spostamenti
+
+si allineano alla griglia di 24 unità. Durante il trascinamento il
+
+movimento resta continuo: lo snap avviene al rilascio. Alt consente
+
+il posizionamento libero. Un gruppo mantiene le proprie distanze interne,
+
+ancorando alla griglia il blocco trascinato. Attivare la griglia non
+
+modifica le coordinate dei diagrammi esistenti. La preferenza è ricordata.
+
+
+
+PARTI DA UNA PROVA CONCRETA
+
+
+
+1. Apri Esempi e scegli Pari o dispari.
+
+2. Premi Verifica. Apri la scheda Verifica per leggere errori e avvisi.
+
+3. Premi Esegui e inserisci 7 quando viene richiesto il numero.
+
+4. Guarda l'output nella scheda Esecuzione: compare Dispari.
+
+5. Premi Ricomincia e usa Avanti. Segui il blocco evidenziato e la
+
+   tabella delle variabili. La decisione sceglie il ramo No.
+
+6. Ripeti con 4 e poi con 0. Osserva cosa cambia nel percorso.
+
+
+
+Ora apri Esercizio: trova l'errore. Premi Verifica, seleziona la
+
+segnalazione e raggiungi il blocco da correggere. Completa il collegamento
+
+del ramo indicato, poi verifica di nuovo: hai appena riparato un errore
+
+strutturale, uno degli errori che il programma può riconoscere da solo.
+
+
+
+LA CONSOLE DELLA PROVA
+
+
+
+In Esecuzione apri Console · letture e stampe. Puoi continuare con Esegui,
+
+Avanti e il campo del valore senza chiudere la finestra. Messaggi distingue
+
+LEGGI e STAMPA; Testo mostra la stessa cronologia selezionabile, con nome
+
+della variabile, funzione e passo. Apri un messaggio per leggere il valore
+
+intero, copiarlo o raggiungere il blocco che l'ha prodotto.
+
+Copia e Salva .txt includono anche i valori inseriti. Per copiare solo
+
+l'output originale usa Copia nel riquadro Il risultato. Svuota cancella
+
+la cronologia senza cambiare variabili o risultato; Ricomincia/Riprova
+
+avvia una nuova prova. Il PNG Diagramma e dati include i valori inseriti.
+
+La console è temporanea: non viene salvata nel progetto né recuperata
+
+alla chiusura. Conserva al massimo 4096 messaggi e 524288 caratteri UTF-16,
+
+compresi i metadati; segnala quando rimuove i più vecchi. Testo e salvataggio
+
+riportano la cronologia conservata, con le etichette e la segnalazione
+
+delle stampe senza a capo: non sono il solo output del programma.
+
+Ctrl+C nella lista copia il valore selezionato; Ctrl+A apre e seleziona
+
+il testo intero; Ctrl+S salva, F5 esegue/mette in pausa, F10/F11 avanza.
+
+
+
+PERSONALIZZA LE USCITE
+
+
+
+Seleziona una Decisione e premi Etichette e colori delle uscite.
+
+Puoi scrivere nomi come Pari / Dispari oppure Continua / Riprova e
+
+scegliere un colore per ciascun percorso. Applica registra una sola modifica,
+
+annullabile con Ctrl+Z. L’espressione sceglie sempre il risultato vero o falso.
+
+Nomi e colori restano nel .frociart, nelle esportazioni e nella versione Android.
+
+Le etichette ammettono fino a 60 caratteri. I progetti precedenti conservano
+
+le diciture e i colori iniziali.
+
+
+
+I BLOCCHI
+
+
+
+Inizio      Punto da cui parte l'algoritmo. Ce ne deve essere uno solo.
+
+Input       Legge un dato e lo mette in una variabile.
+
+Operazione  Calcola e assegna valori alle variabili.
+
+Decisione   Valuta una condizione e sceglie l’uscita vera oppure falsa.
+
+Output      Mostra un valore o un messaggio.
+
+Fine        Termina questa esecuzione.
+
+
+
+Usa le frecce per stabilire l'ordine. Una Decisione ha due uscite, inizialmente chiamate Sì e No;
+
+gli altri blocchi eseguibili hanno una sola uscita. Fine non ha uscite.
+
+Puoi far tornare una freccia a un blocco precedente per creare un ciclo.
+
+
+
+COME SI DISEGNA
+
+
+
+- Clicca un tipo di blocco nella colonna a sinistra per aggiungerlo.
+
+- Seleziona il blocco, scrivi nel pannello Blocco a destra e premi Aggiorna blocco (oppure Ctrl+Invio).
+
+  Anche il doppio clic sul blocco porta alla modifica del contenuto.
+
+- Per collegare, seleziona il blocco di partenza, premi Collega o aggiungi
+
+  in cima al pannello a destra e clicca il blocco di arrivo.
+
+  Per le Decisioni scegli prima quale uscita collegare.
+
+- Se la freccia termina in una zona vuota, clicca con il sinistro e scegli
+
+  Input / Output, Operazione, Decisione o Fine: il nuovo blocco viene creato
+
+  già collegato. Puoi anche trascinare dal + e rilasciare sul foglio.
+
+  Esc o un clic fuori dal menu annulla la scelta senza cambiare il diagramma.
+
+  Ctrl+Z annulla insieme la creazione del blocco e del collegamento.
+
+- Clicca il + sul blocco per aprire subito la scelta del prossimo passaggio.
+
+  Inserire in mezzo mantiene il collegamento verso il blocco successivo.
+
+  Una nuova Decisione chiede quale ramo continua; Fine chiede conferma.
+
+  Il clic sul + crea spazio nei blocchi successivi; Ctrl+Z ripristina tutto.
+
+- Trascina il + sopra un blocco esistente per collegarlo. Nelle Decisioni
+
+  l’uscita a sinistra corrisponde a vero, quella a destra a falso.
+
+- Cambiare l’arrivo di un ramo occupato mostra prima una conferma.
+
+  Mantieni, Esc o X conservano il collegamento precedente.
+
+- Trascina un blocco per spostarlo: segue continuamente il puntatore e
+
+  si allinea alla griglia quando rilasci. Tieni Alt al rilascio per
+
+  posizionarlo liberamente. Sullo sfondo, tieni premuto il tasto sinistro
+
+  del mouse e trascina: appare un riquadro di selezione.
+
+- I blocchi toccati dal riquadro si selezionano insieme. Ctrl + clic
+
+  aggiunge o toglie un blocco; Maiusc + clic aggiunge alla selezione.
+
+  Ctrl o Maiusc permette di aggiungere un altro riquadro.
+
+  Ctrl+A seleziona tutti i blocchi del foglio.
+
+- Trascina uno dei blocchi selezionati per spostare tutto il gruppo.
+
+  Le frecce della tastiera spostano la selezione; Maiusc aumenta il passo.
+
+  Esc annulla un trascinamento in corso e ripristina le posizioni.
+
+- Per spostare la vista tieni premuta la rotella (tasto centrale) e trascina.
+
+  La selezione resta al suo posto. Il tasto destro apre il menu contestuale
+
+  e non sposta la vista. Anche Maiusc+F10 apre il menu da tastiera.
+
+- Il trascinamento sinistro sul vuoto crea sempre il riquadro di selezione,
+
+  anche se era in corso un collegamento: quel collegamento viene annullato.
+
+- La rotellina cambia lo zoom. Inquadra mostra il diagramma nella finestra senza spostare le caselle.
+
+  Clicca la percentuale dello zoom per tornare al 100%.
+
+- Per cambiare l'arrivo seleziona una freccia, oppure una decisione.
+
+  Trascina la maniglia vicino alla punta su un altro blocco. Nel vuoto si
+
+  apre il menu per creare una casella o Scollega questo collegamento.
+
+  Scollega rimuove soltanto la freccia scelta e conserva tutte le caselle.
+
+  Esc, chiusura del menu e rilascio su Inizio mantengono il vecchio arrivo.
+
+  Ctrl+Z annulla l'operazione e Ctrl+Y la ripristina.
+
+- Per staccare un blocco tieni premuto e completa il riempimento:
+
+  l'indicatore mostra quando è pronto.
+
+  Il rilascio conferma lo stacco anche senza spostare il blocco. Trascina
+
+  se vuoi portarlo altrove o inserirlo in un'altra freccia. Esc annulla.
+
+  Muovere prima del completamento avvia il normale trascinamento, con
+
+  i collegamenti conservati. Inizio e Fine non vengono staccati.
+
+  Una decisione con due rami diversi si stacca nel vuoto senza menu: i
+
+  collegamenti precedenti restano liberi e tutte le caselle restano sul foglio.
+
+  Se i due rami hanno lo stesso arrivo, il percorso precedente viene ricucito.
+
+  Quando agganci una freccia, scegli quale ramo prosegue. La X chiude solo
+
+  questa scelta e lascia il blocco libero dove lo hai rilasciato.
+
+  Annulla inserimento è separato e ripristina l'intero gesto.
+
+- Dopo lo stacco compare un cestino rosso in alto a destra. Trascina lì
+
+  il blocco e rilascialo per eliminarlo, con un'animazione di assorbimento.
+
+  Ctrl+Z ripristina casella, posizione e collegamenti in una sola azione.
+
+- Nelle lezioni puoi selezionare e modificare anche un blocco diverso da
+
+  quello richiesto dal compito. Cliccare un blocco durante Prova riapre
+
+  il suo editor; una modifica rende necessario avviare una nuova prova.
+
+- Su PC il + compare anche al passaggio del mouse sulla casella, senza
+
+  selezionarla. Resta raggiungibile quando porti il puntatore sul +.
+
+  Le due uscite della decisione mantengono i propri nomi e colori.
+
+- Un trascinamento normale termina con un piccolo assestamento elastico.
+
+  La piega da sticker compare solo dopo la pressione prolungata completata.
+
+- I menu si chiudono con una breve dissolvenza. Le azioni restano immediate.
+
+- Riordina riposiziona caselle e frecce con una breve animazione a molla
+
+  e adatta la vista. Ctrl+Z ripristina la disposizione precedente.
+
+- Durante Esegui il riempimento blu segue le frecce realmente percorse.
+
+  I rami non eseguiti conservano il loro colore. Azzera la prova con
+
+  Ricomincia. Vista > Animazioni dell'interfaccia disattiva le transizioni;
+
+  anche la preferenza di riduzione del movimento di Windows è rispettata.
+
+- Seleziona un blocco o una freccia e premi Canc per eliminarli. Eliminare
+
+  un blocco rimuove anche le frecce che partono o arrivano a quel blocco.
+
+- Duplica, oppure Ctrl+D, crea una copia della selezione. Se hai scelto
+
+  più blocchi, conserva anche le frecce interne al gruppo.
+
+- Canc elimina i blocchi selezionati e i loro collegamenti. Ctrl+Z annulla
+
+  l'intera operazione sul gruppo; Ctrl+Y o Ctrl+Maiusc+Z la ripete.
+
+  Nei campi di testo queste scorciatoie conservano il normale uso di Windows.
+
+
+
+TEMA CHIARO E SCURO
+
+
+
+Premi Tema scuro nella seconda barra, vicino a Esporta. Il pulsante diventa
+
+Tema chiaro e permette di tornare alla modalità precedente. La scelta
+
+viene ricordata alla riapertura. Foglio, blocchi, pannelli, menu e finestre
+
+usano lo stesso tema; i sei pulsanti in alto a destra conservano il loro
+
+aspetto originale. Le esportazioni restano chiare, su sfondo bianco.
+
+Il cambio di tema conserva le modifiche ancora scritte nei campi,
+
+la selezione, la posizione della vista e i dati di esecuzione.
+
+Le schede Blocco, Verifica ed Esecuzione condividono una barra compatta:
+
+Ctrl+Tab passa alla successiva, Ctrl+Maiusc+Tab torna alla precedente.
+
+Quando la barra ha il focus, usa le frecce sinistra e destra.
+
+Nell'elenco delle segnalazioni usa Su/Giù, Home/End e Invio per raggiungere
+
+il blocco associato. Puoi continuare a usare direttamente il mouse.
+
+La modalità Istantanea esegue piccoli gruppi di passi e lascia la finestra
+
+reattiva. Variabili e output si aggiornano man mano che cambiano.
+
+
+
+CONTENUTO DEI BLOCCHI
+
+
+
+Input: scrivi il nome della variabile, per esempio:
+
+    numero
+
+La domanda da mostrare si inserisce nell'apposito campo separato.
+
+Un valore numerico può usare il punto o la virgola decimale. Puoi inserire
+
+anche testo oppure true/false e vero/falso. Il nome della variabile deve
+
+essere un identificatore, senza spazi: usa totale o numero_1.
+
+
+
+Operazione: scrivi un'assegnazione, per esempio:
+
+    totale = totale + numero
+
+Il valore a destra viene calcolato e poi salvato nella variabile a sinistra.
+
+Se totale non esiste ancora, inizializzalo prima:
+
+    totale = 0
+
+    i = 1
+
+Più assegnazioni possono occupare righe distinte oppure essere separate
+
+da punto e virgola. È accettata anche la scrittura totale <- 0.
+
+
+
+Decisione: scrivi una condizione, per esempio:
+
+    numero % 2 == 0
+
+Il simbolo % calcola il resto della divisione. Se il resto della divisione
+
+per 2 è zero, il numero intero è pari e viene seguito il ramo Sì.
+
+Altri esempi:
+
+    voto >= 18
+
+    eta >= 18 and eta < 65
+
+    not (numero == 0)
+
+Sono accettati anche e, o, non al posto di and, or, not.
+
+
+
+Output: scrivi un'espressione, per esempio:
+
+    totale
+
+    "Risultato: " + totale
+
+    "Ciao!"
+
+Metti i messaggi di testo tra virgolette. Un nome senza virgolette indica
+
+una variabile: totale cerca un valore; "totale" stampa proprio la parola.
+
+
+
+OPERATORI E FUNZIONI
+
+
+
+Calcoli:      +  -  *  /  %  ^
+
+Confronti:    ==  !=  <  <=  >  >=
+
+Logica:       and  or  not  (oppure e  o  non)
+
+Raggruppa:    ( ... )
+
+Funzioni: apri «Funzioni ed esempi» mentre modifichi un blocco o il pseudocodice. Cerca per nome o descrizione e inserisci un esempio nel punto in cui scrivi.
+
+Numeri: abs, sqrt, int, floor, round, min, max, sgn, random.
+
+Trigonometria (radianti): sin, cos, tan, arcsin, arccos, arctan; costante pi o π.
+
+Logaritmi: ln, log, log10. Testi: len, char.
+
+Conversioni: tointeger, toreal, tostring, tofixed, tochar, tocode.
+
+Vettori: vettore/array, size, somma/sum.
+
+len e char contano i punti di codice Unicode: una emoji singola conta come un carattere. Gli indici partono da 0.
+
+random(n) restituisce un intero da 0 a n escluso; n va da 1 a 2147483647. tointeger accetta testi interi da -2147483648 a 2147483647. tofixed usa da 0 a 15 decimali. Le descrizioni nel catalogo riportano i limiti.
+
+
+
+Usa il punto decimale nelle espressioni del diagramma, per esempio 2.5:
+
+la virgola separa gli argomenti delle funzioni. La virgola decimale è
+
+accettata quando rispondi alla richiesta di un blocco Input.
+
+
+
+Le variabili non distinguono maiuscole e minuscole: Totale e totale sono
+
+lo stesso nome. Per chiarezza, mantieni sempre la stessa scrittura.
+
+
+
+Nelle Operazioni, = assegna. Nelle Decisioni, == confronta. Il programma
+
+accetta anche = come confronto nelle condizioni, ma usare == rende più
+
+facile riconoscere la differenza mentre impari.
+
+
+
+VERIFICA, ESEGUI E UN PASSO
+
+
+
+Verifica controlla il diagramma senza chiedere i dati di Input: segnala
+
+problemi come Inizio mancante o duplicato, rami incompleti, collegamenti
+
+non validi, espressioni scorrette e altri problemi rilevabili sul grafo.
+
+Gli errori richiedono una correzione. Gli avvisi indicano aspetti da
+
+controllare, per esempio blocchi irraggiungibili o presenza di cicli.
+
+
+
+Esegui simula il diagramma. Avanti permette di seguirlo un blocco alla
+
+volta: guarda quale blocco viene eseguito, quali variabili cambiano e cosa
+
+viene stampato. Pausa interrompe l'avanzamento automatico. Ricomincia
+
+azzera la simulazione per ripartire con nuovi dati. Pausa, Ricomincia e
+
+Velocità si trovano nella scheda Esecuzione, accanto ai risultati.
+
+
+
+Un errore può dipendere dai dati: numero / divisore funziona con divisore
+
+uguale a 2, ma fallisce con divisore uguale a 0. Per questo una verifica
+
+riuscita non sostituisce le prove di esecuzione.
+
+
+
+Un ciclo viene interrotto dopo 10.000 blocchi eseguiti: il programma lo
+
+segnala, senza dichiarare riuscita l'esecuzione. Controlla che il valore
+
+usato nella condizione cambi nella direzione necessaria a uscire dal ciclo.
+
+
+
+PROVA DATI
+
+
+
+Prova dati esegue il diagramma con una sequenza di valori predefinita e
+
+confronta l'output ottenuto con quello atteso. Inserisci un Input per riga,
+
+nell'ordine in cui il diagramma lo chiederà, e una riga per ogni Output
+
+atteso. Due blocchi Input richiedono due righe; un Input dentro un ciclo
+
+può richiedere più valori durante la stessa prova.
+
+
+
+Il confronto è esatto: contano anche spazi e maiuscole. Per rappresentare
+
+una riga vuota nella prova, scrivi "". Se un messaggio contiene più righe,
+
+riporta nell'output atteso tutte le righe che vuoi vedere.
+
+
+
+Prove pronte sugli esempi inclusi:
+
+
+
+Pari o dispari:       Input 7       Output atteso Dispari
+
+                     Input -3      Output atteso Dispari
+
+                     Input 0       Output atteso Pari
+
+                     Input 4       Output atteso Pari
+
+
+
+Somma di due numeri:  Input su due righe: 2 e 3
+
+                     Output atteso: Somma: 5
+
+
+
+Conto alla rovescia:  Input 3
+
+                     Output atteso su quattro righe:
+
+                     3
+
+                     2
+
+                     1
+
+                     Via!
+
+
+
+                     Input 0       Output atteso Via!
+
+
+
+Prova almeno un caso ordinario, zero, un numero negativo e i valori vicini
+
+al punto in cui una decisione cambia ramo. Scrivi l'output atteso pensando
+
+alla consegna dell'esercizio, prima di leggere quello prodotto dal programma.
+
+
+
+Un test superato dice che l'output coincide per quei dati. Non prova che
+
+l'algoritmo sia corretto per ogni possibile input. Per esempio, cambiare
+
+per errore una somma in una moltiplicazione può produrre lo stesso risultato
+
+con 2 e 2: una prova con 2 e 3 rende visibile la differenza.
+
+
+
+SALVARE IL LAVORO
+
+
+
+Salva, oppure Ctrl+S, conserva il diagramma modificabile in un file
+
+.frociart: include blocchi, contenuti, posizioni e collegamenti. Apri
+
+(Ctrl+O) permette di riprenderlo. Il programma apre anche i vecchi .flow;
+
+al primo salvataggio propone una nuova copia .frociart.
+
+
+
+Progetto > Salva con nome, oppure Ctrl+Maiusc+S, crea una copia del progetto.
+
+Per aprire un file puoi anche trascinarlo sull'icona Frociart.exe in Windows.
+
+Il programma chiede di salvare prima di chiudere o sostituire un lavoro
+
+modificato, anche quando è avviato con la diagnostica.
+
+
+
+Il recupero automatico conserva localmente le modifiche dopo circa
+
+3,5 secondi di inattività, incluso il testo dell'ispettore non ancora
+
+confermato con Aggiorna blocco. Ogni finestra aperta ha una copia distinta.
+
+Alla riapertura puoi scegliere quale sessione interrotta recuperare; Annulla
+
+o la X conservano la copia e permettono di iniziare un nuovo lavoro.
+
+Home > Recupera lavoro e Progetto > Recupera lavoro non salvato mostrano anche
+
+le copie già recuperate. Il documento si apre come copia non salvata e quella
+
+precedente resta in archivio: Salva crea il file nel percorso scelto da te.
+
+Le finestre ancora aperte non compaiono nel recupero. L'avvio sicuro disattiva
+
+il recupero automatico. Il recupero comprende il progetto, non lo stato
+
+della simulazione o la cronologia della console.
+
+
+
+Usa Nuovo per un altro esercizio ed Esempi per partire da un caso pronto.
+
+
+
+ESPORTARE PDF, SVG E PNG
+
+
+
+Apri Esporta nella seconda barra (anche in Progetto > Esporta) e scegli il formato:
+
+
+
+PDF: una pagina A4 con orientamento automatico. Se il diagramma diventa
+
+piccolo, attiva Dividi in pagine A4: il programma mantiene una dimensione
+
+leggibile e mostra il numero di pagine prima di esportare. Le pagine
+
+si leggono per righe, da sinistra a destra, con una piccola sovrapposizione
+
+per seguire i collegamenti. Il disegno è incorporato ad alta risoluzione
+
+(200 dpi); il testo nel PDF fa parte dell'immagine.
+
+
+
+SVG: blocchi, frecce e testi vettoriali, ingrandibili senza perdere
+
+nitidezza. È utile nei programmi di grafica e si apre anche nel browser.
+
+
+
+PNG: immagine su sfondo bianco, adatta a documenti e presentazioni.
+
+
+
+L'esportazione include tutto il diagramma, anche le parti fuori dalla
+
+vista, e non include selezione, griglia o evidenziazione dell'esecuzione.
+
+PDF, SVG e PNG sono copie da condividere: conserva anche il file .frociart
+
+per continuare a modificare ed eseguire l'algoritmo in Frociart.
+
+
+
+QUANDO QUALCOSA NON TORNA
+
+
+
+Non sai quale ramo viene seguito? Usa Avanti e controlla i valori
+
+presenti nella tabella subito prima della Decisione.
+
+
+
+Variabile non definita? Controlla che un Input o un'Operazione le abbia
+
+assegnato un valore lungo ogni percorso che può arrivare al suo utilizzo.
+
+
+
+Il ciclo non finisce? Controlla la sua condizione e l'Operazione che modifica
+
+il contatore. Una condizione i > 0 richiede, per esempio, che i diminuisca
+
+se vuoi avvicinarti a zero.
+
+
+
+Il diagramma è valido ma il risultato è sbagliato? Riprendi la consegna,
+
+scegli dati piccoli, calcola a mano il risultato atteso e confronta Avanti
+
+con il tuo ragionamento. La struttura può essere corretta anche quando
+
+l'algoritmo risolve un problema diverso da quello che avevi in mente.
+
+
+
+La pagina iniziale permette di creare un flowchart, importare pseudocodice e riprendere i progetti recenti. I passaggi tra home ed editor mantengono la pagina precedente durante la dissolvenza. Le animazioni rispettano il movimento ridotto.
+
+
+
+COPIA, TAGLIA E INCOLLA I BLOCCHI
+
+Ctrl+C copia le caselle selezionate; Ctrl+X le taglia dopo la copia riuscita.
+
+Ctrl+V incolla nel foglio visibile, anche in un altro progetto o in un'altra
+
+finestra di Frociart. Sono conservate le frecce interne alla selezione,
+
+i nomi e i colori dei rami. Ogni copia ha identificatori nuovi e mantiene
+
+le distanze fra le caselle, cercando uno spazio libero vicino al centro.
+
+Un solo Ctrl+Z annulla l'intero taglio o incolla; Ctrl+Y/Ctrl+Maiusc+Z ripete.
+
+Ctrl+A seleziona tutte le caselle, Ctrl+D duplica, Canc elimina.
+
+Le azioni sono disponibili anche con il tasto destro sul foglio.
+
+Nei campi di testo Ctrl+C/X/V/A agiscono normalmente sul testo. Copiare una
+
+casella mette anche il suo testo negli appunti, utilizzabile in altre app.
+
+Sono supportati anche Ctrl+Ins (copia), Maiusc+Ins (incolla), Maiusc+Canc
+
+(taglia). Durante un trascinamento i comandi sui blocchi sono sospesi.
+
+
+
+
+
+PARALLELOGRAMMA INPUT / OUTPUT
+
+Scrivi leggi numero per ricevere un dato (azzurro) o stampa numero per mostrarlo (viola).
+
+Per unire testo e variabili: stampa "Il tuo resto è " + resto. Lo spazio appartiene alla frase tra virgolette.
+
+Vista > Separa Input e Output divide le voci della palette; spegnilo per tornare al simbolo unico con icona azzurro-viola. Contenuti e collegamenti restano invariati.
+
+
+
+
+
+DEBUGGER: PASSI E PUNTI DI INTERRUZIONE
+
+
+
+Nel pannello Esecuzione, apri “Debugger · passi e pause”.
+
+Avanti (F11) entra nelle funzioni. F10 completa il blocco corrente e le sue
+
+chiamate, poi si ferma prima del blocco successivo. Maiusc+F11 torna al
+
+chiamante: premi Avanti per completare il blocco rimasto sospeso.
+
+Un punto di interruzione interno può fermare anche F10 e Maiusc+F11.
+
+
+
+Dal menu destro di un blocco scegli “Punto di interruzione…”. F9 lo attiva
+
+o lo disattiva sul blocco selezionato. Il simbolo rosso con due barre indica
+
+una pausa PRIMA dell'esecuzione: le variabili mostrano i valori precedenti.
+
+Lascia la condizione vuota per fermarti sempre, oppure scrivi, per esempio,
+
+contatore >= 5. Le condizioni devono restituire vero o falso; usano variabili
+
+locali e funzioni integrate, esclusa random. Non chiamano funzioni del progetto.
+
+Se una condizione non può essere valutata, l'esecuzione si ferma e spiega
+
+il problema. Puoi correggerla senza perdere i valori o premere Riprendi.
+
+
+
+Puoi ignorare temporaneamente tutti i punti oppure rimuoverli. La rimozione
+
+si annulla con Ctrl+Z. I punti e le condizioni sono salvati nel progetto
+
+.frociart e possono essere aperti su Android. Sono dati del debugger:
+
+l'esportazione in pseudocodice e le immagini descrivono solo l'algoritmo.
+
+
+
+File di testo
+
+Nel menu dei blocchi apri File: Apri file, Leggi file, Scrivi file, Chiudi file.
+
+Imposta il canale Lettura o Scrittura e un nome fra virgolette, per esempio
+
+"dati.txt". Il nome è un suggerimento: scegli tu il documento da leggere o
+
+la destinazione in cui salvare. Nessun percorso viene aperto automaticamente.
+
+
+
+Leggi file assegna una riga alla variabile indicata, anche a un elemento di
+
+vettore. Dichiara riga: TESTO per mantenere parole, spazi e righe vuote.
+
+Una variabile INTERO, REALE o LOGICO richiede invece una riga del suo tipo.
+
+La decisione non EOF() ripete il ciclo finché rimangono righe. EOF() richiede
+
+un file aperto in lettura. L'esempio "Copia un file di testo" mostra il ciclo.
+
+
+
+Scrivi file aggiunge il valore al risultato in preparazione. Disattiva
+
+"Vai a capo" per continuare sulla stessa riga. Le nuove righe usano LF.
+
+Chiudi file sul canale Scrittura ti fa scegliere dove salvare; annullare
+
+conserva il risultato in File generati. Sono copie locali recuperabili,
+
+non una sincronizzazione: esportale prima di disinstallare l'app.
+
+
+
+I canali Lettura e Scrittura sono unici e condivisi con le funzioni chiamate.
+
+Chiudi il canale prima di riaprirlo. I file di testo accettano UTF-8 o UTF-16
+
+con BOM; limite 4 MB, 2 milioni di caratteri UTF-16 e 32768 caratteri per riga.
+
+
+
+Frociart — Condizioni d’uso
+
+Copyright © 2026 mamt104. Tutti i diritti riservati.
+
+
+
+Frociart è un progetto di mamt104.
+
+È consentito scaricare e utilizzare gratuitamente le versioni ufficiali per uso personale, didattico e professionale. I diagrammi e gli elaborati creati dall’utente restano dell’utente.
+
+
+
+Senza autorizzazione scritta dell’autore non è consentito rimuovere o alterare l’attribuzione, rivendere il software, distribuirne versioni modificate o ripubblicarlo presentandolo come un proprio prodotto. Per condividere l’app, usa il collegamento al progetto ufficiale: https://github.com/mamt104/Frociart
+
+
+
+Non viene concessa una licenza sul codice sorgente. Restano salvi i diritti inderogabili previsti dalla legge e quelli espressamente concessi dai termini delle piattaforme che ospitano il progetto. I componenti di terzi mantengono i propri titolari e le rispettive condizioni.
+
+
+
+Il software è fornito senza garanzie, nei limiti consentiti dalla legge. Conserva copie dei tuoi progetti e verifica i risultati con dati di prova.
+
+
+
+
+
+DISEGNO · TARTARUGA
+
+Apri il gruppo Disegno · tartaruga per aggiungere Avanza, Ruota, Origine, Pulisci disegno e Colore penna. Distanze e angoli possono usare variabili e funzioni. La tartaruga parte dal centro, verso l’alto. Origine torna al centro senza traccia, Pulisci elimina le linee e torna al centro: entrambi conservano il colore.
+
+In Esecuzione il disegno segue ogni passo. Espandi per zoom, spostamento, PNG e SVG. L’esempio Disegna un quadrato mostra un ciclo di quattro lati. Ricomincia azzera disegno, posizione e colore.
+
+
+
+CICLI PER CON PASSO CALCOLATO
+
+
+
+Nel pannello Pseudocodice puoi scrivere, per esempio:
+
+    salto = 2
+
+    PER i DA 1 A 5 PASSO salto FAI
+
+        STAMPA i
+
+    FINE PER
+
+Il risultato è 1, 3, 5. Un passo negativo conta all'indietro.
+
+Il passo può arrivare da una variabile o da una funzione, ma deve essere
+
+un intero diverso da zero tra -2147483648 e 2147483647. Inizio, limite e
+
+passo vengono calcolati in quest'ordine, una volta a ogni ingresso nel ciclo.
+
+Cambiare salto dentro il ciclo non cambia il passo già scelto.
+
+
+
+Il diagramma contiene operazioni e decisioni modificabili. Il valore limite
+
+e l'eventuale passo calcolato sono visibili fra le variabili del ciclo.
+
+int(valore, "passo") controlla il passo senza arrotondarlo. Se non è valido,
+
+l'operazione segnala un errore e non modifica i valori precedenti.
+
+Il pannello conserva la forma PER finché riconosce il ciclo completo.
+
+Se modifichi la condizione, l'incremento o i collegamenti, il pannello mostra
+
+le istruzioni effettive: la conversione non corregge o ignora le tue modifiche.
+
+
+
+RIUSA LE FUNZIONI TRA PROGETTI
+
+
+
+Apri Funzioni e scegli Importa da un progetto. Seleziona un file .frociart,
+
+poi la funzione da riusare. Sono incluse automaticamente anche le funzioni
+
+che richiama. Prima di confermare vedrai le definizioni incluse e gli
+
+eventuali nuovi nomi, se nel tuo progetto erano già occupati.
+
+L'importazione conserva i diagrammi esistenti e si annulla con un solo Ctrl+Z.
+
+
+
+Con Esporta una funzione salvi una libreria .frociart con la definizione
+
+scelta e le sue dipendenze. Il diagramma principale del file è vuoto:
+
+apri Funzioni per vedere le definizioni o importale da un altro progetto.
+
+Lo stesso file è utilizzabile su Windows e Android, in ogni layout.
+
+
+
+CICLI GUIDATI
+
+Usa Ciclo guidato nella barra dei blocchi o nel menu del progetto.
+
+Scegli la freccia su cui inserirlo e il tipo: Per, Mentre o Ripeti.
+
+Per conta tra due estremi inclusi, con un passo anche negativo.
+
+Mentre controlla prima; Ripeti esegue almeno una volta e controlla dopo.
+
+La condizione indica quando continuare. Nel corpo puoi leggere, stampare,
+
+calcolare, annidare altri cicli e richiamare le funzioni del progetto.
+
+L'anteprima mostra il pseudocodice. Inserisci ciclo conserva il resto
+
+del diagramma e crea blocchi normali, tutti modificabili.
+
+Ctrl+Z annulla l'inserimento intero. I blocchi a monte restano fermi;
+
+il percorso coinvolto si adatta per fare spazio, con animazione.
+
+Su Android trovi Ciclo guidato anche nel menu Blocco.
+
+
+
+COMMENTI AI BLOCCHI
+
+Seleziona un blocco e scrivi nel campo Commento dell'editor.
+
+La nota appare sotto l'istruzione e nelle immagini, SVG e PDF esportati.
+
+Non viene eseguita e non modifica il valore delle variabili.
+
+Le dimensioni del blocco si adattano; Applica conserva istruzione e nota
+
+insieme, annullabili con Ctrl+Z. Su Android una modifica non applicata
+
+resta disponibile come bozza quando riapri il blocco.
+
+Il file .frociart conserva le note su PC e Android. Anche il pseudocodice
+
+le conserva, con NOTA "spiegazione" prima dell'istruzione.
+
+Nei sorgenti Java, Python e C# le note diventano commenti di documentazione.
+
+
+
+NOTE LIBERE SUL FOGLIO
+
+Nella palette scegli Nota libera, oppure trascinala sul foglio. Scrivi una
+
+spiegazione su più righe: la carta si adatta e resta fuori dalle frecce.
+
+Puoi spostarla, duplicarla, copiarla, eliminarla e annullare le modifiche.
+
+Riordina lascia le note nella posizione scelta. PNG, PDF e SVG le includono.
+
+Le note si salvano anche nei diagrammi delle funzioni e si trasferiscono
+
+tra PC e Android. Nel pseudocodice usa ANNOTAZIONE "testo della nota".
+
+Java, Python, C# e Flowgorithm le conservano come commenti.
+
+
+
+RIEPILOGO E MODIFICA DEI CICLI
+
+Nel menu Modifica > Cicli scegli Riepilogo: riepilogo e modifica. Su Windows il comando
+
+appare anche nell'ispettore dei blocchi, tranne Inizio e Fine.
+
+Se il blocco selezionato appartiene a un ciclo, si apre la sua scheda;
+
+altrimenti vedrai l'elenco dei cicli del diagramma o della funzione attuale.
+
+Per cambia gli estremi e il passo; Mentre e Ripeti cambiano la condizione
+
+che permette di continuare. La scheda conserva il corpo, le frecce,
+
+i commenti e i punti di interruzione. Il contatore si rinomina nei blocchi.
+
+Seleziona ciclo seleziona insieme i blocchi che lo compongono:
+
+trascinane uno per spostarli. Nei cicli annidati viene scelto il più interno.
+
+Il corpo si modifica sul foglio. I collegamenti ambigui o incompleti restano
+
+modificabili nei singoli blocchi. Ctrl+Z annulla una modifica della scheda.
+
+La scheda è un riepilogo compatto: il diagramma mantiene visibili i passaggi.
+
+
+
+
+
+IMPORTA DA FLOWGORITHM
+
+Con Apri file scegli un progetto .fprg (formati 1.x–4.x).
+
+La conversione è locale e non esegue il programma. Il file originale resta
+
+intatto; Salva propone una copia .frociart. Sono supportati dichiarazioni,
+
+vettori locali, assegnazioni, input, output con o senza a capo, decisioni, cicli
+
+e funzioni con parametri scalari e vettoriali per riferimento. I commenti diventano note libere sul foglio della stessa funzione,
+
+conservate separatamente e senza collegamenti di esecuzione.
+
+Gli operatori matematici vengono convertiti, compreso & per unire i testi.
+
+Un For viene mostrato come inizializzazione, condizione, corpo e incremento.
+
+Sono importabili anche file di testo, tartaruga e punti di interruzione,
+
+che diventano blocchi Pausa. I canali dei file devono essere read o write:
+
+durante l'esecuzione scegli i documenti da leggere o salvare.
+
+Le condizioni dei punti di interruzione non possono chiamare funzioni
+
+del progetto o random. Per i costrutti non supportati il messaggio indica
+
+la riga: il progetto aperto viene conservato senza importazioni incomplete.
+
+L’aspetto di Flowgorithm e la sua cronologia personale non vengono copiati.
+
+
+
+
+
+VETTORI: COPIA O ORIGINALE
+
+Nella definizione di una funzione seleziona Vettore per il parametro.
+
+La scelta normale usa una copia: modificare valori[i] non cambia il vettore
+
+del chiamante. Attiva Modifica l’originale (riferimento) per condividere
+
+gli elementi. Questa scelta è disponibile anche nell'app Android.
+
+Nel pseudocodice scrivi, per esempio:
+
+FUNZIONE aggiorna(valori: RIF INTERO[])
+
+    valori[0] = 7
+
+FINE FUNZIONE
+
+dati = [1, 2]
+
+CHIAMA aggiorna(dati)
+
+STAMPA dati
+
+Il risultato è [7, 2]. Senza RIF il risultato rimane [1, 2].
+
+Passa il nome di un vettore, con lo stesso tipo degli elementi richiesto
+
+dal parametro. Puoi modificarne gli elementi, mantenendo la dimensione;
+
+non puoi riassegnare tutto il parametro. Se passi lo stesso vettore a più
+
+parametri per riferimento, le modifiche sono condivise anche fra essi.
+
+Gli scalari rimangono per valore. Salvataggi, importazione di funzioni
+
+e sorgenti Python/Java/C# conservano la scelta. Per aprire un progetto con
+
+riferimenti su un altro dispositivo, aggiorna prima anche Frociart lì.
+
+
+
+
+
+STAMPA SULLA STESSA RIGA
+
+Seleziona un blocco di stampa e disattiva Vai a capo dopo la stampa.
+
+La stampa successiva continuerà subito dopo, senza spazi aggiunti.
+
+Anche nel testo del blocco puoi scrivere stampa_continua espressione.
+
+Nel pseudocodice usa STAMPA_CONTINUA; STAMPA conclude la riga.
+
+La scelta viene conservata in salvataggio, bozze, annulla/ripeti e copia
+
+dei blocchi. Anche copia risultato, immagine con dati, Prova dati,
+
+importazione Flowgorithm e sorgenti Python/Java/C# rispettano la scelta.
+
+
+
+
+
+PANORAMICA CICLI
+
+Dal menu Modifica > Cicli apri Panoramica cicli: Per, Mentre e Ripeti riconosciuti diventano schede con parametri e numero di blocchi. Tocca una scheda per espanderla; Scegli ciclo permette di raggiungere anche i cicli annidati. Espandi tutti e Riduci tutti cambiano solo la panoramica. Apri sul foglio torna al blocco originale; Parametri apre la modifica del ciclo. La panoramica non modifica, salva o esegue istruzioni: copia, annulla, riordina e debug si usano sul foglio originale. Strutture incomplete o con ingressi multipli restano visibili come blocchi normali.
+
+
+
+
+
+ESPORTA PER FLOWGORITHM
+
+Dal menu Progetto scegli Flowgorithm · salva una copia .fprg. L'originale rimane intatto. Se un input non ha un tipo, scegli Intero, Reale, Testo o Logico solo per la copia. Puoi cambiare la scelta e leggere i controlli prima del salvataggio. Vai al blocco apre il punto da correggere; Chiudi annulla l'esportazione.
+
+La copia supporta diagrammi strutturati, variabili coerenti, decisioni, cicli, input/output, funzioni scalari, vettori per riferimento e file di testo. Apri, Leggi, Scrivi e Chiudi file mantengono i canali di lettura e scrittura, anche nelle funzioni. Le letture logiche accettano vero/falso e true/false con maiuscole e spazi. Nella copia Flowgorithm i file usano direttamente i percorsi del programma: non compare il selettore di Frociart.
+
+La copia include anche Avanza, Ruota, Origine, Pulisci e Penna della tartaruga. Pulisci conserva il colore di Frociart, anche attraverso le funzioni. I colori usano la palette di Flowgorithm: i cambi di tonalità sono indicati nei controlli. Per un colore RGB senza equivalente tra i colori di base scegli il colore della sola copia prima di salvare; l'originale non cambia. Le scelte Android restano presenti quando ruoti lo schermo.
+
+L'aspetto, i limiti numerici e i messaggi seguono Flowgorithm. I valori iniziali e la valutazione delle condizioni sono adattati per conservare il comportamento nei casi supportati. Le incompatibilità bloccano il salvataggio: per esempio grafi non strutturati, tipi che cambiano, vettori copiati nei parametri, risultati vettoriali, colori della penna calcolati durante l'esecuzione, scrittura su file senza a capo e alcune conversioni dinamiche del testo. Conserva sempre anche il progetto .frociart.
+
+
+
+
+
+CICLI COMPATTI SUL FOGLIO
+
+Modifica > Cicli > Riduci tutti i cicli sul foglio raccoglie i cicli riconosciuti in schede compatte. Il menu contestuale della selezione permette di ridurre o espandere anche un solo ciclo. Il doppio clic sulla scheda espande le istruzioni. Su Android usa il doppio tocco oppure Selezione > Espandi ciclo sul foglio.
+
+Un clic seleziona l'intero ciclo: spostamento, copia, duplicazione ed eliminazione coinvolgono tutti i suoi blocchi e collegamenti interni. Annulla e Ripeti ripristinano le normali modifiche. Una copia con l'uscita ancora libera mostra Uscita da collegare: espandila per completare le frecce.
+
+Le scelte dei cicli annidati restano memorizzate quando apri quello esterno. Richiudere non modifica posizioni o collegamenti del grafo originale. Il debugger continua a eseguire le stesse istruzioni e indica la scheda che contiene il passaggio attivo. Selezionare un blocco nascosto per modificarlo riapre il ciclo.
+
+Lo stato compatto è salvato nel progetto .frociart e si trasferisce fra PC e Android. Le versioni precedenti possono mostrarlo espanso, con la stessa logica. PNG, SVG e PDF esportano il diagramma completo. Le animazioni rispettano la riduzione del movimento.
+
+
+
+CODICE C#
+
+Codice > Genera codice > C# visualizza ed esporta il programma. Seleziona una riga
+
+collegata e usa Vai al blocco. La vista nasconde il supporto per leggere
+
+il programma; Salva e Copia includono sempre tutto il file autonomo.
+
+Salva Programma.cs e, su Windows con il compilatore C# disponibile, usa:
+
+csc /r:System.Numerics.dll Programma.cs
+
+Esegui Programma.exe. I file del programma vengono aperti dai percorsi
+
+scritti nel sorgente, rispetto alla cartella in cui lo esegui: non sono
+
+le autorizzazioni selezionate nella prova di Frociart. La sostituzione di
+
+un file esistente richiede conferma. Una scrittura non conclusa conserva
+
+una bozza .frociart-recovery-… nella cartella di destinazione.
+
+I comandi tartaruga conservano le coordinate e salvano un SVG, con nome
+
+univoco Frociart_disegno_…; il percorso viene mostrato a fine esecuzione.
+
+Il codice esportato conserva i limiti di passi, memoria e ricorsione.
+
+Su Android trovi lo stesso comando in Esporta; Adatta righe controlla
+
+la sola visualizzazione, senza cambiare il testo copiato o salvato.
+
+
+
+JAVASCRIPT E TYPESCRIPT
+
+Codice > Genera codice > JavaScript o Codice TypeScript apre lo stesso visualizzatore
+
+collegato ai blocchi. La scelta è disponibile anche nell'anteprima live.
+
+Salva Programma.cjs e avvia node Programma.cjs con Node.js 22 o successivo.
+
+Per TypeScript salva Programma.cts e compila con:
+
+tsc --strict --target ES2020 --module node16 Programma.cts
+
+Poi avvia node Programma.cjs. Serve un compilatore TypeScript installato.
+
+Le estensioni .cjs e .cts mantengono il formato CommonJS anche nei progetti
+
+con package.json impostato come modulo. Il programma usa il terminale,
+
+non il browser, e non ha bisogno di pacchetti aggiuntivi per eseguirsi.
+
+File e disegni seguono le regole descritte per C#: percorsi del programma,
+
+conferma di sostituzione, bozza di recupero e disegno SVG con nome univoco.
+
+
+
+STAMPA
+
+Ctrl+P oppure Progetto → Stampa apre l’anteprima del foglio attuale. Usa lo zoom per leggere i testi e Più pagine leggibili per i diagrammi grandi. Stampa… permette di scegliere stampante e intervallo di pagine. Il disegno viene adattato al foglio e ai margini della stampante. Non modifica il progetto.
+
+
+
+STILE DEI DIAGRAMMI
+
+Vista → Stile dei diagrammi offre Standard, Contorni marcati, Bianco e nero e Personalizzato. Le caselle mantengono uno sfondo neutro. La preferenza riguarda questo dispositivo e segue anche esportazioni e stampa.
+
+Personalizzato permette di scegliere Moderno, Classico o Monospazio, una dimensione tra 80% e 200% e i colori dei titoli. Il pulsante colorato apre la scelta del colore; il campo accetta anche #RRGGBB. L’anteprima campione mostra il risultato senza modificare il progetto. Applica conferma; Annulla o X conserva l’aspetto precedente.
+
+Il cambio di carattere o dimensione adatta la spaziatura nel progetto e nelle sue funzioni. Istruzioni e collegamenti restano invariati. Ctrl+Z e Ctrl+Y ripristinano anche aspetto e posizioni. I colori dei rami salvati non vengono riscritti. I font usano le famiglie disponibili nel sistema; non vengono scaricati né inseriti nei file .frociart.
+
+
+
+
+
+CERCA NEL PROGETTO
+
+Ctrl+F o Modifica > Cerca nel progetto cerca testo dei blocchi, domande di lettura, note, nomi dei rami, condizioni di pausa e definizioni delle funzioni. Puoi distinguere maiuscole, cercare una parola intera o limitare la ricerca al diagramma attuale. Ogni risultato indica diagramma, tipo di casella e campo. Invio o doppio clic porta al blocco; i cicli richiusi vengono aperti. Una voce per campo, fino a 200 risultati: restringi la ricerca se sono troppi. La ricerca è letterale: parentesi e altri simboli non sono espressioni regolari.
+
+
+
+CODICE C++
+
+In Codice > Genera codice oppure Codice a vista scegli C++. Salva Programma.cpp. Compila con g++ -std=c++17 -O2 Programma.cpp -o Programma; avvia Programma. Su Linux/macOS aggiungi -pthread. File e SVG usano la cartella di esecuzione; prima di sostituire un file viene chiesta conferma. Le scritture interrotte restano in una bozza nella destinazione.
+
+Il programma resta leggibile nascondendo il supporto; Vai al blocco e il percorso di esecuzione usano le righe visibili. Copia e Salva includono sempre il sorgente completo.
+
+
+
+VARIABILI E CHIAMATE
+
+Premi F7 o apri Variabili e chiamate nella prova. Scegli la chiamata oppure segui quella attiva; cerca per nome e leggi tipo, ruolo e valore. I vettori mostrano 64 indici per pagina: Vai raggiunge un indice, Apri elemento ne legge il valore completo. Copia valore include tutto il valore; Salva variabili esporta la chiamata selezionata in testo UTF-8. I testi sono mostrati tra virgolette con escape; i caratteri nulli sono copiati come escape per non perdere contenuto negli appunti. Avanti, Esegui/Pausa e Invio continuano la stessa prova. F11 entra nelle funzioni, F10 le supera e Maiusc+F11 torna al chiamante. Cambiare chiamata non modifica il programma.
+
+
+
+TESTO NELLA FINESTRA VARIABILI
+
+Apri Variabili e chiamate con F7. Testo permette di ingrandire questa finestra dal 100% al 200%: Ctrl e + ingrandisce, Ctrl e - riduce, Ctrl e 0 ripristina. Ctrl+F raggiunge la ricerca. Input e comandi rimangono visibili mentre scorri i valori.
+
+
+
+Variabili del progetto
+
+Progetto > Impostazioni del progetto e dei file > Variabili sceglie come nascono i nomi. Dichiarazione automatica mantiene il comportamento abituale. Dichiarazioni obbligatorie richiede Dichiara prima dell’uso e segnala errori come totale / totlae, nel blocco e nella funzione corretti. Parametri e nome del risultato sono definiti dalla firma della funzione. Nei cicli PER integri, i valori ausiliari di limite e passo sono gestiti dalla struttura; il contatore dell’utente va dichiarato.
+
+La scelta vale in tutti i layout, si salva nel progetto e si può annullare con Ctrl+Z. Applica una scelta diversa per azzerare la prova; annullare il menu conserva la prova in pausa e il valore che stavi scrivendo. Aggiorna Frociart sull’altro dispositivo per aprire un progetto con dichiarazioni obbligatorie.
+
+Nel pseudocodice metti VARIABILI DICHIARATE prima di funzioni e INIZIO. Anche REQUIRE DECLARATIONS è accettato. Per tornare alle variabili automatiche usa il menu del progetto oppure rimuovi la direttiva prima di creare un nuovo diagramma dal testo.
+
+
+
+I progetti .fprg importati da Flowgorithm mantengono le dichiarazioni obbligatorie; Progetto > Impostazioni del progetto e dei file > Variabili permette di cambiare la scelta.
+
+
+
+Visual Basic .NET: Codice > Genera codice > Visual Basic .NET. Il file .vb è autonomo, con controlli di tipo, limiti, funzioni, vettori, file e disegni SVG. Copia e Salva includono sempre il programma completo. Per compilarlo usa gli strumenti Visual Basic .NET e il riferimento System.Numerics. Nei modelli personali, Base = vbnet usa il generatore nativo.
+
+
+
+
+
+TROVA IL COMANDO GIUSTO
+
+I comandi sono raccolti in Progetto, Modifica, Esegui, Codice, Vista e Aiuto. Nel progetto trovi Apri e recupera, Condividi ed esporta e Impostazioni. In Esegui trovi Debug passo passo e Ispeziona l’esecuzione. In Vista, Aspetto e animazioni raccoglie stile, tema e movimento.
+
+Ctrl+K oppure Trova apre la ricerca dei comandi. Scrivi un nome, un percorso o una scorciatoia (ad esempio PDF, allinea, Java o Ctrl+S). Frecce su/giù e Invio scelgono un comando; Esc chiude senza cambiare il progetto. Il percorso mostrato sotto ogni risultato indica dove ritrovarlo nei menu. I comandi temporaneamente non disponibili restano riconoscibili. Il selettore Layout apre direttamente le tre modalità; nessuna funzione viene rimossa passando a Essenziale.
+
+
+
+
+
+PROVA DATI
+
+Esegui > Prova con dati di test confronta il programma con un risultato atteso: una riga per input e output, confronto esatto di spazi e maiuscole. Scrivi "" per una riga vuota. L’esecuzione è una copia e conserva la simulazione del foglio. Se il programma richiede di aprire o salvare un file, la prova si ferma con un messaggio: usa Esegui per scegliere i documenti. Nessun file viene selezionato o salvato automaticamente. Interrompere non assegna un esito.
+
+
+
+Nelle prove dati, per due virgolette letterali scrivi \"". Se il testo è formato da barre inverse seguite da due virgolette, aggiungi una barra inversa iniziale. Gli altri testi e percorsi restano letterali.
+
+
+
+
+
+BLOCCHI ORGANIZZATI
+
+La palette distingue blocchi di base, strutture e dati, annotazioni e debug. Apri Variabili e funzioni, File, Disegno · tartaruga, Annotazioni o Debug per trovare gli altri blocchi. Le famiglie restano disponibili in tutti i layout; la scelta del layout cambia solo la presentazione. La separazione di Input e Output si trova in Vista.
+
+
+
+
+
+KOTLIN/JVM
+
+Codice > Genera codice > Kotlin mostra il programma con collegamenti ai blocchi. Copia e Salva includono anche il supporto completo; l’anteprima può nasconderlo per rendere leggibile l’algoritmo. Usa kotlinc Programma.kt -include-runtime -d Programma.jar, poi java -jar Programma.jar. Sono necessari Kotlin/JVM 1.9+ e Java 8+. Il disegno si apre in una finestra sul computer. Nei modelli personali, Base = kotlin ed Extension = kt usano il generatore nativo; le stringhe proteggono anche il simbolo $ dall’interpolazione. L’app non esegue il codice generato.
+
+
+
+
+
+I modelli importati Python, Java e C# compatibili possono ora esportare risultati vettoriali delle funzioni. Il codice mostra gli adattamenti applicati e conserva il modello originale. Per modelli propri consulta [Array Return] nella guida dei modelli.
+
+
+
+GRUPPI DI BLOCCHI
+
+Seleziona più caselle con Ctrl+clic o con un rettangolo di selezione. Tieni premuta una casella selezionata: il riempimento e il sollevamento coinvolgono tutto il gruppo. Rilascia nel vuoto per staccarlo, oppure trascinalo su una freccia illuminata per inserirlo. I collegamenti interni e i rami delle decisioni restano intatti; le parti separate si inseriscono dall’alto verso il basso, da sinistra a destra a parità di altezza. Le uscite libere proseguono verso la parte successiva. Inizio e Fine restano agli estremi; per i cicli chiusi libera prima un’uscita. Ctrl+Z annulla l’intero gesto.
+
+
+
+CODICE GROOVY
+
+Codice > Genera codice > Groovy mostra il programma con righe collegate ai blocchi. Copia e Salva includono il supporto completo; puoi nasconderlo nell’anteprima per leggere l’algoritmo. Salva Programma.groovy ed esegui groovy Programma.groovy con Groovy 5+ e Java 17+. Le variabili e i testi non diventano codice Groovy: anche il simbolo $ resta testo. I nomi che coincidono con parole riservate vengono adattati nella copia. File e bozze usano la cartella di esecuzione; i disegni si aprono in una finestra. I modelli personali possono usare Base = groovy ed Extension = groovy. Frociart genera il file senza compilare o eseguire il programma.
+
+
+
+DOVE TROVARE I COMANDI
+
+Progetto contiene file, salvataggi e condivisione. Modifica contiene cronologia, selezione, copia/incolla, ricerca, funzioni, cicli e Riordina. Esegui raccoglie verifica, prova e debugger. Codice raccoglie pseudocodice e linguaggi. Vista cambia zoom, pannelli e aspetto. Aiuto contiene guida e spiegazioni. Inquadra adatta lo zoom senza spostare i blocchi; Riordina cambia le loro posizioni.
+
+
+
+ESEGUI FINO AL BLOCCO SELEZIONATO
+
+Seleziona un solo blocco e scegli Esegui > Esegui fino al blocco selezionato, oppure Ctrl+F10 o il menu del blocco. La prova si ferma prima della sua prossima esecuzione, senza aggiungere punti di interruzione al progetto. Input, file e pause esistenti restano attivi. Pausa o un altro comando annullano la destinazione temporanea. Se il percorso non passa dal blocco, viene spiegato al termine; il programma non viene deviato. Se il blocco è già iniziato, la destinazione riguarda un passaggio successivo.
+
+
+
+VALUTA UN’ESPRESSIONE DURANTE LA PAUSA
+
+Apri Esegui > Variabili e chiamate, scegli la chiamata e premi Valuta espressione. Il calcolo usa una copia dei valori di quel passo: non cambia variabili, file o esecuzione. Puoi usare indici e funzioni integrate; le funzioni del programma e i numeri casuali non vengono eseguiti. Valuta aggiorna il risultato; modificare il testo invalida quello precedente. Valore completo permette di leggerlo e Copia risultato conserva il valore integrale fino al limite di 262.144 caratteri. I vettori mostrano in anteprima al massimo 64 elementi.
+
+
+
+VARIABILI NUOVE E MODIFICATE
+
+Nella finestra Variabili e chiamate, Nuova e Modificata confrontano i valori con l’ultima pausa osservata nella stessa chiamata. La prima lettura non ha un confronto. Seleziona una variabile modificata per leggere anche il valore precedente; Copia valore e Salva variabili continuano a usare i valori attuali. Durante l’esecuzione continua non si aggiornano i riferimenti del confronto. Ricominciare una prova o aprire un altro progetto azzera i riferimenti; ruotare Android conserva il confronto. Non è una cronologia di tutti i passi o una modifica del programma.
+
+
+
+CODICE RUBY
+
+Codice > Genera codice > Ruby produce un programma completo per Ruby 3.3+. La vista del programma nasconde il supporto dei tipi senza eliminarlo da Copia o Salva. Puoi selezionare le righe per tornare ai blocchi e seguire la prova del diagramma. Salva Programma.rb e usa ruby Programma.rb sul computer. File e bozze restano nella cartella di esecuzione; prima di sostituire un file viene chiesta conferma. Il disegno diventa un SVG. Le stringhe restano dati, anche se contengono #{...}. Nei modelli personali scegli Ruby come base. Frociart non installa Ruby e non esegue il codice esportato.
+
+
+PHP
+Codice > Genera codice > PHP produce un programma autonomo per PHP 8.2+, CLI a 64 bit. Salva Programma.php e usa php Programma.php sul computer. Copia e Salva includono il supporto completo anche quando l’anteprima lo nasconde. Le righe rimangono collegate alle caselle. File e bozze usano la cartella di esecuzione; il disegno viene salvato in SVG. Il programma gestisce testi Unicode, tipi e vettori per copia o per riferimento. L’app non installa PHP e non esegue i programmi esportati.
+
+INDICE DEI COMANDI — PERCORSI DEI MENU
+
+Usa Trova (Ctrl+K) per cercare il nome della voce. La ricerca indica lo stesso percorso dei menu.
+I comandi non disponibili restano riconoscibili: seleziona un blocco per le azioni sulla selezione; Pausa richiede una prova in esecuzione.
+I tre layout cambiano gli strumenti visibili e conservano le funzioni del progetto.
+
+PROGETTO
+Progetto > Nuovo diagramma
+Progetto > Apri progetto
+Progetto > Salva
+Progetto > Salva con nome
+Progetto > Rinomina diagramma
+Progetto > Apri e recupera > Home e progetti recenti
+Progetto > Apri e recupera > Recupera lavoro non salvato
+Progetto > Apri e recupera > Esempi
+Progetto > Condividi ed esporta > Esporta
+Progetto > Condividi ed esporta > Stampa
+Progetto > Condividi ed esporta > Flowgorithm · salva una copia .fprg
+Progetto > Impostazioni del progetto e dei file > Variabili: automatiche
+Progetto > Impostazioni del progetto e dei file > Attiva icona e doppio clic dei progetti
+La voce Variabili: automatiche diventa Variabili: dichiarate quando il progetto richiede dichiarazioni.
+
+MODIFICA
+Modifica > Annulla modifica
+Modifica > Ripeti modifica
+Modifica > Taglia blocchi
+Modifica > Copia blocchi
+Modifica > Incolla blocchi
+Modifica > Duplica blocchi
+Modifica > Elimina blocchi
+Modifica > Seleziona tutti i blocchi
+Modifica > Cerca nel progetto
+Modifica > Rinomina variabile
+Modifica > Funzioni del progetto
+Modifica > Cicli > Inserisci un ciclo guidato
+Modifica > Cicli > Cicli: riepilogo e modifica
+Modifica > Cicli > Panoramica cicli · espandi e riduci
+Modifica > Cicli > Riduci tutti i cicli sul foglio
+Modifica > Cicli > Espandi tutti i cicli sul foglio
+Modifica > Riordina i blocchi
+
+ESEGUI
+Esegui > Verifica diagramma
+Esegui > Esegui / riprendi
+Esegui > Esegui fino al blocco selezionato
+Esegui > Pausa
+Esegui > Ricomincia la prova
+Esegui > Debug passo passo > Avanti · entra nella funzione
+Esegui > Debug passo passo > Avanti · senza entrare
+Esegui > Debug passo passo > Esci dalla funzione
+Esegui > Ispeziona l’esecuzione > Variabili e chiamate · F7
+Esegui > Ispeziona l’esecuzione > Console · letture e stampe
+Esegui > Ispeziona l’esecuzione > File generati e recupero
+Esegui > Prova con dati di test
+
+CODICE
+Codice > Importa / modifica pseudocodice
+Codice > Genera codice > Codice Python · visualizza ed esporta
+Codice > Genera codice > Codice Java · visualizza ed esporta
+Codice > Genera codice > Codice Kotlin · visualizza ed esporta
+Codice > Genera codice > Codice C# · visualizza ed esporta
+Codice > Genera codice > Codice C++ · visualizza ed esporta
+Codice > Genera codice > Codice JavaScript · visualizza ed esporta
+Codice > Genera codice > Codice TypeScript · visualizza ed esporta
+Codice > Genera codice > Codice Visual Basic .NET · visualizza ed esporta
+Codice > Genera codice > Codice Groovy · visualizza ed esporta
+Codice > Genera codice > Codice Ruby · visualizza ed esporta
+Codice > Genera codice > Codice PowerShell · visualizza ed esporta
+Codice > Genera codice > Codice PHP · visualizza ed esporta
+Codice > Modelli di codice personali
+
+VISTA
+Vista > Layout di lavoro > Essenziale
+Vista > Layout di lavoro > Sviluppo
+Vista > Layout di lavoro > Completo
+Vista > Solo foglio / pannelli
+Vista > Codice a vista
+Vista > Separa Input e Output
+Vista > Inquadra il diagramma
+Vista > Griglia di allineamento
+Vista > Aspetto e animazioni > Stile dei diagrammi
+Vista > Aspetto e animazioni > Attiva tema scuro
+Vista > Aspetto e animazioni > Animazioni dell’interfaccia
+Attiva tema scuro diventa Attiva tema chiaro quando il tema scuro è già attivo.
+
+AIUTO
+Aiuto > Guida a Frociart
+Aiuto > Leggi il mio flowchart
+Aiuto > Spiega la casella selezionata
+Aiuto > Comandi rapidi
+Aiuto > Autore e condizioni d’uso
+Aiuto > Informazioni su Frociart
+
+PROVA DEL DIAGRAMMA E FILE ESPORTATO
+Esegui, Avanti, Pausa e Ricomincia nelle finestre di codice provano lo stesso flowchart della finestra principale. Le righe evidenziate seguono i blocchi; i valori e gli input appartengono a quella prova.
+Il file esportato si esegue separatamente nel linguaggio scelto. Frociart non installa né avvia gli interpreti dei linguaggi esportati. Le pause del flowchart servono al debugger dell’app: il programma esportato le attraversa.
+Gli esempi incompleti o con errori dichiarati servono per esercitarsi a trovare e correggere il problema; la verifica non deve trasformarli in un successo apparente.

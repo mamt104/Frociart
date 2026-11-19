@@ -1,0 +1,1826 @@
+    ' Supporto autonomo: valori, limiti, file e grafica SVG. Nessun interprete di diagrammi.
+
+    Public NotInheritable Class ValueFormatter
+        Private Shared Function FormatNumber(value As Double) As String
+            If value = 0 Then Return "0"
+            If Double.IsNaN(value) OrElse Double.IsInfinity(value) Then Return value.ToString(CultureInfo.InvariantCulture)
+            If Math.Abs(value) < 1.0E15 AndAlso value = Math.Truncate(value) Then Return value.ToString("0", CultureInfo.InvariantCulture)
+            Dim negative As Boolean = value < 0, bits As Long = BitConverter.DoubleToInt64Bits(Math.Abs(value))
+            Dim power As Integer = CInt((bits >> 52) And 2047L)
+            Dim mantissa As ULong = CULng(bits And 4503599627370495L)
+            If power <> 0 Then mantissa = mantissa Or 4503599627370496UL
+            Dim shift As Integer = If(power = 0, -1022, power - 1023) - 52, scale As Integer = 0
+            Dim coefficient As New BigInteger(mantissa)
+            If shift >= 0 Then
+                coefficient = coefficient << shift
+            Else
+                scale = -shift
+                coefficient *= BigInteger.Pow(New BigInteger(5), scale)
+            End If
+            Dim digits As String = coefficient.ToString(CultureInfo.InvariantCulture), exponent As Integer = digits.Length - scale - 1
+            If digits.Length > 15 Then
+                Dim head As ULong = ULong.Parse(digits.Substring(0, 15), CultureInfo.InvariantCulture)
+                If digits(15) >= "5"c Then head += 1UL
+                digits = head.ToString(CultureInfo.InvariantCulture)
+                If digits.Length > 15 Then
+                    exponent += 1
+                    digits = digits.Substring(0, 15)
+                End If
+            End If
+            digits = digits.TrimEnd("0"c)
+            Dim body As String
+            If exponent >= 15 OrElse exponent < -4 Then
+                body = digits.Substring(0, 1) & If(digits.Length > 1, "." & digits.Substring(1), "") & "E" & If(exponent >= 0, "+", "-") & Math.Abs(exponent).ToString("D2", CultureInfo.InvariantCulture)
+            Else
+                Dim at As Integer = exponent + 1
+                body = If(at <= 0, "0." & New String("0"c, -at) & digits, If(at >= digits.Length, digits & New String("0"c, at - digits.Length), digits.Substring(0, at) & "." & digits.Substring(at)))
+            End If
+            Return If(negative, "-", "") & body
+        End Function
+        Public Shared Function Format(value As Object) As String
+            If value Is Nothing Then Return ""
+            If TypeOf value Is VectorValue Then Return CType(value, VectorValue).Format()
+            If TypeOf value Is Boolean Then Return If(CBool(value), "vero", "falso")
+            If TypeOf value Is Double Then
+                Dim number As Double = CDbl(value)
+                If number = 0 Then Return "0"
+                Return FormatNumber(number)
+            End If
+            Return Convert.ToString(value, CultureInfo.InvariantCulture)
+        End Function
+    End Class
+
+
+    Friend NotInheritable Class FlowException
+        Inherits Exception
+        Public Sub New(message As String)
+            MyBase.New(message)
+        End Sub
+    End Class
+
+    ' Immutable values preserve assignment-by-value and transactional block execution.
+    Public NotInheritable Class VectorValue
+        Public Const MaxLength As Integer = 1024
+        Private ReadOnly items As Object()
+        Public ReadOnly Property Count As Integer
+            Get
+                Return items.Length
+            End Get
+        End Property
+        Friend Sub New(values As IEnumerable(Of Object))
+            items = values.ToArray()
+            If items.Length > MaxLength Then Throw New FlowException("Un vettore può contenere al massimo 1024 elementi.")
+            Dim kind = -1, total = 2
+
+            For Each value In items
+                Dim type = If(TypeOf value Is Boolean, 1, If(TypeOf value Is String, 2, If(__FROCIART_PROGRAM__.Values.Numeric(value), 0, -1)))
+                If type < 0 Then Throw New FlowException("I vettori contengono numeri, testi o valori logici; i vettori annidati non sono supportati.")
+
+                If kind < 0 Then
+                    kind = type
+                ElseIf kind <> type Then
+                    Throw New FlowException("Tutti gli elementi del vettore devono avere lo stesso tipo.")
+                End If
+
+                If type = 0 Then __FROCIART_PROGRAM__.Values.Number(value)
+                total += Element(value).Length + 2
+                If total > __FROCIART_PROGRAM__.Values.MaxStringLength Then Throw New FlowException("Il contenuto del vettore supera 32768 caratteri.")
+            Next
+        End Sub
+        Private Shared Function Element(value As Object) As String
+            Return If(TypeOf value Is String, """" & CStr(value).Replace("\", "\\").Replace("""", "\""").Replace(vbLf, "\n").Replace(vbCr, "\r").Replace(vbTab, "\t") & """", ValueFormatter.Format(value))
+        End Function
+        Public Function Format() As String
+            Return "[" & String.Join(", ", items.[Select](New Func(Of Object, String)(AddressOf Element))) & "]"
+        End Function
+        Friend Shared Function [Integer](value As Object, label As String) As Integer
+            Dim n = Values.Number(value)
+            If n < 0 OrElse n > Integer.MaxValue OrElse n <> Math.Floor(n) Then Throw New FlowException(label & " deve essere un intero maggiore o uguale a 0.")
+            Return CInt(n)
+        End Function
+        Friend Function Index(pIndex As Object) As Integer
+            Dim i = [Integer](pIndex, "L’indice")
+            If i >= Count Then Throw New FlowException(If(Count = 0, "Il vettore è vuoto: non contiene elementi.", "Indice " & i.ToString() & " fuori dal vettore. Usa un indice da 0 a " & (Count - 1).ToString() & "."))
+            Return i
+        End Function
+        Public Function At(index As Integer) As Object
+            Return items(Me.Index(CDbl(index)))
+        End Function
+        Friend Shared Function ScalarKind(value As Object) As Integer
+            Dim kind = If(TypeOf value Is Boolean, 1, If(TypeOf value Is String, 2, If(Values.Numeric(value), 0, -1)))
+            If kind < 0 Then Throw New FlowException("Il valore iniziale deve essere un numero, un testo o un valore logico.")
+            If kind = 0 Then Values.Number(value)
+            Return kind
+        End Function
+        Friend Function [Set](index As Integer, value As Object) As VectorValue
+            Me.Index(CDbl(index))
+            If ScalarKind(items(index)) <> ScalarKind(value) Then Throw New FlowException("Il nuovo valore deve avere lo stesso tipo degli elementi del vettore.")
+            Dim [next] As Object() = CType(items.Clone(), Object())
+            [next](index) = value
+            Return New VectorValue([next])
+        End Function
+        Friend Shared Function Require(value As Object) As VectorValue
+            Dim vector = TryCast(value, VectorValue)
+            If vector Is Nothing Then Throw New FlowException("Serve un vettore, per esempio valori = [10, 20, 30].")
+            Return vector
+        End Function
+        Public Overrides Function Equals(value As Object) As Boolean
+            Dim other = TryCast(value, VectorValue)
+            Return other IsNot Nothing AndAlso items.SequenceEqual(other.items)
+        End Function
+        Public Overrides Function GetHashCode() As Integer
+            Dim hash = 17
+
+            For Each item In items
+                Dim nextHash As Long = (CLng(hash) * 31L + CLng(item.GetHashCode())) And &HFFFFFFFFL
+                hash = If(nextHash >= &H80000000L, CInt(nextHash - &H100000000L), CInt(nextHash))
+            Next
+
+            Return hash
+        End Function
+        Public Overrides Function ToString() As String
+            Return Format()
+        End Function
+    End Class
+
+    Friend NotInheritable Class Values
+        Public Const MaxStringLength As Integer = 32768
+
+        Public Shared Function Number(value As Object) As Double
+            If TypeOf value Is Double Then Return Finite(CDbl(value))
+            If TypeOf value Is Integer OrElse TypeOf value Is Long OrElse TypeOf value Is Single OrElse TypeOf value Is Decimal Then Return Finite(Convert.ToDouble(value, CultureInfo.InvariantCulture))
+            Throw New FlowException("Serve un numero, ma il valore è «" & [Short](value) & "».")
+        End Function
+
+        Public Shared Function Truth(value As Object) As Boolean
+            If TypeOf value Is Boolean Then Return CBool(value)
+            If TypeOf value Is Double OrElse TypeOf value Is Integer OrElse TypeOf value Is Long OrElse TypeOf value Is Single OrElse TypeOf value Is Decimal Then Return Number(value) <> 0
+            Throw New FlowException("La condizione deve restituire vero/falso o un numero, non un testo.")
+        End Function
+
+        Public Shared Function Finite(value As Double) As Double
+            If Double.IsNaN(value) OrElse Double.IsInfinity(value) Then Throw New FlowException("Il risultato non è un numero finito: controlla dominio e grandezza dei valori.")
+            Return value
+        End Function
+
+        Public Shared Function [String](value As String) As String
+            If value.Length > MaxStringLength Then Throw New FlowException("Il testo supera il limite di " & MaxStringLength.ToString() & " caratteri.")
+            Return value
+        End Function
+
+        Public Shared Function [Short](value As Object) As String
+            Dim text = ValueFormatter.Format(value)
+            Return If(text.Length <= 60, text, text.Substring(0, 57) & "...")
+        End Function
+
+        Public Shared Function Input(raw As String) As Object
+            If Equals(raw, Nothing) Then raw = ""
+            If raw.Length > MaxStringLength Then Throw New FlowException("Il valore inserito è troppo lungo.")
+            Dim trimmed As String = raw.Trim()
+            Dim n As Double
+            If Double.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, n) OrElse Double.TryParse(trimmed, NumberStyles.Float, CultureInfo.GetCultureInfo("it-IT"), n) Then
+                If (Double.IsNaN(n) OrElse Double.IsInfinity(n)) AndAlso (trimmed.IndexOf(ChrW(0)) >= 0 OrElse trimmed.Equals("+NaN", StringComparison.OrdinalIgnoreCase) OrElse trimmed.Equals("-NaN", StringComparison.OrdinalIgnoreCase)) Then Return raw
+                Return Finite(n)
+            End If
+            If LooksNumeric(trimmed) Then Throw New FlowException("Il numero inserito è troppo grande. Usa un numero finito più piccolo.")
+            If trimmed.Equals("true", StringComparison.OrdinalIgnoreCase) OrElse trimmed.Equals("vero", StringComparison.OrdinalIgnoreCase) Then Return True
+            If trimmed.Equals("false", StringComparison.OrdinalIgnoreCase) OrElse trimmed.Equals("falso", StringComparison.OrdinalIgnoreCase) Then Return False
+            If trimmed.Equals("NaN", StringComparison.OrdinalIgnoreCase) OrElse trimmed.Equals("Infinity", StringComparison.OrdinalIgnoreCase) OrElse trimmed.Equals("+Infinity", StringComparison.OrdinalIgnoreCase) OrElse trimmed.Equals("-Infinity", StringComparison.OrdinalIgnoreCase) OrElse trimmed.Equals("infinito", StringComparison.OrdinalIgnoreCase) Then Throw New FlowException("Inserisci un numero finito.")
+            Return raw
+        End Function
+
+        Private Shared Function LooksNumeric(text As String) As Boolean
+            Dim i = 0, digits = 0
+            If i < text.Length AndAlso (text(i) = "+"c OrElse text(i) = "-"c) Then i += 1
+            While i < text.Length AndAlso text(i) >= "0"c AndAlso text(i) <= "9"c
+                i += 1
+                digits += 1
+            End While
+            If i < text.Length AndAlso (text(i) = "."c OrElse text(i) = ","c) Then
+                i += 1
+                While i < text.Length AndAlso text(i) >= "0"c AndAlso text(i) <= "9"c
+                    i += 1
+                    digits += 1
+                End While
+            End If
+            If digits = 0 Then Return False
+            If i < text.Length AndAlso (text(i) = "e"c OrElse text(i) = "E"c) Then
+                i += 1
+                If i < text.Length AndAlso (text(i) = "+"c OrElse text(i) = "-"c) Then i += 1
+                Dim exponentStart = i
+                While i < text.Length AndAlso text(i) >= "0"c AndAlso text(i) <= "9"c
+                    i += 1
+                End While
+                If i = exponentStart Then Return False
+            End If
+            Return i = text.Length
+        End Function
+
+        Public Shared Function Numeric(value As Object) As Boolean
+            Return TypeOf value Is Double OrElse TypeOf value Is Integer OrElse TypeOf value Is Long OrElse TypeOf value Is Single OrElse TypeOf value Is Decimal
+        End Function
+    End Class
+
+
+    Friend NotInheritable Class IntrinsicOperations
+        ' Framework uses the Windows 10/11 system CRT for full-range trigonometry.
+        ' Modern .NET and non-Windows hosts keep their platform Math implementation.
+        Private Shared ReadOnly UseSystemTrigonometry As Boolean = Global.System.Environment.OSVersion.Platform = Global.System.PlatformID.Win32NT AndAlso GetType(Object).Assembly.GetName().Name = "mscorlib"
+        <Global.System.Runtime.InteropServices.DllImport("ucrtbase.dll", EntryPoint:="sin", ExactSpelling:=True, CallingConvention:=Global.System.Runtime.InteropServices.CallingConvention.Cdecl)>
+        <Global.System.Runtime.InteropServices.DefaultDllImportSearchPaths(Global.System.Runtime.InteropServices.DllImportSearchPath.System32)>
+        Private Shared Function SystemSin(value As Double) As Double
+        End Function
+        <Global.System.Runtime.InteropServices.DllImport("ucrtbase.dll", EntryPoint:="cos", ExactSpelling:=True, CallingConvention:=Global.System.Runtime.InteropServices.CallingConvention.Cdecl)>
+        <Global.System.Runtime.InteropServices.DefaultDllImportSearchPaths(Global.System.Runtime.InteropServices.DllImportSearchPath.System32)>
+        Private Shared Function SystemCos(value As Double) As Double
+        End Function
+        <Global.System.Runtime.InteropServices.DllImport("ucrtbase.dll", EntryPoint:="tan", ExactSpelling:=True, CallingConvention:=Global.System.Runtime.InteropServices.CallingConvention.Cdecl)>
+        <Global.System.Runtime.InteropServices.DefaultDllImportSearchPaths(Global.System.Runtime.InteropServices.DllImportSearchPath.System32)>
+        Private Shared Function SystemTan(value As Double) As Double
+        End Function
+        Friend Shared Function Sin(value As Double) As Double
+            Return If(UseSystemTrigonometry, SystemSin(value), Math.Sin(value))
+        End Function
+        Friend Shared Function Cos(value As Double) As Double
+            Return If(UseSystemTrigonometry, SystemCos(value), Math.Cos(value))
+        End Function
+        Friend Shared Function Tan(value As Double) As Double
+            Return If(UseSystemTrigonometry, SystemTan(value), Math.Tan(value))
+        End Function
+        Private Shared ReadOnly RandomSource As Random = New Random()
+        Private Shared ReadOnly Names As HashSet(Of String) = New HashSet(Of String)({"sin", "cos", "tan", "arcsin", "arccos", "arctan", "int", "ln", "log", "log10", "sgn", "random", "size", "char", "tochar", "tocode", "tofixed", "tointeger", "toreal", "tostring"})
+        Friend Shared Function [Handles](name As String) As Boolean
+            Return Names.Contains(name)
+        End Function
+        Private Shared Function Text(value As Object) As String
+            If Not (TypeOf value Is String) Then Throw New FlowException("Questa funzione richiede un testo tra virgolette o una variabile di testo.")
+            Return CStr(value)
+        End Function
+        Friend Shared Function Characters(text As String) As List(Of String)
+            Dim result = New List(Of String)()
+            For i = 0 To text.Length - 1
+                If Char.IsHighSurrogate(text(i)) Then
+                    If i + 1 >= text.Length OrElse Not Char.IsLowSurrogate(text(i + 1)) Then Throw New FlowException("Il testo contiene un carattere Unicode incompleto.")
+                    result.Add(text.Substring(Math.Min(Threading.Interlocked.Increment(i), i - 1), 2))
+                Else
+                    If Char.IsLowSurrogate(text(i)) Then Throw New FlowException("Il testo contiene un carattere Unicode incompleto.")
+                    result.Add(text(i).ToString())
+                End If
+            Next
+            Return result
+        End Function
+        Friend Shared Function CharacterCount(text As String) As Integer
+            Dim count = 0
+            Dim i = 0
+
+            While i < text.Length
+                If Char.IsHighSurrogate(text(i)) Then
+                    If i + 1 >= text.Length OrElse Not Char.IsLowSurrogate(text(i + 1)) Then Throw New FlowException("Il testo contiene un carattere Unicode incompleto.")
+                    i += 1
+                ElseIf Char.IsLowSurrogate(text(i)) Then
+                    Throw New FlowException("Il testo contiene un carattere Unicode incompleto.")
+                End If
+
+                i += 1
+                count += 1
+            End While
+            Return count
+        End Function
+        Private Shared Function [Integer](value As Object, minimum As Integer, maximum As Integer, label As String) As Integer
+            Dim n = Values.Number(value)
+            If n < minimum OrElse n > maximum OrElse n <> Math.Truncate(n) Then Throw New FlowException(label & " deve essere un intero da " & minimum.ToString() & " a " & maximum.ToString() & ".")
+            Return CInt(n)
+        End Function
+        ' Framework's Double.ToString("F") keeps only 15 significant digits.
+        ' Format the already rounded binary value exactly, matching Android's
+        ' BigDecimal(double) without losing large integer or requested fractional digits.
+        Private Shared Function Fixed(number As Double, digits As Integer) As String
+            Dim rounded = Math.Round(number, digits, MidpointRounding.AwayFromZero)
+            Dim bits = BitConverter.DoubleToInt64Bits(Math.Abs(rounded))
+            Dim exponent As Integer = CInt((bits >> 52) And &H7fF)
+            Dim mantissa = bits And &HfffffffffffffL
+            If exponent <> 0 Then mantissa = mantissa Or 1L << 52
+            Dim shift = If(exponent = 0, -1022, exponent - 1023) - 52
+            Dim scaled As BigInteger = New BigInteger(mantissa) * BigInteger.Pow(10, digits)
+            If shift >= 0 Then
+                scaled <<= shift
+            Else
+                Dim remainder As BigInteger = BigInteger.Zero, denominator = BigInteger.One << -shift
+                scaled = BigInteger.DivRem(scaled, denominator, remainder)
+                If remainder * 2 >= denominator Then scaled += BigInteger.One
+            End If
+            Dim text = scaled.ToString(CultureInfo.InvariantCulture)
+            If digits > 0 Then
+                text = text.PadLeft(digits + 1, "0"c)
+                text = text.Insert(text.Length - digits, ".")
+            End If
+            Return If(rounded < 0 AndAlso Not scaled.IsZero, "-" & text, text)
+        End Function
+        Friend Shared Function Evaluate(name As String, args As Object()) As Object
+            Dim first = args(0)
+            If Equals(name, "size") Then Return CDbl(VectorValue.Require(first).Count)
+            If Equals(name, "char") Then
+                Dim chars = Characters(Text(first))
+                Dim index = [Integer](args(1), 0, Integer.MaxValue, "L’indice")
+                If index >= chars.Count Then Throw New FlowException(If(chars.Count = 0, "Il testo è vuoto: non contiene caratteri.", "Indice fuori dal testo. Usa un indice da 0 a " & (chars.Count - 1).ToString() & "."))
+                Return chars(index)
+            End If
+            If Equals(name, "tocode") Then
+                Dim chars = Characters(Text(first))
+                If chars.Count <> 1 Then Throw New FlowException("tocode richiede esattamente un carattere.")
+                Return CDbl(Char.ConvertToUtf32(chars(0), 0))
+            End If
+            ' The optional mode validates generated FOR steps without reserving a
+            ' new function name that could conflict with an existing user project.
+            If Equals(name, "int") AndAlso args.Length = 2 Then
+                If Not (TypeOf args(1) Is String) OrElse Not String.Equals(CStr(args(1)), "passo", StringComparison.OrdinalIgnoreCase) Then Throw New FlowException("Il secondo argomento di int deve essere ""passo"" per controllare il passo di un ciclo.")
+                If Not (TypeOf first Is Double OrElse TypeOf first Is Integer OrElse TypeOf first Is Long OrElse TypeOf first Is Single OrElse TypeOf first Is Decimal) Then Throw New FlowException("Il passo del ciclo deve essere un numero intero diverso da zero.")
+                Dim [step] = Values.Number(first)
+                If [step] = 0 OrElse [step] <> Math.Truncate([step]) OrElse [step] < Integer.MinValue OrElse [step] > Integer.MaxValue Then Throw New FlowException("Il passo del ciclo deve essere un intero diverso da zero, da -2147483648 a 2147483647.")
+                Return [step]
+            End If
+            If Equals(name, "tointeger") OrElse Equals(name, "toreal") Then
+                Dim text As String = IntrinsicOperations.Text(first).Trim()
+                Dim value As Double = Nothing
+                Dim pattern = If(Equals(name, "tointeger"), "^[+-]?[0-9]+$", "^[+-]?(?:[0-9]+(?:[.,][0-9]*)?|[.,][0-9]+)(?:[eE][+-]?[0-9]+)?$")
+                If Not Regex.IsMatch(text, pattern) OrElse Not Double.TryParse(text.Replace(","c, "."c), NumberStyles.Float, CultureInfo.InvariantCulture, value) Then Throw New FlowException(If(Equals(name, "tointeger"), "Scrivi un testo che contenga un numero intero, per esempio ""42"".", "Scrivi un testo che contenga un numero, per esempio ""12.5""."))
+                value = Values.Finite(value)
+                If Equals(name, "tointeger") AndAlso (value < Integer.MinValue OrElse value > Integer.MaxValue) Then Throw New FlowException("tointeger accetta valori da -2147483648 a 2147483647.")
+                Return value
+            End If
+            Dim n = Values.Number(first)
+            Select Case name
+                Case "sin"
+                    Return Values.Finite(Sin(n))
+                Case "cos"
+                    Return Values.Finite(Cos(n))
+                Case "tan"
+                    Return Values.Finite(Tan(n))
+                Case "arcsin", "arccos"
+                    If n < -1 OrElse n > 1 Then Throw New FlowException(name & " richiede un numero tra -1 e 1.")
+                    Return If(Equals(name, "arcsin"), Math.Asin(n), Math.Acos(n))
+                Case "arctan"
+                    Return Math.Atan(n)
+                Case "int"
+                    Return Math.Truncate(n)
+                Case "sgn"
+                    Return CDbl(Math.Sign(n))
+                Case "ln", "log", "log10"
+                    If n <= 0 Then Throw New FlowException("Il logaritmo richiede un numero maggiore di 0.")
+                    Return If(Equals(name, "log10"), Math.Log10(n), Math.Log(n))
+                Case "random"
+                    Dim bound = [Integer](first, 1, Integer.MaxValue, "Il limite di random")
+                    SyncLock RandomSource
+                        Return CDbl(RandomSource.Next(bound))
+                    End SyncLock
+                Case "tochar"
+                    Dim code = [Integer](first, 0, &H10FFFF, "Il codice Unicode")
+                    If code >= &HD800 AndAlso code <= &HDFFF Then Throw New FlowException("Il codice non rappresenta un carattere Unicode completo.")
+                    Return Char.ConvertFromUtf32(code)
+                Case "tostring"
+                    Return ValueFormatter.Format(n)
+                Case "tofixed"
+                    Dim digits = [Integer](args(1), 0, 15, "Le cifre decimali")
+                    Return Fixed(n, digits)
+                Case Else
+                    Throw New FlowException("Funzione sconosciuta.")
+            End Select
+        End Function
+    End Class
+
+
+    Private Shared Function PrimitiveBinary(op As String, a As Object, b As Object) As Object
+        If Equals(op, "&") OrElse Equals(op, "+") AndAlso (TypeOf a Is String OrElse TypeOf b Is String) Then
+            Dim first = ValueFormatter.Format(a), second = ValueFormatter.Format(b)
+            If first.Length + second.Length > Values.MaxStringLength Then Throw New FlowException("Il testo prodotto supera il limite di " & Values.MaxStringLength.ToString() & " caratteri.")
+            Return first & second
+        End If
+        If Equals(op, "=") OrElse Equals(op, "==") OrElse Equals(op, "!=") OrElse Equals(op, "<>") Then
+            Dim same As Boolean
+            If Values.Numeric(a) AndAlso Values.Numeric(b) Then
+                same = Values.Number(a) = Values.Number(b)
+            Else
+                same = Equals(a, b)
+            End If
+            Return If(Equals(op, "!=") OrElse Equals(op, "<>"), Not same, same)
+        End If
+        If Equals(op, "<") OrElse Equals(op, "<=") OrElse Equals(op, ">") OrElse Equals(op, ">=") Then
+            Dim comparison As Integer
+            If TypeOf a Is String AndAlso TypeOf b Is String Then
+                comparison = String.CompareOrdinal(CStr(a), CStr(b))
+            Else
+                comparison = Values.Number(a).CompareTo(Values.Number(b))
+            End If
+            Select Case op
+                Case "<"
+                    Return comparison < 0
+                Case "<="
+                    Return comparison <= 0
+                Case ">"
+                    Return comparison > 0
+                Case Else
+                    Return comparison >= 0
+            End Select
+        End If
+        Dim x = Values.Number(a), y = Values.Number(b)
+        Select Case op
+            Case "+"
+                Return Values.Finite(x + y)
+            Case "-"
+                Return Values.Finite(x - y)
+            Case "*"
+                Return Values.Finite(x * y)
+            Case "/"
+                If y = 0 Then Throw New FlowException("Divisione per zero: il divisore deve essere diverso da 0.")
+                Return Values.Finite(x / y)
+            Case "%"
+                If y = 0 Then Throw New FlowException("Resto con divisore zero: usa un divisore diverso da 0.")
+                Return Values.Finite(x Mod y)
+            Case "^"
+                Return Values.Finite(Math.Pow(x, y))
+            Case Else
+                Throw New FlowException("Operatore non riconosciuto.")
+        End Select
+    End Function
+
+    Private Shared Function PrimitiveCall(name As String, args As Object()) As Object
+        Dim first = args(0)
+        If Equals(name, "array") OrElse Equals(name, "vettore") Then
+            Dim length = VectorValue.Integer(first, "La dimensione")
+            If length > VectorValue.MaxLength Then Throw New FlowException("Un vettore può contenere al massimo 1024 elementi.")
+            Dim initial = If(args.Length = 2, args(1), 0.0)
+            VectorValue.ScalarKind(initial)
+            Return New VectorValue(Enumerable.Repeat(initial, length))
+        End If
+        If Equals(name, "len") Then
+            If TypeOf first Is VectorValue Then Return CDbl(CType(first, VectorValue).Count)
+            If TypeOf first Is String Then Return CDbl(IntrinsicOperations.CharacterCount(CStr(first)))
+            Throw New FlowException("len richiede un testo o un vettore.")
+        End If
+        If IntrinsicOperations.Handles(name) Then Return IntrinsicOperations.Evaluate(name, If(args.Length = 1, {first}, {first, args(1)}))
+        If Equals(name, "sum") OrElse Equals(name, "somma") OrElse (Equals(name, "min") OrElse Equals(name, "max")) AndAlso args.Length = 1 Then
+            Dim vector = VectorValue.Require(first)
+            If vector.Count = 0 AndAlso Not Equals(name, "sum") AndAlso Not Equals(name, "somma") Then Throw New FlowException("Il vettore è vuoto: min e max richiedono almeno un elemento.")
+            Dim result As Double = 0
+
+            For i = 0 To vector.Count - 1
+                Dim n = Values.Number(vector.At(i))
+                result = If(Equals(name, "min"), If(i = 0, n, Math.Min(result, n)), If(Equals(name, "max"), If(i = 0, n, Math.Max(result, n)), Values.Finite(result + n)))
+            Next
+
+            Return result
+        End If
+        Dim number = Values.Number(first)
+        Select Case name
+            Case "abs"
+                Return Math.Abs(number)
+            Case "sqrt"
+                If number < 0 Then Throw New FlowException("La radice quadrata richiede un numero maggiore o uguale a 0.")
+                Return Math.Sqrt(number)
+            Case "floor"
+                Return Math.Floor(number)
+            Case "round"
+                Dim digits = 0
+                If args.Length = 2 Then
+                    Dim places = Values.Number(args(1))
+                    If places < 0 OrElse places > 15 OrElse places <> Math.Floor(places) Then Throw New FlowException("Le cifre decimali di round devono essere un intero tra 0 e 15.")
+                    digits = CInt(places)
+                End If
+                Return Math.Round(number, digits, MidpointRounding.AwayFromZero)
+            Case "min", "max"
+                For i = 1 To args.Length - 1
+                    Dim [next] = Values.Number(args(i))
+                    number = If(Equals(name, "min"), Math.Min(number, [next]), Math.Max(number, [next]))
+                Next
+                Return number
+            Case Else
+                Throw New FlowException("Funzione sconosciuta.")
+        End Select
+    End Function
+
+    Public Enum FlowFileRequestKind
+        Read
+        Save
+    End Enum
+
+    ' A request is a capability for one suspended block, never an arbitrary filesystem path.
+    Public NotInheritable Class FlowFileRequest
+        Private _Kind As __FROCIART_PROGRAM__.FlowFileRequestKind, _Name As String, _Text As String
+
+        Public Property Kind As FlowFileRequestKind
+            Get
+                Return _Kind
+            End Get
+            Private Set(value As FlowFileRequestKind)
+                _Kind = value
+            End Set
+        End Property
+
+        Public Property Name As String
+            Get
+                Return _Name
+            End Get
+            Private Set(value As String)
+                _Name = value
+            End Set
+        End Property
+
+        Public Property Text As String
+            Get
+                Return _Text
+            End Get
+            Private Set(value As String)
+                _Text = value
+            End Set
+        End Property
+        Friend Sub New(kind As FlowFileRequestKind, name As String, Optional text As String = Nothing)
+            Me.Kind = kind
+            Me.Name = name
+            Me.Text = text
+        End Sub
+    End Class
+
+    ''' <summary>Two program-wide channels. Output remains a recoverable draft until the host confirms a save.</summary>
+    Public NotInheritable Class FlowTextFiles
+        Private _RecoveryCopyRemains As Boolean, _ReadName As String, _WriteName As String
+        Public Interface IJournal
+            ReadOnly Property Id As String
+            Sub Append(text As String)
+            Sub Close()
+            Function Saved() As Boolean
+        End Interface
+        Public ReadOnly Property ActiveJournalId As String
+            Get
+                Return If(journal Is Nothing, Nothing, journal.Id)
+            End Get
+        End Property
+        Public Property JournalFactory As Func(Of String, IJournal)
+        Private journal As IJournal
+
+        Public Property RecoveryCopyRemains As Boolean
+            Get
+                Return _RecoveryCopyRemains
+            End Get
+            Private Set(value As Boolean)
+                _RecoveryCopyRemains = value
+            End Set
+        End Property
+        Public Sub CloseJournal()
+            If journal IsNot Nothing Then
+                journal.Close()
+                journal = Nothing
+            End If
+        End Sub
+        Public Const MaxBytes As Integer = 4194304, MaxCharacters As Integer = 2097152, MaxLine As Integer = 32768
+        Private input As String
+        Private position As Integer
+        Private output As StringBuilder
+        Private outputBytes As Integer
+
+        Public Property ReadName As String
+            Get
+                Return _ReadName
+            End Get
+            Private Set(value As String)
+                _ReadName = value
+            End Set
+        End Property
+
+        Public Property WriteName As String
+            Get
+                Return _WriteName
+            End Get
+            Private Set(value As String)
+                _WriteName = value
+            End Set
+        End Property
+        Public ReadOnly Property HasRead As Boolean
+            Get
+                Return Not Equals(input, Nothing)
+            End Get
+        End Property
+        Public ReadOnly Property HasWrite As Boolean
+            Get
+                Return output IsNot Nothing
+            End Get
+        End Property
+        Public ReadOnly Property OutputDraft As String
+            Get
+                Return If(output Is Nothing, Nothing, output.ToString())
+            End Get
+        End Property
+        Private Shared ReadOnly Utf8 As UTF8Encoding = New UTF8Encoding(False, True)
+
+        Public Function Eof() As Boolean
+            RequireRead()
+            Return position >= input.Length
+        End Function
+        Private Sub RequireRead()
+            If Not HasRead Then Throw New FlowException("Apri prima un file in lettura. EOF() controlla quel file.")
+        End Sub
+        Friend Shared Function Name(value As Object) As String
+            Dim lName = TryCast(value, String)
+            If String.IsNullOrWhiteSpace(lName) OrElse lName.Length > 256 Then Throw New FlowException("Il nome del file deve essere un testo da 1 a 256 caratteri.")
+            For Each c In lName
+                If Char.IsControl(c) Then Throw New FlowException("Il nome del file non può contenere righe nuove o caratteri di controllo.")
+            Next
+            ValidateText(lName)
+            Return lName
+        End Function
+        Friend Sub OpenRead(name As String, text As String)
+            If HasRead Then Throw New FlowException("Un file è già aperto in lettura. Chiudilo prima di aprirne un altro.")
+            ValidateText(text)
+            input = text
+            position = 0
+            ReadName = name
+        End Sub
+        Friend Sub OpenWrite(name As String)
+            If HasWrite Then Throw New FlowException("Un file è già aperto in scrittura. Chiudilo e salvalo prima di aprirne un altro.")
+            Try
+                journal = If(JournalFactory Is Nothing, Nothing, JournalFactory(name))
+            Catch __unusedIOException1__ As IOException
+                Throw New FlowException("Non riesco a preparare la bozza locale. Controlla lo spazio disponibile e la bozza di recupero indicata, poi riprova.")
+            Catch __unusedUnauthorizedAccessException2__ As UnauthorizedAccessException
+                Throw New FlowException("Non riesco a creare la bozza locale. Controlla l'accesso alla cartella di destinazione.")
+            End Try
+            RecoveryCopyRemains = False
+            output = New StringBuilder()
+            outputBytes = 0
+            WriteName = name
+        End Sub
+        Public Function PeekLine() As String
+            RequireRead()
+            If Eof() Then Throw New FlowException("Il file è terminato. Usa non EOF() nella condizione del ciclo prima di leggere.")
+            Dim [end] = position
+
+            While [end] < input.Length AndAlso input([end]) <> ChrW(13) AndAlso input([end]) <> ChrW(10)
+                If [end] - position >= MaxLine Then Throw New FlowException("Una riga del file supera 32768 caratteri.")
+                [end] += 1
+            End While
+            Return input.Substring(position, [end] - position)
+        End Function
+        Friend Sub CommitRead()
+            Dim line As String = PeekLine()
+            position += line.Length
+            If position < input.Length AndAlso input(position) = ChrW(13) Then
+                position += 1
+                If position < input.Length AndAlso input(position) = ChrW(10) Then position += 1
+            ElseIf position < input.Length AndAlso input(position) = ChrW(10) Then
+                position += 1
+            End If
+        End Sub
+        Friend Sub Write(text As String, newline As Boolean)
+            If Not HasWrite Then Throw New FlowException("Apri prima un file in scrittura.")
+            text = If(text, "") & If(newline, vbLf, "")
+            Dim bytes As Integer
+            Try
+                bytes = Utf8.GetByteCount(text)
+            Catch __unusedEncoderFallbackException1__ As EncoderFallbackException
+                Throw New FlowException("Il file contiene caratteri Unicode non validi.")
+            End Try
+            If output.Length + CLng(text.Length) > MaxCharacters OrElse outputBytes + CLng(bytes) > MaxBytes Then Throw New FlowException("Il file generato supera il limite di 4 MiB o 2 milioni di caratteri.")
+            Try
+                If journal IsNot Nothing Then journal.Append(text)
+            Catch __unusedIOException1__ As IOException
+                Throw New FlowException("Scrittura interrotta: non riesco a conservare la bozza locale. Il testo precedente resta in la bozza di recupero indicata.")
+            Catch __unusedUnauthorizedAccessException2__ As UnauthorizedAccessException
+                Throw New FlowException("Non riesco ad aggiornare la bozza locale. Il testo precedente resta in la bozza di recupero indicata.")
+            End Try
+            output.Append(text)
+            outputBytes += bytes
+        End Sub
+        Friend Sub CloseRead()
+            RequireRead()
+            input = Nothing
+            position = 0
+            ReadName = Nothing
+        End Sub
+        Friend Sub Saved()
+            If journal IsNot Nothing Then
+                RecoveryCopyRemains = Not journal.Saved()
+                journal = Nothing
+            End If
+
+            output = Nothing
+            outputBytes = 0
+            WriteName = Nothing
+        End Sub
+        Friend Sub Reset()
+            CloseJournal()
+            input = Nothing
+            position = 0
+            ReadName = Nothing
+            output = Nothing
+            outputBytes = 0
+            WriteName = Nothing
+            RecoveryCopyRemains = False
+        End Sub
+        Private Shared Sub ValidateText(text As String)
+            If Equals(text, Nothing) Then Throw New FlowException("Il file di testo non è disponibile.")
+            If text.Length > MaxCharacters Then Throw New FlowException("Il file supera 2 milioni di caratteri.")
+            Try
+                If Utf8.GetByteCount(text) > MaxBytes Then Throw New FlowException("Il file supera 4 MiB.")
+            Catch __unusedEncoderFallbackException1__ As EncoderFallbackException
+                Throw New FlowException("Il file contiene caratteri Unicode non validi.")
+            End Try
+        End Sub
+        ' The caller owns the stream and grants access through its native file picker.
+        Public Shared Function ReadText(stream As Stream) As String
+            If stream Is Nothing Then Throw New ArgumentNullException("stream")
+            Using bytes = New MemoryStream()
+                Dim buffer = New Byte(8191) {}
+                Dim count As Integer
+                While True
+                    count = stream.Read(buffer, 0, buffer.Length)
+                    If count <= 0 Then Exit While
+                    If bytes.Length + count > MaxBytes Then Throw New FlowException("Il file supera 4 MiB.")
+                    bytes.Write(buffer, 0, count)
+                End While
+                Dim data As Byte() = bytes.ToArray()
+                Dim start = 0
+                Dim encoding As Encoding = Utf8
+                If data.Length >= 3 AndAlso data(0) = 239 AndAlso data(1) = 187 AndAlso data(2) = 191 Then
+                    start = 3
+                ElseIf data.Length >= 2 AndAlso data(0) = 255 AndAlso data(1) = 254 Then
+                    start = 2
+                    encoding = New UnicodeEncoding(False, False, True)
+                ElseIf data.Length >= 2 AndAlso data(0) = 254 AndAlso data(1) = 255 Then
+                    start = 2
+                    encoding = New UnicodeEncoding(True, False, True)
+                End If
+                Try
+                    Dim text = encoding.GetString(data, start, data.Length - start)
+                    ValidateText(text)
+                    Return text
+                Catch __unusedDecoderFallbackException1__ As DecoderFallbackException
+                    Throw New FlowException("Il file non è un testo UTF-8 o UTF-16 valido. Salvalo come UTF-8 e riprova.")
+                End Try
+            End Using
+        End Function
+        Public Shared Sub WriteText(stream As Stream, text As String)
+            ValidateText(text)
+            Dim bytes = Utf8.GetBytes(text)
+            stream.Write(bytes, 0, bytes.Length)
+            stream.Flush()
+        End Sub
+
+    End Class
+
+    Public NotInheritable Class FlowTurtle
+        Private _X As Double, _Y As Double, _Heading As Double, _Color As String, _Revision As Long, _Used As Boolean
+        Public Const MaxSegments As Integer = 10000
+        Public Const MaxCoordinate As Double = 1000000
+        Public NotInheritable Class Segment
+            Private _X1 As Double, _Y1 As Double, _X2 As Double, _Y2 As Double, _Color As String
+
+            Public Property X1 As Double
+                Get
+                    Return _X1
+                End Get
+                Private Set(value As Double)
+                    _X1 = value
+                End Set
+            End Property
+
+            Public Property Y1 As Double
+                Get
+                    Return _Y1
+                End Get
+                Private Set(value As Double)
+                    _Y1 = value
+                End Set
+            End Property
+
+            Public Property X2 As Double
+                Get
+                    Return _X2
+                End Get
+                Private Set(value As Double)
+                    _X2 = value
+                End Set
+            End Property
+
+            Public Property Y2 As Double
+                Get
+                    Return _Y2
+                End Get
+                Private Set(value As Double)
+                    _Y2 = value
+                End Set
+            End Property
+
+            Public Property Color As String
+                Get
+                    Return _Color
+                End Get
+                Private Set(value As String)
+                    _Color = value
+                End Set
+            End Property
+            Friend Sub New(x1 As Double, y1 As Double, x2 As Double, y2 As Double, color As String)
+                Me.X1 = x1
+                Me.Y1 = y1
+                Me.X2 = x2
+                Me.Y2 = y2
+                Me.Color = color
+            End Sub
+        End Class
+        Public NotInheritable Class Snapshot
+            Private _X As Double, _Y As Double, _Heading As Double, _Color As String, _Revision As Long, _Segments As System.Collections.Generic.IList(Of __FROCIART_PROGRAM__.FlowTurtle.Segment)
+
+            Public Property X As Double
+                Get
+                    Return _X
+                End Get
+                Private Set(value As Double)
+                    _X = value
+                End Set
+            End Property
+
+            Public Property Y As Double
+                Get
+                    Return _Y
+                End Get
+                Private Set(value As Double)
+                    _Y = value
+                End Set
+            End Property
+
+            Public Property Heading As Double
+                Get
+                    Return _Heading
+                End Get
+                Private Set(value As Double)
+                    _Heading = value
+                End Set
+            End Property
+
+            Public Property Color As String
+                Get
+                    Return _Color
+                End Get
+                Private Set(value As String)
+                    _Color = value
+                End Set
+            End Property
+
+            Public Property Revision As Long
+                Get
+                    Return _Revision
+                End Get
+                Private Set(value As Long)
+                    _Revision = value
+                End Set
+            End Property
+
+            Public Property Segments As IList(Of Segment)
+                Get
+                    Return _Segments
+                End Get
+                Private Set(value As IList(Of Segment))
+                    _Segments = value
+                End Set
+            End Property
+            Friend Sub New(owner As FlowTurtle)
+                X = owner.X
+                Y = owner.Y
+                Heading = owner.Heading
+                Color = owner.Color
+                Revision = owner.Revision
+                Segments = Array.AsReadOnly(owner.lines.ToArray())
+            End Sub
+        End Class
+        Friend Shared Function Svg(snapshot As Snapshot) As String
+            Dim minX = Math.Min(0, snapshot.X), maxX = Math.Max(0, snapshot.X), minY = Math.Min(0, snapshot.Y), maxY = Math.Max(0, snapshot.Y)
+
+            For Each line In snapshot.Segments
+                minX = Math.Min(minX, Math.Min(line.X1, line.X2))
+                maxX = Math.Max(maxX, Math.Max(line.X1, line.X2))
+                minY = Math.Min(minY, Math.Min(line.Y1, line.Y2))
+                maxY = Math.Max(maxY, Math.Max(line.Y1, line.Y2))
+            Next
+            Dim margin = Math.Max(10, Math.Max(maxX - minX, maxY - minY) * .05), width = Math.Max(1, maxX - minX) + 2 * margin, height = Math.Max(1, maxY - minY) + 2 * margin
+            Dim n As Func(Of Double, String) = Function(v) v.ToString("R", CultureInfo.InvariantCulture)
+            Dim b = New StringBuilder()
+            b.Append("<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""").Append(n(minX - margin)).Append(" "c).Append(n(-maxY - margin)).Append(" "c).Append(n(width)).Append(" "c).Append(n(height)).Append("""><title>Disegno tartaruga — Frociart</title><rect x=""").Append(n(minX - margin)).Append(""" y=""").Append(n(-maxY - margin)).Append(""" width=""").Append(n(width)).Append(""" height=""").Append(n(height)).Append(""" fill=""white""/>")
+            For Each line In snapshot.Segments
+                b.Append("<line x1=""").Append(n(line.X1)).Append(""" y1=""").Append(n(-line.Y1)).Append(""" x2=""").Append(n(line.X2)).Append(""" y2=""").Append(n(-line.Y2)).Append(""" stroke=""").Append(line.Color).Append(""" stroke-width=""2"" stroke-linecap=""round"" vector-effect=""non-scaling-stroke""/>")
+            Next
+
+            Return b.Append("</svg>").ToString()
+        End Function
+        Private ReadOnly lines As List(Of Segment) = New List(Of Segment)()
+        Private ReadOnly view As ReadOnlyCollection(Of Segment)
+
+        Public Property X As Double
+            Get
+                Return _X
+            End Get
+            Private Set(value As Double)
+                _X = value
+            End Set
+        End Property
+
+        Public Property Y As Double
+            Get
+                Return _Y
+            End Get
+            Private Set(value As Double)
+                _Y = value
+            End Set
+        End Property
+
+        Public Property Heading As Double
+            Get
+                Return _Heading
+            End Get
+            Private Set(value As Double)
+                _Heading = value
+            End Set
+        End Property
+
+        Public Property Color As String
+            Get
+                Return _Color
+            End Get
+            Private Set(value As String)
+                _Color = value
+            End Set
+        End Property
+
+        Public Property Revision As Long
+            Get
+                Return _Revision
+            End Get
+            Private Set(value As Long)
+                _Revision = value
+            End Set
+        End Property
+
+        Public ReadOnly Property Segments As IList(Of Segment)
+            Get
+                Return view
+            End Get
+        End Property
+
+        Public Property Used As Boolean
+            Get
+                Return _Used
+            End Get
+            Private Set(value As Boolean)
+                _Used = value
+            End Set
+        End Property
+        Public Sub New()
+            view = lines.AsReadOnly()
+            Reset()
+        End Sub
+        Public Function Capture() As Snapshot
+            Return New Snapshot(Me)
+        End Function
+        Friend Sub Reset()
+            lines.Clear()
+            Y = 0 : X = 0
+            Heading = 90
+            Color = "#000000"
+            Used = False
+            Revision += 1
+        End Sub
+        Friend Sub Apply(kind As Integer, value As Object, flag As Boolean)
+            Select Case kind
+                Case 12
+                    Dim distance = Number(value), radians = Heading * Math.PI / 180
+                    Dim cos = If(Heading = 90 OrElse Heading = 270, 0, If(Heading = 0, 1, If(Heading = 180, -1, IntrinsicOperations.Cos(radians))))
+                    Dim sin = If(Heading = 0 OrElse Heading = 180, 0, If(Heading = 90, 1, If(Heading = 270, -1, IntrinsicOperations.Sin(radians))))
+                    Dim nx = X + distance * cos, ny = Y + distance * sin
+                    Coordinate(nx)
+                    Coordinate(ny)
+                    Dim line = flag AndAlso (nx <> X OrElse ny <> Y)
+                    If line AndAlso lines.Count >= MaxSegments Then Throw New FlowException("Il disegno supera 10000 tratti. Controlla il ciclo o usa Pulisci disegno.")
+                    If line Then lines.Add(New Segment(X, Y, nx, ny, Color))
+                    X = nx
+                    Y = ny
+                Case 13
+                    Dim angle = Number(value) Mod 360
+                    Heading = ((Heading + If(flag, angle, -angle)) Mod 360 + 360) Mod 360
+                Case 14
+                    Y = 0 : X = 0
+                    Heading = 90
+                Case 15
+                    lines.Clear()
+                    Y = 0 : X = 0
+                    Heading = 90
+                Case 16
+                    Color = ParseColor(value)
+                Case Else
+                    Throw New FlowException("Comando tartaruga non riconosciuto.")
+            End Select
+
+            Used = True
+            Revision += 1
+        End Sub
+        Private Shared Function Number(value As Object) As Double
+            If Not Values.Numeric(value) Then Throw New FlowException("La distanza e l'angolo richiedono un numero.")
+            Dim n = Values.Number(value)
+            If Double.IsNaN(n) OrElse Double.IsInfinity(n) Then Throw New FlowException("Il valore della tartaruga deve essere finito.")
+            Return n
+        End Function
+        Private Shared Sub Coordinate(value As Double)
+            If Double.IsNaN(value) OrElse Double.IsInfinity(value) OrElse Math.Abs(value) > MaxCoordinate Then Throw New FlowException("Il disegno supera lo spazio disponibile: coordinate tra -1000000 e 1000000.")
+        End Sub
+        Friend Shared ReadOnly Colors As String()() = {
+         New String() {"nero", "black", "#000000"},
+              New String() {"bianco", "white", "#FFFFFF"},
+              New String() {"grigio", "gray", "#808080"},
+              New String() {"rosso", "red", "#FF0000"},
+              New String() {"arancione", "orange", "#FF8C00"},
+              New String() {"giallo", "yellow", "#FFFF00"},
+              New String() {"verde", "green", "#008000"},
+              New String() {"lime", "lime", "#00FF00"},
+              New String() {"turchese", "teal", "#008080"},
+              New String() {"ciano", "cyan", "#00FFFF"},
+              New String() {"blu", "blue", "#0000FF"},
+              New String() {"azzurro", "skyblue", "#00BFFF"},
+              New String() {"viola", "purple", "#800080"},
+              New String() {"magenta", "magenta", "#FF00FF"},
+              New String() {"rosa", "pink", "#FF69B4"},
+        New String() {"marrone", "brown", "#A52A2A"}}
+        Friend Shared Function ParseColor(value As Object) As String
+            Dim text As String = TryCast(value, String)
+            If Equals(text, Nothing) Then Throw New FlowException("Il colore richiede un testo, per esempio ""blu"" o ""#3366FF"".")
+            text = text.Trim()
+
+            For Each item In Colors
+                If text.Equals(item(0), StringComparison.OrdinalIgnoreCase) OrElse text.Equals(item(1), StringComparison.OrdinalIgnoreCase) Then Return item(2)
+            Next
+
+            If text.Equals("grey", StringComparison.OrdinalIgnoreCase) Then Return "#808080"
+            If Regex.IsMatch(text, "\A#[0-9a-fA-F]{6}\z") Then Return text.ToUpperInvariant()
+            If Regex.IsMatch(text, "\A#[0-9a-fA-F]{3}\z") Then Return ("#" & text(1).ToString() & text(1).ToString() & text(2).ToString() & text(2).ToString() & text(3).ToString() & text(3).ToString()).ToUpperInvariant()
+            Throw New FlowException("Colore non riconosciuto. Usa un nome, per esempio ""rosso"", oppure #RRGGBB fra virgolette.")
+        End Function
+
+    End Class
+    ' Standalone controller: emitted methods execute the program; no diagram or expression parser.
+    Friend NotInheritable Class Value
+        Friend ReadOnly raw As Object
+
+        Friend Sub New(raw As Object)
+            Me.raw = raw
+        End Sub
+        Friend Shared Function number(n As Double) As Value
+            Return New Value(Values.Finite(n))
+        End Function
+        Friend Shared Function text(pText As String) As Value
+            Return New Value(Values.String(If(pText, "")))
+        End Function
+        Friend Shared Function logical(value As Boolean) As Value
+            Return New Value(value)
+        End Function
+        Friend Shared Function vector(items As IEnumerable(Of Value)) As Value
+            Return New Value(New VectorValue(items.[Select](Function(v) v.raw)))
+        End Function
+        Friend Function isVector() As Boolean
+            Return TypeOf raw Is VectorValue
+        End Function
+
+        Friend Function isNumber() As Boolean
+            Return Values.Numeric(raw)
+        End Function
+        Friend Function isText() As Boolean
+            Return TypeOf raw Is String
+        End Function
+
+        Friend Function isBoolean() As Boolean
+            Return TypeOf raw Is Boolean
+        End Function
+        Friend Function asNumber() As Double
+            Return Values.Number(raw)
+        End Function
+
+        Friend Function asBoolean() As Boolean
+            Return Values.Truth(raw)
+        End Function
+        Friend Function vectorSize() As Integer
+            Return VectorValue.Require(raw).Count
+        End Function
+
+        Friend Function element(i As Integer) As Value
+            Return New Value(VectorValue.Require(raw).At(i))
+        End Function
+        Friend Function format() As String
+            Return ValueFormatter.Format(raw)
+        End Function
+    End Class
+
+    Friend NotInheritable Class Variables
+        Inherits Dictionary(Of String, Value)
+        Friend Sub New()
+            MyBase.New(StringComparer.OrdinalIgnoreCase)
+        End Sub
+
+        Friend Sub New(source As Variables)
+            MyBase.New(source, StringComparer.OrdinalIgnoreCase)
+        End Sub
+        Friend Function find(name As String) As Value
+            Dim value As Value = Nothing
+            Return If(TryGetValue(name, value), value, Nothing)
+        End Function
+    End Class
+
+    Friend NotInheritable Class TypeSpec
+        Friend ReadOnly kind, length As Integer
+        Friend ReadOnly array As Boolean
+
+        Friend Sub New(kind As Integer, array As Boolean, length As Integer)
+            Me.kind = kind
+            Me.array = array
+            Me.length = length
+        End Sub
+    End Class
+
+    Friend NotInheritable Class ArrayCell
+        Friend value As Value
+        Friend kind As Integer
+
+        Friend Sub New(value As Value, kind As Integer)
+            Me.value = value
+            Me.kind = kind
+        End Sub
+    End Class
+
+    Friend NotInheritable Class ArrayArgument
+        Friend ReadOnly cell As ArrayCell
+        Friend ReadOnly snapshot As Value
+
+        Friend Sub New(cell As ArrayCell)
+            Me.cell = cell
+            snapshot = cell.value
+        End Sub
+    End Class
+
+    Private Shared Function problem(text As String) As FlowException
+        Return New FlowException(text)
+    End Function
+
+    Friend NotInheritable Class Intrinsics
+        Friend Shared Function [integer](value As Value, min As Integer, max As Integer, label As String) As Integer
+            Dim n As Double = value.asNumber()
+            If n < min OrElse n > max OrElse n <> Math.Truncate(n) Then Throw problem(label & " deve essere un intero da " & min.ToString() & " a " & max.ToString() & ".")
+            Return CInt(n)
+        End Function
+    End Class
+
+    Friend NotInheritable Class _fc_Runtime
+        Friend ReadOnly reader As Func(Of String, String)
+        Friend ReadOnly writer As Action(Of String)
+        Friend fileReader As Func(Of String, String)
+        Friend fileSaver As Func(Of String, String, Boolean)
+        Friend ReadOnly files As FlowTextFiles = New FlowTextFiles()
+        Friend ReadOnly drawing As FlowTurtle = New FlowTurtle()
+        Friend ReadOnly output As List(Of String) = New List(Of String)()
+        Friend ReadOnly outputNewlines As List(Of Boolean) = New List(Of Boolean)()
+        Friend ReadOnly frames As List(Of FrameType) = New List(Of FrameType)()
+        Friend errorVariables As Variables, lastVariables As Variables = New Variables()
+        Friend steps, outputSize As Integer, maxSteps As Integer = 10000
+        Friend references As Boolean
+        Friend recoveryPath As String
+        Friend NotInheritable Class FrameType
+            Friend ReadOnly scope As String
+            Friend transaction As Variables, variables As Variables = New Variables()
+            Friend ReadOnly retained As Dictionary(Of Integer, List(Of Value)) = New Dictionary(Of Integer, List(Of Value))()
+            Friend assignment As Value
+            Friend ReadOnly bindings As Dictionary(Of String, ArrayCell) = New Dictionary(Of String, ArrayCell)(StringComparer.OrdinalIgnoreCase), newArrays As Dictionary(Of String, ArrayCell) = New Dictionary(Of String, ArrayCell)(StringComparer.OrdinalIgnoreCase)
+            Friend ReadOnly overlays As Dictionary(Of ArrayCell, ArrayCell) = New Dictionary(Of ArrayCell, ArrayCell)()
+            Friend ReadOnly wholeWrites As HashSet(Of String) = New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+            Friend Sub New(scope As String)
+                Me.scope = scope
+            End Sub
+        End Class
+        Friend Sub New()
+            Me.New(Nothing, Nothing, Nothing, Nothing)
+        End Sub
+        Friend Sub New(reader As Func(Of String, String), writer As Action(Of String), fileReader As Func(Of String, String), fileSaver As Func(Of String, String, Boolean))
+            Me.reader = If(reader, AddressOf consoleRead)
+            Me.writer = writer
+            Me.fileReader = If(fileReader, AddressOf readPath)
+            Me.fileSaver = If(fileSaver, AddressOf savePath)
+            If fileSaver Is Nothing Then files.JournalFactory = AddressOf journal
+        End Sub
+        Private Function consoleRead(prompt As String) As String
+            Console.Write(prompt)
+            Console.Out.Flush()
+            Dim text As String = Console.ReadLine()
+            If Equals(text, Nothing) Then Throw problem("Input terminato prima di ricevere un valore valido.")
+            Return text
+        End Function
+        Friend Sub guard()
+            If steps >= maxSteps Then Throw problem("Limite di esecuzione raggiunto. Controlla la condizione del ciclo.")
+        End Sub
+        Friend Sub [step]()
+            guard()
+            steps += 1
+        End Sub
+
+        Friend Function test(expression As Func(Of Value)) As Boolean
+            [step]()
+            Return expression().asBoolean()
+        End Function
+        Friend Sub guardCall()
+            If frames.Count >= 128 Then Throw problem("Troppe chiamate annidate: massimo 128 livelli.")
+        End Sub
+        Friend Sub enter(scope As String, names As String(), values As Value(), Optional references As Boolean = False)
+            guardCall()
+            Me.references = Me.references Or references
+            Dim f = New FrameType(scope)
+
+            For i = 0 To names.Length - 1
+                Dim value = values(i)
+                Dim address = If(value Is Nothing, Nothing, TryCast(value.raw, ArrayArgument))
+
+                If address IsNot Nothing Then
+                    f.bindings(names(i)) = address.cell
+                    value = address.cell.value
+                End If
+
+                f.variables(names(i)) = value
+            Next
+
+            frames.Add(f)
+        End Sub
+        Private Function frame() As FrameType
+            Return frames(frames.Count - 1)
+        End Function
+        Friend Sub captureError()
+            If errorVariables Is Nothing AndAlso frames.Count > 0 Then errorVariables = New Variables(frame().variables)
+        End Sub
+        Friend Sub leave()
+            Dim f = frame()
+            If Equals(f.scope, Nothing) Then lastVariables = New Variables(f.variables)
+            frames.RemoveAt(frames.Count - 1)
+        End Sub
+        Friend Function value(pValue As Value, name As String) As Value
+            If pValue IsNot Nothing Then Return pValue
+            If name.Equals("pi", StringComparison.OrdinalIgnoreCase) OrElse Equals(name, "π") Then Return Value.number(Math.PI)
+            Throw problem("La variabile «" & name & "» non ha ancora un valore.")
+        End Function
+        Friend Function lookup(name As String) As Value
+            Dim f = frame()
+            Return value(If(f.transaction, f.variables).find(name), name)
+        End Function
+        Friend Function reference(name As String, declaration As TypeSpec, parameter As TypeSpec) As Value
+            Dim f = frame()
+            Dim v = lookup(name)
+            VectorValue.Require(v.raw)
+            Dim spec = If(declaration, parameter)
+            Dim kind = If(spec Is Nothing, 0, spec.kind)
+            Dim cell As ArrayCell = Nothing
+            If f.transaction IsNot Nothing AndAlso (f.wholeWrites.Contains(name) OrElse Not f.variables.ContainsKey(name)) Then
+                If Not f.newArrays.TryGetValue(name, cell) Then
+                    cell = New ArrayCell(v, kind)
+                    f.newArrays(name) = cell
+                End If
+
+                Return New Value(New ArrayArgument(cell))
+            End If
+            If Not f.bindings.TryGetValue(name, cell) Then
+                Dim original = f.variables.find(name)
+                VectorValue.Require(original.raw)
+                cell = New ArrayCell(original, kind)
+                f.bindings(name) = cell
+            End If
+            If f.transaction IsNot Nothing Then
+                Dim staged As ArrayCell = Nothing
+                If f.overlays.TryGetValue(cell, staged) Then Return New Value(New ArrayArgument(staged))
+                If v IsNot cell.value Then Return New Value(New ArrayArgument(overlay(f, cell, v)))
+            End If
+            Return New Value(New ArrayArgument(cell))
+        End Function
+        Friend Function checkReference(argument As Value, kind As Integer) As Value
+            Dim address = If(argument Is Nothing, Nothing, TryCast(argument.raw, ArrayArgument))
+            If address Is Nothing Then Throw problem("Parametro per riferimento non valido.")
+            checkType(address.snapshot, kind, True)
+            Dim cell = address.cell
+            If cell.kind <> 0 AndAlso kind <> 0 AndAlso cell.kind <> kind Then Throw problem("Il tipo del vettore per riferimento deve coincidere con quello originale.")
+            checkType(cell.value, kind, True)
+            If cell.kind = 0 AndAlso kind <> 0 Then cell.kind = kind
+            Return cell.value
+        End Function
+        Private Function overlay(f As FrameType, cell As ArrayCell, value As Value) As ArrayCell
+            Dim staged As ArrayCell = Nothing
+
+            If Not f.overlays.TryGetValue(cell, staged) Then
+                staged = New ArrayCell(value, cell.kind)
+                f.overlays(cell) = staged
+            End If
+
+            Return staged
+        End Function
+        Private Sub propagate(cell As ArrayCell)
+            For Each f In frames
+                For Each pair In f.bindings
+
+                    If pair.Value Is cell Then
+                        Dim name = pair.Key
+                        f.variables(name) = cell.value
+
+                        If f.transaction IsNot Nothing AndAlso Not f.wholeWrites.Contains(name) Then
+                            Dim staged As ArrayCell = Nothing
+                            f.transaction(name) = If(f.overlays.TryGetValue(cell, staged), staged.value, cell.value)
+                        End If
+                    End If
+                Next
+                If f.transaction IsNot Nothing Then
+                    For Each pair In f.newArrays
+                        If pair.Value Is cell Then f.transaction(pair.Key) = cell.value
+                    Next
+
+                    For Each pair In f.overlays
+
+                        If pair.Value Is cell Then
+                            For Each [alias] In f.bindings
+                                If [alias].Value Is pair.Key AndAlso Not f.wholeWrites.Contains([alias].Key) Then f.transaction([alias].Key) = cell.value
+                            Next
+                        End If
+                    Next
+                End If
+            Next
+        End Sub
+        Private Sub checkCell(cell As ArrayCell, value As Value)
+            If value.vectorSize() <> cell.value.vectorSize() Then Throw problem("Un vettore per riferimento conserva la dimensione originale.")
+            checkType(value, cell.kind, True)
+        End Sub
+        Private Function valueSize(v As Value) As Long
+            If v Is Nothing Then Return 8
+            Dim address = TryCast(v.raw, ArrayArgument)
+            If address IsNot Nothing Then Return valueSize(address.snapshot)
+            If v.isText() Then Return v.format().Length
+
+            If v.isVector() Then
+                Dim n As Long = v.vectorSize() * 8L
+
+                For i = 0 To v.vectorSize() - 1
+                    Dim item = v.element(i)
+                    If item.isText() Then n += item.format().Length
+                Next
+
+                Return n
+            End If
+
+            Return 8
+        End Function
+        Friend Sub checkMemory()
+            Dim size As Long = outputSize, slots As Long = 0
+
+            For Each f In frames
+
+                For Each values In {f.variables, f.transaction}
+
+                    If values IsNot Nothing Then
+                        slots += values.Count
+
+                        For Each v In values.Values
+                            size += valueSize(v)
+                        Next
+                    End If
+                Next
+
+                For Each list In f.retained.Values
+
+                    For Each v In list
+                        size += valueSize(v)
+                    Next
+                Next
+
+                If f.assignment IsNot Nothing Then size += valueSize(f.assignment)
+                If size > 2097152 OrElse slots > 16384 Then Throw problem("La memoria dei valori supera il limite di esecuzione.")
+            Next
+        End Sub
+        Friend Sub begin()
+            Dim f = frame()
+            f.transaction = New Variables(f.variables)
+
+            If references Then
+                f.overlays.Clear()
+                f.newArrays.Clear()
+                f.wholeWrites.Clear()
+            End If
+        End Sub
+        Friend Function stage(name As String, value As Value, Optional check As Boolean = True, Optional indexed As Boolean = False) As Value
+            Dim f = frame()
+            Dim cell As ArrayCell = Nothing
+
+            If Not references Then
+                f.transaction(name) = value
+            ElseIf Not indexed Then
+                f.transaction(name) = value
+                f.wholeWrites.Add(name)
+                f.newArrays.Remove(name)
+            ElseIf f.wholeWrites.Contains(name) AndAlso f.newArrays.TryGetValue(name, cell) Then
+                checkCell(cell, value)
+                cell.value = value
+                propagate(cell)
+            ElseIf Not f.wholeWrites.Contains(name) AndAlso f.bindings.TryGetValue(name, cell) Then
+                Dim staged = overlay(f, cell, f.transaction.find(name))
+                checkCell(staged, value)
+                staged.value = value
+                propagate(staged)
+            Else
+                f.transaction(name) = value
+            End If
+
+            If check Then checkMemory()
+            Return value
+        End Function
+        Friend Function staged(name As String) As Value
+            Return frame().transaction.find(name)
+        End Function
+
+        Friend Function variable(name As String) As Value
+            Return frame().variables.find(name)
+        End Function
+        Friend Sub commit(Optional check As Boolean = False)
+            If check Then checkMemory()
+            Dim f = frame()
+
+            If references Then
+                For Each pair In f.overlays
+                    checkCell(pair.Key, pair.Value.value)
+                Next
+
+                For Each cell In f.newArrays.Values
+                    checkCell(cell, cell.value)
+                Next
+
+                For Each name In f.wholeWrites
+                    f.bindings.Remove(name)
+                Next
+
+                For Each pair In f.overlays
+                    pair.Key.value = pair.Value.value
+                    propagate(pair.Key)
+                Next
+
+                For Each pair In f.newArrays
+                    f.bindings(pair.Key) = pair.Value
+                Next
+            End If
+            f.variables = f.transaction
+            f.transaction = Nothing
+            f.overlays.Clear()
+            f.newArrays.Clear()
+            f.wholeWrites.Clear()
+        End Sub
+        Private Sub acceptInput(name As String, value As Value, indexed As Boolean)
+            begin()
+
+            Try
+                stage(name, value, True, indexed)
+                commit()
+            Finally
+                frame().transaction = Nothing
+            End Try
+        End Sub
+        Friend Function hold(key As Integer, value As Value) As Value
+            Dim values As List(Of Value) = Nothing
+
+            If Not frame().retained.TryGetValue(key, values) Then
+                values = New List(Of Value)()
+                frame().retained(key) = values
+            End If
+
+            values.Add(value)
+            Return value
+        End Function
+        Friend Function release(key As Integer, value As Value) As Value
+            frame().retained.Remove(key)
+            Return value
+        End Function
+        Friend Function [call](key As Integer, invocation As Func(Of Value)) As Value
+            Dim value As Value = invocation()
+            release(key, value)
+            hold(-1, value)
+
+            Try
+                checkMemory()
+            Finally
+                release(-1, value)
+            End Try
+
+            Return value
+        End Function
+        Friend Function unary(op As String, value As Value) As Value
+            Return If(Equals(op, "not"), Value.logical(Not value.asBoolean()), Value.number(If(Equals(op, "-"), -value.asNumber(), value.asNumber())))
+        End Function
+        Friend Function binary(op As String, a As Value, b As Value) As Value
+            Return New Value(PrimitiveBinary(op, a.raw, b.raw))
+        End Function
+        Friend Function at(target As Value, index As Func(Of Value)) As Value
+            Dim v = VectorValue.Require(target.raw)
+            Return New Value(v.At(v.Index(index().raw)))
+        End Function
+        Friend Function atName(name As String, index As Func(Of Value)) As Value
+            VectorValue.Require(lookup(name).raw)
+            Dim i As Value = index()
+            Dim v = VectorValue.Require(lookup(name).raw)
+            Return New Value(v.At(v.Index(i.raw)))
+        End Function
+        Friend Function setAfter(value As Value, target As Value, index As Func(Of Value)) As Value
+            frame().assignment = value
+
+            Try
+                Dim v = VectorValue.Require(target.raw)
+                Return New Value(v.Set(v.Index(index().raw), value.raw))
+            Finally
+                frame().assignment = Nothing
+            End Try
+        End Function
+        Friend Function setAfterName(value As Value, name As String, index As Func(Of Value)) As Value
+            VectorValue.Require(lookup(name).raw)
+            frame().assignment = value
+
+            Try
+                Dim i As Value = index()
+                Dim v = VectorValue.Require(lookup(name).raw)
+                Return New Value(v.Set(v.Index(i.raw), value.raw))
+            Finally
+                frame().assignment = Nothing
+            End Try
+        End Function
+        Friend Function checkType(v As Value, kind As Integer, array As Boolean) As Value
+            If array Then
+                If v Is Nothing OrElse Not v.isVector() Then Throw problem("Serve un vettore.")
+
+                For i = 0 To v.vectorSize() - 1
+                    checkType(v.element(i), kind, False)
+                Next
+
+                Return v
+            End If
+
+            Dim valid As Boolean = v IsNot Nothing AndAlso Not v.isVector()
+
+            If kind = 1 Then
+                valid = v IsNot Nothing AndAlso v.isNumber() AndAlso v.asNumber() = Math.Truncate(v.asNumber())
+            ElseIf kind = 2 Then
+                valid = v IsNot Nothing AndAlso v.isNumber()
+            ElseIf kind = 3 Then
+                valid = v IsNot Nothing AndAlso v.isText()
+            ElseIf kind = 4 Then
+                valid = v IsNot Nothing AndAlso v.isBoolean()
+            ElseIf kind = 5 Then
+                valid = False
+            End If
+
+            If Not valid Then Throw problem("Il valore non corrisponde al tipo dichiarato.")
+            Return v
+        End Function
+        Private Function convertScalar(v As Value, kind As Integer) As Value
+            Return If(kind = 1 AndAlso v IsNot Nothing AndAlso v.isNumber(), __FROCIART_PROGRAM__.Value.number(Math.Truncate(v.asNumber())), checkType(v, kind, False))
+        End Function
+        Friend Function convert(v As Value, declaration As TypeSpec, parameter As TypeSpec) As Value
+            If declaration IsNot Nothing Then
+                If declaration.array Then
+                    If Not v.isVector() OrElse v.vectorSize() <> declaration.length Then Throw problem("La dimensione del vettore dichiarato non può cambiare.")
+                    v = __FROCIART_PROGRAM__.Value.vector(Enumerable.Range(0, v.vectorSize()).[Select](Function(i) convertScalar(v.element(i), declaration.kind)))
+                Else
+                    v = convertScalar(v, declaration.kind)
+                End If
+            End If
+
+            If parameter IsNot Nothing Then v = checkType(v, parameter.kind, parameter.array)
+            Return v
+        End Function
+        Friend Function initial(kind As Integer, array As Boolean, length As Integer) As Value
+            Dim v = If(kind = 3, __FROCIART_PROGRAM__.Value.text(""), If(kind = 4, __FROCIART_PROGRAM__.Value.logical(False), __FROCIART_PROGRAM__.Value.number(0)))
+            Return If(array, __FROCIART_PROGRAM__.Value.vector(Enumerable.Repeat(v, length)), v)
+        End Function
+        Private Function wantsText(d As TypeSpec, p As TypeSpec, indexed As Boolean) As Boolean
+            Dim s = If(d, p)
+            Return s IsNot Nothing AndAlso s.kind = 3 AndAlso (indexed OrElse Not s.array)
+        End Function
+        Friend Function read(name As String, prompt As String, declaration As TypeSpec, parameter As TypeSpec, vector As Value, indexExpression As Func(Of Value)) As Value
+            guard()
+            Dim display = name
+            Dim index As Integer? = Nothing
+
+            If indexExpression IsNot Nothing Then
+                Dim v = VectorValue.Require(vector.raw)
+                Dim i As Value = indexExpression()
+                If references Then v = VectorValue.Require(lookup(name).raw)
+                index = v.Index(i.raw)
+                display += "[" & index.ToString() & "]"
+            End If
+
+            guard()
+            If String.IsNullOrWhiteSpace(prompt) OrElse Equals(prompt, "Inserisci un valore per x") Then prompt = "Inserisci un valore per " & display
+            Do
+                Dim raw = reader(prompt & ": ")
+                If Equals(raw, Nothing) Then Throw problem("Input terminato prima di ricevere un valore valido.")
+
+                Try
+                    Dim v As Value = If(wantsText(declaration, parameter, index IsNot Nothing), __FROCIART_PROGRAM__.Value.text(raw), New Value(Values.Input(raw)))
+                    If index IsNot Nothing Then v = New Value(VectorValue.Require(If(references, lookup(name), vector).raw).Set(index.Value, v.raw))
+                    v = convert(v, declaration, parameter)
+                    acceptInput(name, v, index IsNot Nothing)
+                    Return v
+                Catch [error] As FlowException
+                    Console.Error.WriteLine([error].Message)
+                End Try
+            Loop
+        End Function
+        Friend Sub emit(value As Value, Optional newline As Boolean = True)
+            Dim text As String = If(value Is Nothing, "", value.format())
+            If outputSize + CLng(text.Length) > 262144 Then Throw problem("Il risultato supera 256 KiB.")
+            output.Add(text)
+            outputNewlines.Add(newline)
+            outputSize += text.Length
+
+            If writer Is Nothing Then
+                Console.Write(text)
+                If newline Then Console.WriteLine()
+                Console.Out.Flush()
+            Else
+                writer(text)
+            End If
+        End Sub
+        Friend Function intrinsic(name As String, ParamArray args As Value()) As Value
+            If Equals(name, "eof") Then Return __FROCIART_PROGRAM__.Value.logical(files.Eof())
+            Return New Value(PrimitiveCall(name, args.[Select](Function(v) v.raw).ToArray()))
+        End Function
+        Friend Sub requireClosed(reading As Boolean)
+            If If(reading, files.HasRead, files.HasWrite) Then Throw problem("Chiudi il file precedente prima di aprirne un altro.")
+        End Sub
+        Friend Sub requireWrite()
+            If Not files.HasWrite Then Throw problem("Apri prima un file in scrittura.")
+        End Sub
+        Friend Sub openFile(reading As Boolean, name As Value)
+            requireClosed(reading)
+            Dim path = FlowTextFiles.Name(name.raw)
+
+            If reading Then
+                files.OpenRead(path, fileReader(path))
+            Else
+                files.OpenWrite(path)
+            End If
+        End Sub
+        Friend Function readFile(name As String, declaration As TypeSpec, parameter As TypeSpec, vector As Value, indexExpression As Func(Of Value)) As Value
+            Dim index As Integer? = Nothing
+
+            If indexExpression IsNot Nothing Then
+                Dim v = VectorValue.Require(vector.raw)
+                Dim i As Value = indexExpression()
+                If references Then v = VectorValue.Require(lookup(name).raw)
+                index = v.Index(i.raw)
+            End If
+
+            Dim raw As String = files.PeekLine()
+            Dim value As Value = If(wantsText(declaration, parameter, index IsNot Nothing), Value.text(raw), New Value(Values.Input(raw)))
+            If index IsNot Nothing Then value = New Value(VectorValue.Require(If(references, lookup(name), vector).raw).Set(index.Value, value.raw))
+            value = convert(value, declaration, parameter)
+            acceptInput(name, value, index IsNot Nothing)
+            files.CommitRead()
+            Return value
+        End Function
+        Friend Sub writeFile(value As Value, newline As Boolean)
+            files.Write(value.format(), newline)
+        End Sub
+        Friend Sub closeFile(reading As Boolean)
+            If reading Then
+                files.CloseRead()
+                Return
+            End If
+
+            requireWrite()
+            If Not fileSaver(files.WriteName, files.OutputDraft) Then Throw problem("Salvataggio annullato: la bozza resta disponibile.")
+            files.Saved()
+        End Sub
+        Friend Sub finishFiles()
+            If files.HasWrite Then closeFile(False)
+            If files.HasRead Then files.CloseRead()
+        End Sub
+        Private Function readPath(name As String) As String
+            Try
+
+                Using stream = File.OpenRead(name)
+                    Return FlowTextFiles.ReadText(stream)
+                End Using
+
+            Catch __unusedIOException1__ As IOException
+                Throw problem("Non riesco a leggere il file «" & name & "».")
+            Catch __unusedUnauthorizedAccessException2__ As UnauthorizedAccessException
+                Throw problem("Accesso al file negato.")
+            End Try
+        End Function
+        Friend NotInheritable Class JournalType
+            Implements FlowTextFiles.IJournal
+            Private ReadOnly path As String
+            Private ReadOnly stream As FileStream
+
+            Friend Sub New(path As String)
+                Me.path = path
+                stream = New FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read)
+            End Sub
+            Public ReadOnly Property Id As String Implements FlowTextFiles.IJournal.Id
+                Get
+                    Return path
+                End Get
+            End Property
+
+            Public Sub Append(text As String) Implements FlowTextFiles.IJournal.Append
+                Dim bytes As Byte() = New UTF8Encoding(False, True).GetBytes(text)
+                stream.Write(bytes, 0, bytes.Length)
+                stream.Flush(True)
+            End Sub
+
+            Public Sub Close() Implements FlowTextFiles.IJournal.Close
+                stream.Dispose()
+            End Sub
+            Public Function Saved() As Boolean Implements FlowTextFiles.IJournal.Saved
+                stream.Dispose()
+
+                Try
+                    If File.Exists(path) Then File.Delete(path)
+                    Return True
+                Catch __unusedIOException1__ As IOException
+                    Return False
+                Catch __unusedUnauthorizedAccessException2__ As UnauthorizedAccessException
+                    Return False
+                End Try
+            End Function
+        End Class
+        Private Function journal(name As String) As FlowTextFiles.IJournal
+            Dim target = Path.GetFullPath(name), parent = Path.GetDirectoryName(target)
+            If Not Directory.Exists(parent) Then Throw New IOException("Cartella non disponibile.")
+            Dim draft As String = Path.Combine(parent, ".frociart-recovery-" & Guid.NewGuid().ToString("N") & ".txt")
+            Dim created = New JournalType(draft)
+            recoveryPath = draft
+            Return created
+        End Function
+        Private Function savePath(name As String, text As String) As Boolean
+            Try
+                files.CloseJournal()
+                Dim target = Path.GetFullPath(name)
+
+                If File.Exists(target) Then
+                    Dim answer = reader("Il file «" & name & "» esiste. Sostituirlo? [s/N] ")
+                    If Equals(answer, Nothing) OrElse Not answer.Trim().Equals("s", StringComparison.OrdinalIgnoreCase) Then Return False
+                    File.Replace(recoveryPath, target, Nothing)
+                Else
+                    File.Move(recoveryPath, target)
+                End If
+
+                recoveryPath = Nothing
+                Return True
+            Catch __unusedIOException1__ As IOException
+                Throw problem("File non salvato. La bozza è conservata in " & recoveryPath & ".")
+            Catch __unusedUnauthorizedAccessException2__ As UnauthorizedAccessException
+                Throw problem("Accesso negato. La bozza è conservata in " & recoveryPath & ".")
+            End Try
+        End Function
+        Friend Sub turtle(kind As Integer, value As Value, flag As Boolean)
+            drawing.Apply(kind, If(value Is Nothing, Nothing, value.raw), flag)
+        End Sub
+        Friend Function drawingSvg() As String
+            Return FlowTurtle.Svg(drawing.Capture())
+        End Function
+        Private Sub showDrawing()
+            If Not drawing.Used Then Return
+            Dim path As String = IO.Path.GetFullPath("Frociart_disegno_" & Guid.NewGuid().ToString("N") & ".svg")
+
+            Using stream = New FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read)
+                Dim data As Byte() = New UTF8Encoding(False, True).GetBytes(drawingSvg())
+                stream.Write(data, 0, data.Length)
+                stream.Flush(True)
+            End Using
+
+            Console.Error.WriteLine("Disegno SVG salvato: " & path)
+        End Sub
+        Friend Function run(main As Func(Of Value), show As Boolean) As Boolean
+            ' The generated call stack must accommodate all 128 supported function frames,
+            ' including their bounded expression helpers. The process's default stack varies.
+            Dim success = False
+            Dim worker = New Threading.Thread(Sub()
+                                                  Try
+                                                      main()
+                                                      If show Then showDrawing()
+                                                      success = True
+                                                  Catch [error] As Exception
+                                                      Console.Error.WriteLine([error].Message)
+                                                  Finally
+
+                                                      Try
+                                                          files.CloseJournal()
+                                                      Catch __unusedIOException1__ As IOException
+                                                          Console.Error.WriteLine("Non riesco a chiudere la bozza.")
+                                                      End Try
+
+                                                      If Not Equals(recoveryPath, Nothing) Then Console.Error.WriteLine("Bozza recuperabile: " & recoveryPath)
+                                                  End Try
+                                              End Sub, 16 * 1024 * 1024)
+            worker.Start()
+            worker.Join()
+            Return success
+        End Function
+    End Class
+

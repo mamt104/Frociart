@@ -23,3 +23,5 @@ jobs:
           node tests/security-bounds.cjs
           node tests/native-link-boundary.cjs
           node tests/seo-metadata.cjs
+      - name: Keep private files out of the tracked source tree
+        run: python3 tools/ci/check_source_hygiene.py

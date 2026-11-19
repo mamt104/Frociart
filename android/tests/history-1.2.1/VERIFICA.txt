@@ -1,0 +1,236 @@
+FROCIART ANDROID 1.2.1 — CORREZIONI E COLLAUDO
+18 ottobre 2026
+
+STATO DELLA REVISIONE
+Pacchetto it.frociart.app, versionName 1.2.1, versionCode 4.
+Sorgenti e compilazione pronti; il collaudo corrente è concluso con gli
+esiti e i limiti elencati sotto. Avvio a freddo finale: PASS.
+L’APK di distribuzione con la firma originale non è ancora disponibile.
+
+L’accesso al backup della chiave originale è stato rifiutato dalla
+revisione automatica delle autorizzazioni: il materiale di firma è stato
+considerato riservato e la richiesta non autorizzava esplicitamente il
+suo accesso. Il backup non è stato recuperato. Occorre l’autorizzazione
+all’uso della chiave per produrre un aggiornamento della stessa app.
+
+Le prove Android usano una firma temporanea di collaudo. Questa firma
+non aggiorna l’app già installata dall’utente. L’APK QA non è distribuito
+come aggiornamento. Nell’archivio dei sorgenti, candidate/ contiene solo
+il pacchetto compilato e allineato NON FIRMATO, come checkpoint tecnico.
+
+L’ultima distribuzione Android installabile resta la 1.2.0:
+SHA-256 843682de3b8532fb3398854992cd18b6ac2cf4126dfc40213a4ea9c9ea872afb.
+Certificato originale SHA-256:
+f5d2fd4d1f51a0f74562e81b2949a0299fe46869500b07ddd52b5b013572055f
+
+COME CAMBIANO I COLLEGAMENTI
+
+1. Il + di Inizio è visibile anche quando l’unico blocco selezionato è
+   in modalità Gruppo. Aprire un nuovo progetto azzera la vecchia modalità
+   di selezione. Il bersaglio del + misura 48 dp, il pulsante visibile 40 dp.
+
+2. Un tap sul + apre subito “Aggiungi un passaggio”. Da una Decisione si
+   sceglie prima l’uscita. “Collega” apre invece le destinazioni esistenti:
+   righe con tipo e contenuto, ricerca, oppure scelta direttamente sul foglio.
+
+3. Trascinare il + mostra l’anteprima. Un bersaglio vicino si evidenzia;
+   il messaggio resta sopra il dito. Rilascio nel vuoto: nuovo passaggio.
+   Rilascio su un blocco: collegamento, con scelta dell’uscita se necessaria.
+   Inizio, il blocco sorgente e altri arrivi vietati non diventano destinazioni.
+
+4. Aggiungere C dopo A, quando esiste A→B, conserva il percorso A→C→B.
+   Inserendo una Decisione si sceglie quale ramo continua verso B. Inserendo
+   Fine, una conferma chiarisce l’interruzione del percorso. I blocchi
+   successivi rimangono nel diagramma. Creazione e collegamenti formano
+   una sola operazione nella cronologia.
+
+5. Cambiare un’uscita già occupata mostra il vecchio e il nuovo arrivo e
+   chiede di confermare. Annullare con il pulsante, X o Back lascia il
+   collegamento precedente e chiude la modalità di collegamento.
+   Ripetere la stessa destinazione non crea duplicati né una modifica inutile.
+
+6. In modalità Sposta, un tap sulla freccia o sulla sua etichetta apre
+   “Cambia arrivo” e “Scollega”. Scollega conserva entrambi i blocchi e si
+   può annullare. In modalità Gruppo il gesto resta dedicato alla selezione.
+
+7. Nei pannelli, nomi lunghi e destinazioni vanno a capo con altezza
+   adattiva. Nome, colore, funzione logica dell’uscita e arrivo restano
+   insieme. Sul canvas i nomi lunghi possono essere abbreviati; nei file
+   .frociart la dicitura completa viene conservata.
+
+ALTRI DIFETTI CORRETTI
+
+- Bozze indipendenti per progetto e blocco. Scrivere in un secondo blocco
+  o cambiare progetto non cancella la prima bozza. Applica e Scarta agiscono
+  soltanto sulla bozza aperta. Testo, domanda, nomi e colori vengono conservati.
+- Migrazione delle bozze precedenti conservativa: un salvataggio fallito
+  non elimina il record originario; una bozza recente valida ha precedenza.
+- Eliminare il progetto corrente riapre correttamente un nuovo progetto,
+  con preferenze Ordina, selezione e contesto didattico coerenti. Il progetto
+  eliminato non viene salvato di nuovo durante il cambio. I fallimenti di
+  cancellazione non vengono presentati come successi.
+- Un risultato di Verifica arrivato dopo Home, un cambio progetto o un
+  nuovo pannello non interrompe il contesto corrente.
+- La creazione manuale vicino ai limiti delle coordinate mantiene i nuovi
+  blocchi nell’intervallo accettato dal formato, evitando progetti non salvabili.
+- Una freccia non valida importata da Fine può comunque essere scollegata
+  e ripristinata con Annulla.
+- Elenchi delle destinazioni con righe riciclate, colori dei tipi coerenti
+  con il canvas e contesto lungo spostato nel contenuto scorrevole dei pannelli.
+- PDF A4: i confini delle pagine cadono negli spazi tra i blocchi quando
+  disponibili. Nei gruppi troppo densi le pagine si sovrappongono in parte,
+  conservando almeno una copia completa di ogni blocco. Il difetto originale
+  era stato riprodotto nel file Pari/Dispari salvato dalla UI Android.
+- Il contatore mostra correttamente “1 blocco”; la guida precisa che il tap
+  sulle frecce per modificarle si usa in modalità Sposta.
+
+PROVE EFFETTIVAMENTE ESEGUITE IN QUESTA REVISIONE
+
+HOST JAVA
+170 controlli del motore e 11 dei limiti di capacità: PASS.
+245 controlli FlowDraftStore: PASS.
+Planner PDF A4: 35 casi, 6.018 asserzioni di invarianti PASS. Comprende la
+fixture reale Pari/Dispari, nodi ai bordi, coordinate negative, gruppi densi,
+catene lunghe e limite di 24 pagine. Questo gate verifica la suddivisione
+geometrica, non sostituisce la verifica del rendering Android.
+Le prove bozze usano un adattatore SharedPreferences sul computer, quindi
+non sono una prova di scrittura sul filesystem Android. La persistenza reale
+è verificata separatamente nei percorsi nativi riportati sotto.
+
+I test del motore dichiarano che i vecchi fixture desktop non erano presenti
+in quel momento; hanno usato esempi integrati e roundtrip generati. Non sono
+stati presentati come una nuova verifica completa dell’interoperabilità Windows.
+I tempi JVM nel log non misurano prestazioni del telefono.
+
+ANDROID NATIVO — BASE PRECEDENTE
+L’APK 1.2.0 originale si è avviato nell’emulatore Android.
+Riprodotti tre difetti: + di Inizio assente in Gruppo, tap sul + ambiguo,
+sostituzione silenziosa dell’uscita durante il collegamento trascinato.
+Il log della riproduzione conserva anche il successivo problema ambientale
+nella scrittura del rapporto; le tre asserzioni sono presenti nello stdout.
+
+ANDROID NATIVO — CANVAS CORRENTE
+118 controlli precedenti rieseguiti, 64 nuovi controlli funzionali e il
+controllo della geometria del + nella finestra allegata: PASS.
+I conteggi non sommano due volte l’asserzione aggregatrice dei 118 controlli.
+Il primo gate della pulsazione è fallito mentre il dialogo Android “System UI
+isn’t responding” aveva il focus. Il Canvas interrompe correttamente le
+animazioni senza focus. Il probe è stato corretto per verificare la precondizione
+prima della pulsazione. La riprova mirata ha superato 5 controlli: finestra
+collegata, visibile e con focus; + di Inizio pulsante anche in Gruppo;
+Riduci animazioni ferma la pulsazione mantenendo il + disponibile; Prova
+nasconde gli strumenti di modifica. Il fallimento iniziale resta nel pacchetto.
+
+ANDROID NATIVO — AGGIORNAMENTO E BOZZA LEGACY
+7 controlli nella preparazione mediante UI 1.2.0 e 6 nell’aggiornamento 1.2.1:
+PASS. Stesso ID del progetto e stessa codifica integrale dopo install -r;
+bozza scritta dall’editor precedente recuperata e applicata al nodo corretto.
+Entrambe le build usano la stessa firma QA. Questa prova verifica la migrazione
+tra versioni, non certifica ancora un aggiornamento firmato con la chiave originale.
+
+ANDROID NATIVO — COSTRUZIONE E COLLEGAMENTI
+Journey finale: 97 controlli, errors=0.
+Creati sei blocchi tramite UI; + di Inizio anche in Gruppo, inserimento
+intermedio e Decisione con continuazione, Annulla/Ripeti, nomi lunghi e colori,
+lista degli arrivi, annullamento e conferma della sostituzione, tap sulla
+freccia, Scollega/Annulla, Verifica e due esecuzioni su rami differenti.
+Input 3 raggiunge l’output positivo; input -2 raggiunge quello non positivo.
+Il primo tentativo si fermava per una chiamata obsoleta nel solo harness.
+Il tentativo successivo usava per errore un nome lungo 61 caratteri, oltre
+il limite di 60: la fixture è stata corretta senza allargare il limite dell’app.
+I log iniziali sono conservati separatamente e non gonfiano il conteggio finale.
+
+ANDROID NATIVO — BOZZE E CANCELLAZIONE
+Bozze: 33 controlli PASS, errors=0. Due bozze su blocchi diversi sopravvivono
+al cambio progetto; Applica e Scarta agiscono solo sul blocco corretto;
+la bozza aperta ritorna dopo una ricreazione reale dell’Activity.
+Eliminazione del progetto corrente: 23 controlli PASS, errors=0. Annullare
+conserva progetto e file; confermare elimina il progetto pratica e apre uno
+starter pulito, Ordina attivo, Gruppo disattivato e senza vecchio contesto
+lezione. Lo stato resta corretto dopo la ricreazione dell’Activity.
+
+ANDROID NATIVO — STATO E NAVIGAZIONE
+17 controlli PASS e 1 fallimento della precondizione di focus. Completati
+coordinate limite con salvataggio/riapertura, Scollega/Annulla su una freccia
+importata da Fine, risultato di Verifica tardivo e chiusura della riconnessione
+con X. Il caso seguente si ferma perché il dialogo non ottiene il focus entro
+3 secondi; la causa non è determinata. Le varianti Back/Home successive
+non sono state completate; la suite non viene dichiarata interamente superata.
+
+ANDROID NATIVO — FILE ED ESPORTAZIONE
+Il percorso attraverso DocumentsUI termina con 26 controlli e 8 errori di
+selettore/focus/timeout. Sono stati realmente salvati .frociart, PDF singolo
+e PDF A4. PNG non completato; SVG, condivisione e import completo non
+raggiunti in questo percorso. Non viene dichiarato PASS il flusso UI dei file.
+L’ispezione delle pagine ha trovato il taglio degli Output nel PDF A4; il
+PDF singolo era completo e leggibile. Le pagine originali sono conservate
+come evidenza del difetto, corretto nel candidato finale.
+Il gate I/O nativo sul candidato finale ha superato 44 controlli. Usa i
+componenti installati dell’app e le API Android reali: salvataggio atomico
+e recupero del backup, limite import, roundtrip .frociart, SVG XML vettoriale
+con nomi e colori, PNG decodificato con limiti di dimensione e sfondo bianco,
+PDF letto con PdfRenderer, PDF A4 con diramazioni e più pagine, limite di 24
+pagine, nomi file univoci, pulizia dei temporanei e provider in sola lettura.
+Le prove usano dati isolati e non equivalgono a un percorso completo nel
+selettore documenti Android.
+
+Il rendering finale Poppler dei tre PDF reali è riuscito e tutte le sette
+pagine sono state ispezionate: Pari/Dispari A4 in due pagine, campione alto
+in quattro e PDF singolo in una. Blocchi e testo sono interi nei campioni
+esaminati. Nel Pari/Dispari i due Output sono completi nella seconda pagina,
+senza frammenti di testo o blocco nella prima. Il fallback dei gruppi densi
+è coperto dagli invarianti host, non da una matrice visiva di ogni layout.
+
+COPERTURA
+Le varianti non eseguite sono indicate in tests/user-journeys/COVERAGE_MAP.txt.
+Non tutte le 48 voci della checklist corrispondono a un percorso utente
+completo già eseguito: la mappa distingue UI, controller, componente, host
+e parti non ancora provate.
+
+COMPILAZIONE E CORRISPONDENZA
+SDK Android 35 e Build Tools 35.0.0; Java compilato con JDK 17.
+minSdk 26, targetSdk 35. Nessuna libreria nativa specifica per processore.
+23 file di produzione coincidono con gli ingressi della build QA finale.
+I sette payload ZIP dell’APK non firmato coincidono byte per byte con quelli
+della build QA, al netto della firma. CRC e metadati package/versione verificati.
+Nessun harness di test viene incluso nell’app di produzione.
+
+APK QA finale, SHA-256:
+a3bfecdf629639aac58593b29bd5c191a3e2364e75603faebdca3d0e20fb5502
+APK allineato non firmato finale, 174.030 byte, SHA-256:
+2582e488eb870c02e3ecc587851f4d662173cdecd2df931055a7f30406cff4d1
+
+Le prove collegamenti, bozze, cancellazione, stato e migrazione usano il
+primo candidato QA 1.2.1, identificato nei relativi snapshot. Il candidato
+finale cambia soltanto il planner/esportatore PDF A4 e tre microtesti in
+MainActivity; le funzioni di collegamenti/bozze/stato rimangono le stesse.
+Su questa build finale sono eseguiti I/O 44 e avvio a freddo, seguiti dalla
+verifica visiva dei PDF. final-source-delta.json e final-provenance.json
+distinguono le compilazioni; i risultati iniziali non vengono rietichettati
+come nuove esecuzioni dell’intera suite.
+
+LIMITI DEL COLLAUDO
+Le prove native usano Android API 35 in emulazione software, senza KVM.
+Sono stati osservati blocchi di System UI e pressione sulla memoria del
+computer ospitante: questi tentativi rimangono distinti dai bug applicativi.
+Non è una prova su telefono fisico o su tutte le versioni Android supportate.
+Non è stata misurata una frequenza reale di 120/144 FPS. I controlli funzionali
+e la riduzione del lavoro inutile non certificano una cadenza sul display.
+La revisione non dimostra l’assenza assoluta di bug né la correttezza di
+qualsiasi algoritmo per ogni input possibile.
+
+Le prove della 1.2.0 e delle versioni precedenti restano come evidenze storiche.
+I 24 contenuti didattici, le 72 domande, le relative fonti e il motore non
+sono stati riscritti in questa revisione. Il PDF A4 ha una correzione mirata
+dei confini di pagina; PNG e SVG mantengono il renderer precedente. I vecchi conteggi
+non sono attribuiti a nuove esecuzioni.
+
+FILE DI EVIDENZA
+- tests/results/update-1.2.1/engine-host.log e candidate-payload-check.json.
+- tests/drafts/results/: controlli delle bozze e provenienza dei sorgenti.
+- tests/connections/results/: baseline, controlli Canvas, primo problema focus.
+- tests/results/update-1.2.1/native/: log, schermate e file delle prove native.
+- tests/user-journeys/CHECKLIST.txt e COVERAGE_MAP.txt: inventario e copertura.
+- tests/history-1.2.0/VERIFICA.txt: rapporto della precedente distribuzione.
+- tests/pdf/: planner A4, fixture reale, invarianti e provenienza dei sorgenti.
+- SOURCE_MANIFEST.json: hash dei file e degli ingressi di produzione finali.

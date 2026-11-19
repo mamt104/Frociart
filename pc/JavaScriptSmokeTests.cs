@@ -1,0 +1,2 @@
+using System;using System.IO;using System.Text;using Frociart;
+internal static class JavaScriptSmokeTests {static int Main(string[] args){try{var p=FlowSource.Compile(FlowPseudocode.Decode("x=2\nSTAMPA x+1"));foreach(bool ts in new[]{false,true}){var source=FlowJavaScript.Generate(p,ts);File.WriteAllText(Path.Combine(args[0],ts?"Programma.cts":"Programma.cjs"),source.Text,new UTF8Encoding(false));}Console.WriteLine("NODE_SMOKE_SOURCE PASS");return 0;}catch(Exception e){Console.WriteLine(e);return 1;}}}

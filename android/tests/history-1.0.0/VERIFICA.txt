@@ -1,0 +1,98 @@
+FROCIART ANDROID 1.0.0 — VERIFICA DELLA CONSEGNA
+17 ottobre 2026
+
+APK FINALE
+Pacchetto: it.frociart.app — versionName 1.0.0, versionCode 1.
+Dimensione: 102.962 byte.
+SHA-256:
+3cbf51de434ac061177659a258db2cab8aa54093a25777f3e534cee7b78d7351
+Compilazione Java 8 con JDK 17, Android SDK 35 e Build Tools 35.0.0.
+Min SDK 26, target SDK 35. Firma APK v2 e v3 e allineamento verificati.
+Installazione e avvio dell'applicazione di produzione completati.
+Il file consegnato contiene l'app; gli APK di instrumentation sono separati
+e non sono inclusi nell'eseguibile distribuito.
+
+MOTORE E FILE
+184 controlli Java del linguaggio e del motore: tutti passati.
+11 controlli di capacità del modello Java: tutti passati.
+18 controlli di compatibilità Java/C#: tutti passati.
+15 controlli sui cinque file di esempio: tutti passati.
+43 controlli I/O sul runtime Android: tutti passati.
+Il quinto esempio contiene intenzionalmente un ramo mancante.
+
+Le prove I/O usano le vere API Android: AtomicFile per salvataggi e recupero,
+PdfDocument e PdfRenderer per creare e riaprire PDF, bitmap PNG e il
+provider di condivisione effettivamente installato. Verificati recupero di
+scritture interrotte e backup, nomi/colori dei rami, importazioni non valide,
+PDF multipagina, SVG, PNG, MIME dei file e sola lettura dei file condivisi.
+I nomi e colori passano da Android al codec desktop e ritornano in Android.
+I vecchi progetti senza questi campi conservano i default.
+
+GESTI E CANVAS
+73 controlli con MotionEvent sul runtime Android: tutti passati.
+Comprendono selezione singola e a riquadro, gruppi, trascinamento, undo
+atomico, pan, pinch, soppressione del dito residuo dopo pinch, collegamenti,
+duplica/elimina, limiti, accessibilità e indipendenza delle esportazioni
+da tema/selezione/evidenziazione di esecuzione.
+La posizione non salta al dito quando termina un trascinamento.
+Il target + ha un'area di tocco di 48 dp.
+
+Dopo queste prove è stato modificato soltanto il margine del fit iniziale:
+ora riserva 30 dp sopra e 88 dp sotto il disegno, tenendo il blocco Fine
+fuori dai controlli zoom. Il fit finale è stato controllato nella vera
+Activity. Gli hash del canvas prima e dopo questo intervento sono conservati.
+
+INTERFACCIA REALE
+Controllati app principale, esecuzione, tema scuro, scelta del blocco,
+modifica della decisione, nomi e colori, Undo/Redo, rotazione e riavvio.
+Verificata anche la disposizione su larghezza ridotta di 320 dp.
+La scelta del tema e le modifiche applicate persistono dopo il riavvio.
+
+La prima prova ha trovato un difetto concreto: Applica veniva tagliato
+in orizzontale. SheetColumn ora riserva titolo e comandi prima di misurare
+il corpo scorrevole. La prova finale sullo stesso APK consegnato verifica:
+1. L'esempio Somma veloce raggiunge lo stato COMPLETED.
+2. Il risultato è 5.
+3. La tastiera Android è realmente visibile.
+4. Applica modifiche è completamente visibile sopra la tastiera.
+5. Applica modifiche è completamente visibile anche in orizzontale.
+6. La bozza della decisione sopravvive alla rotazione.
+Tutti e sei i controlli sono passati. Le catture finali sono state aperte
+e ispezionate, oltre al controllo delle geometrie dei View.
+
+Altri affinamenti di gestione dello stato:
+- Le verifiche sul worker vengono ignorate se il diagramma è cambiato.
+- Un riavvio con stato salvato non reimporta l'originale del file esterno.
+- Le bozze si conservano anche quando si modifica soltanto il colore.
+- La lista dei progetti e quella degli errori riutilizzano le righe.
+- Validazione, importazione, lista progetti ed esportazione usano un worker.
+- Il renderer di export è indipendente da quello del foglio interattivo.
+
+REATTIVITÀ
+Canvas nativo con accelerazione hardware, geometrie/testi riutilizzati e
+culling degli oggetti non visibili. Nessun timer continuo per animare
+il foglio fermo. Le animazioni brevi sono limitate a pulsanti e pannelli.
+L'esecuzione rapida usa batch con budget temporale e limite di passi per
+lasciare elaborare input e ridisegno. Non sono stati misurati FPS su un
+telefono fisico; i tempi JVM dei test non rappresentano prestazioni Android.
+
+PROVENIENZA E LIMITI
+Test eseguiti su emulatore AOSP Android 35 con CPU software, senza telefono
+fisico. Lo schermo di partenza è 432 x 960 pixel, densità 1,125. Il collaudo
+comprende rotazione, tastiera e un'ulteriore larghezza di 320 dp.
+Non copre ogni produttore, tastiera, versione Android o tecnologia assistiva.
+La compilazione riporta avvisi di deprecazione per API mantenute per
+compatibilità, senza errori di compilazione.
+
+L'emulatore aveva inizialmente un timeout di SystemUI e di apertura IME;
+il collaudo finale include la vera tastiera visibile. La vecchia prova
+d'esecuzione aveva un'attesa fissa troppo breve per l'emulazione software:
+la prova finale attende lo stato COMPLETED e conferma l'output effettivo.
+Le prove non dimostrano assenza di ogni bug o correttezza per ogni input.
+
+SORGENTI E LOG
+tests/VERIFICA_ENGINE.txt descrive nel dettaglio linguaggio e limiti.
+tests/results contiene log del motore, compatibilità, file, canvas e UI.
+tests/results/android-ui-final contiene hash, report e schermate finali.
+tests/ui e tests/io contengono i programmi di instrumentation.
+tests/canvas contiene i controlli dei gesti. I test sono esclusi dall'APK.

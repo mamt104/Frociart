@@ -1,0 +1,17 @@
+Frociart Android: verifica canvas, aggiornamento 18 ottobre 2026
+
+118 controlli superati nel runtime Android 35 dell'emulatore, density 1.125.
+Il log finale contiene la riga CANVAS CHECKS PASSED: 118 del processo 3179.
+
+73 controlli preesistenti: movimento diretto, rilascio senza rincorsa, gruppi, pinch, selezione, connessioni e limiti, cache, SVG/bitmap e accessibilita.
+23 regressioni aggiunte: pan che conserva i MOVE prima della soglia, CANCEL del riquadro e doppio tap, ultima posizione del drag, assenza di un loop di redraw, riuso del testo e delle coordinate delle frecce con verifica geometrica/SVG.
+22 controlli aggiunti per setReadOnly/isReadOnly: pan e pinch disponibili, niente selezione/modifica/creazione/connessioni da input, niente duplicazione/eliminazione, azioni accessibili di modifica escluse, navigazione accessibile disponibile, cancellazione del gesto pendente, chiusura del drag esistente senza undo aggiuntivo e ritorno alla modifica normale.
+
+Le prove usano MotionEvent e API Android native; non sono una misura FPS e non sono state eseguite su un telefono fisico. Il test di sola lettura richiama anche il callback di pressione lunga per verificare che sia inerte.
+
+Nuove API pubbliche:
+  setReadOnly(boolean)
+  isReadOnly()
+Le API programmatiche select/focusNode/setHighlight restano disponibili al controller. La sola lettura blocca l'input di modifica del canvas e i suoi metodi di modifica strutturale; il documento resta gestito dall'Activity.
+
+Evidenze: results/native-readonly.log e results/source-sha256.json.

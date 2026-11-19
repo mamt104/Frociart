@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="it.frociart.iochecks" android:versionCode="1" android:versionName="1.0">
+  <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="35" />
+  <application android:label="Frociart I/O checks" />
+  <instrumentation android:name="it.frociart.app.IoInstrumentation" android:targetPackage="it.frociart.app.continua" android:functionalTest="true" />
+</manifest>

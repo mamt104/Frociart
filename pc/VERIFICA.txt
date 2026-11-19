@@ -1,0 +1,104 @@
+﻿FROCIART 1.9.0 — WINDOWS NATIVO
+19 ottobre 2026
+
+AVVIO
+Apri Frociart_1.9.0.exe; oppure estrai il pacchetto e apri Frociart.exe.
+Windows 10/11 con .NET Framework 4.8. Non serve un browser.
+L'eseguibile non ha una firma Authenticode.
+
+REVISIONE DEL PERCORSO COMPLETO
+24 lezioni dalle basi, 45 passi in cui aggiungere, scrivere e collegare
+caselle reali. Sono spiegati forme, frecce, virgolette, numero/testo,
+Input/Output, variabili, calcoli, confronti, != rispetto a !, and/or/not,
+cicli, accumulatore e funzioni. La guida conserva 39 termini e 13 blocchi
+pronti, con variabili, dipendenze ed esempi eseguibili.
+
+NOVITA DI QUESTA REVISIONE
+- Ogni lezione dichiara obiettivo e regole di valutazione. 364 prove:
+  71 casi scritti nel corso e 293 casi aggiuntivi con risultati calcolati
+  separatamente, inclusi negativi, zero, decimali, soglie e cicli.
+- La prova finale esegue il proprio diagramma: non richiede identificatori
+  interni, nomi delle variabili o disposizione identici all'esempio.
+- Sono verificate formule equivalenti, variabili rinominate coerentemente
+  e condizioni negate con uscite Si/No scambiate in modo coerente.
+- Input numerico: 21 e un esempio; sono accettati altri numeri validi
+  quando la missione chiede di rileggere il dato inserito.
+- Rinomina variabile aggiorna i riferimenti nelle caselle, rispetta i
+  testi tra virgolette e impedisce di fondere due variabili diverse.
+- Prova direttamente il mio flowchart permette di verificare l'obiettivo
+  completo anche prima di terminare il percorso di passi suggerito.
+- Un errore mostra atteso, ottenuto e Input della prova; Capisci questa
+  prova mostra gli ultimi passaggi reali e le regole da rileggere.
+  Il calcolo o la Decisione evidenziati derivano dall'esecuzione effettiva.
+- I controlli delle singole istruzioni distinguono il proprio foglio
+  dall'esempio preparato: la guida non riempie le caselle dell'utente.
+- Le etichette dei rami ignorano maiuscole, spazi ripetuti e punteggiatura
+  finale. Il saluto puo essere un testo non vuoto scelto da te.
+  Copiare un Input testuale, invece, richiede di conservarlo esattamente;
+  numero 5 e testo "5" rimangono due tipi diversi.
+- I criteri richiedono la competenza della lezione, per esempio un ciclo
+  raggiungibile quando si sta imparando a ripetere. Non basta un risultato
+  fisso che per caso coincide con il primo esempio.
+
+COME USARLO
+Apri Impara, scegli una lezione, leggi Prima capiamolo e Cosa controlla
+questa prova, poi Prova sul foglio. Prova esegue un passo alla volta:
+spiega cosa legge la casella, il calcolo, il valore aggiornato e il ramo.
+Quando manca un dato, indica quale serve senza inventare il risultato.
+Costruisci guidato apre il laboratorio di blocchi pronti.
+Riordina, Tutto, zoom, griglia e Annulla/Ripeti restano disponibili.
+I progressi dei quiz precedenti e i progetti dell'editor sono conservati;
+i nuovi fogli didattici e le bozze hanno salvataggi separati.
+PC e Android non sincronizzano automaticamente i progressi.
+
+LIMITI DELLA VALUTAZIONE
+I test eseguono casi finiti e controllano le competenze dichiarate.
+Non dimostrano la correttezza di ogni programma possibile e non deducono
+qualsiasi intenzione. Nessun servizio AI online o nuovo account e richiesto.
+Le prove automatiche non costituiscono un test con un principiante reale.
+
+NUOVA INTERFACCIA PC
+Il percorso e organizzato in sei unita con titoli completi e progressi reali.
+La lettura distingue Capisci, Esempio e regole, Parole nuove.
+Durante gli esercizi il disegno occupa il centro della finestra: il lungo
+elenco laterale non e piu presente. Scrittura e prova hanno una posizione
+stabile a destra; Riordina e Tutto restano accanto al disegno.
+Una fascia con icona e testo indica Passo corretto, Flowchart corretto
+oppure Da correggere. Una modifica rimuove il risultato precedente.
+Le verifiche possono produrre brevi suoni diversi per riuscita, correzione
+e completamento. Altro > Suoni delle verifiche permette di disattivarli.
+PC non produce vibrazione.
+
+SPECIFICO PC
+Scrivi mostra l'azione principale; operazioni meno frequenti sono in
+Altri comandi. Rinomina aggiorna anche le bozze, con un solo Annulla.
+Corrette le interruzioni di riga nei pannelli di lettura, guida e prova.
+Il testo di una spiegazione non viene selezionato tutto all'apertura.
+Salva copia come progetto esporta un vero file .frociart.
+
+VERIFICHE EFFETTIVE
+PASS build 1.9.0, avvio del vero eseguibile, apertura di una fixture
+.frociart, chiusura della finestra e codice di uscita 0.
+PASS 437 controlli tutor: tutte le 24 lezioni percorse con controlli
+WinForms reali, 45 passi, 364 casi e 17 esecuzioni dei 13 blocchi pronti.
+PASS 216 controlli aggiuntivi su tutti i contratti: identificatori propri,
+variabili alternative, formule, rami negati, frecce mancanti e cicli.
+PASS rinomina reale, bozze, Annulla/Ripeti, progressi, copia indipendente
+del diagramma, completamento anticipato e riapertura senza ripristini errati.
+PASS salvataggi isolati, ripresa della bozza in un nuovo processo, backup
+valido, errori di scrittura e protezione di versioni future.
+PASS 55 regressioni delle vecchie lezioni/griglia, 45 dell'editor e
+228 asserzioni del motore. Codice base di motore/editor/griglia conservato.
+Controlli reali renderizzati con DrawToBitmap e ispezionati visivamente:
+lezioni, laboratorio, errore, percorso della prova, rinomina, completamento,
+finestra minima 1050x720 e tema scuro. Nessun mockup usato come prova.
+NOT_RUN: persone esterne, DPI diversi e lettori di schermo.
+
+SORGENTI
+Sorgenti contiene il progetto nativo, i test e il corso incorporato.
+Corso-e-verifiche contiene generatore, contratti e copertura didattica.
+Da Sorgenti: build-framework.cmd; con Python 3.10+: python run-checks.py.
+I test usano fixture e preferenze isolate sotto test-results.
+La build moderna .NET 10 autosufficiente non e stata eseguita.
+Verifiche/verifica-1.9.0.json descrive questa build; i documenti storici
+conservati possono riferirsi a versioni precedenti.

@@ -1,0 +1,261 @@
+FROCIART 1.2.0 — FONTI DEL PERCORSO IMPARA
+Contenuti versione 1 · Consultazione delle fonti: 18 ottobre 2026 (UTC)
+
+COME È COSTRUITO IL PERCORSO
+
+Il percorso contiene 6 unità, 24 microlezioni e 72 domande originali. Ogni lezione ha
+un obiettivo, una spiegazione breve, un consiglio contestuale, un controesempio e
+fonti consultabili. Ciascuna delle tre opzioni di ogni domanda ha un feedback
+specifico: 216 spiegazioni delle scelte in totale.
+
+Le regole sono sintetizzate da fonti primarie: la documentazione dell'autore di
+Flowgorithm e materiali didattici pubblicati da Harvard, MIT e Cornell. Gli input,
+le domande e i ragionamenti sui loro risultati sono stati scritti per Frociart;
+non sono domande d'esame copiate da quei corsi. I consigli applicano tecniche
+documentate, come tracing, controllo dei confini, riduzione del caso che fallisce,
+invarianti, misure di terminazione e analisi del numero di operazioni.
+
+Si parte da input/output e si arriva a ragionamenti più avanzati su correttezza,
+progettazione ed efficienza. Questo è un percorso di studio e pratica: completare
+24 lezioni non certifica una qualifica professionale. Le fonti permettono di
+approfondire con corsi completi, altri esercizi e progetti.
+
+Lezioni, esercizi e progressi funzionano offline. Il pulsante delle fonti apre
+l'URL scelto nel browser; per consultare quei siti serve una connessione.
+
+METODO DI LAVORO
+
+1. Leggi l'idea e il consiglio della lezione.
+2. Prevedi un valore o scegli una strategia prima di eseguire.
+3. Leggi il feedback della tua scelta, anche quando è corretta.
+4. Se hai sbagliato, correggi il ragionamento e riprova lo stesso punto.
+5. Confronta il controesempio finale; apri l'esempio collegato, cambia un dato e
+   usa la prova a passi.
+
+Gli errori non sottraggono punti. La lezione si completa dopo le tre risposte
+corrette; ripassarla non attribuisce di nuovo i 30 XP di completamento. La
+padronanza si costruisce provando e spiegando casi nuovi, oltre ai quiz.
+
+MAPPA DELLE LEZIONI E DELLE FONTI
+
+Unità 1 — Leggere un flusso
+  l01 Dal problema ai passi                         s01, s03
+  l02 Un blocco, un compito                         s02, s04, s09
+  l03 L'ordine cambia il risultato                  s05, s04
+  l04 Segui lo stato, passo per passo               s06, s14
+
+Unità 2 — Dati che cambiano
+  l05 Assegnare non è confrontare                   s05, s08
+  l06 Un valore prima di ogni lettura               s05, s13, s09
+  l07 Calcoli senza sorprese                        s08, s13
+  l08 Numero, testo o vero/falso?                   s07, s13
+
+Unità 3 — Scegliere una strada
+  l09 Le soglie contano                            s09, s15
+  l10 Combinare le condizioni                      s08, s13
+  l11 Una categoria alla volta                     s09, s13
+  l12 Controlla prima di calcolare                  s19, s09, s08
+
+Unità 4 — Ripetere con criterio
+  l13 Il ciclo può fare zero giri                  s10, s12
+  l14 Conta i giri, evita il giro in più            s11, s15
+  l15 Conserva il lavoro già fatto                 s18, s05
+  l16 Leggi fino al segnale di fine                s22, s15
+
+Unità 5 — Capire perché funziona
+  l17 Trova la prima differenza                    s16, s14
+  l18 Test scelti, non numeri a caso                s15
+  l19 Una promessa a ogni giro                     s17, s18
+  l20 Perché il ciclo si ferma?                     s17, s10
+
+Unità 6 — Progettare e migliorare
+  l21 Dividi il problema con un contratto           s19, s20
+  l22 Cerca senza escludere la risposta             s21
+  l23 Quanto lavoro cresce con i dati?              s23, s21
+  l24 Progetto: un report affidabile                s19, s15, s18, s22
+
+CATALOGO DELLE FONTI PRIMARIE
+
+s01 — Harvard CS50x, Lecture 0
+https://cs50.harvard.edu/x/notes/0/
+Fondamento: algoritmo, trasformazione input/output e pianificazione in pseudocodice.
+
+s02 — Flowgorithm, Documentation
+https://flowgorithm.org/documentation/index.html
+Fondamento: famiglie di blocchi e riferimenti ufficiali alle istruzioni del flowchart.
+
+s03 — Flowgorithm, Input
+https://www.flowgorithm.org/documentation/input.html
+Fondamento: leggere un valore dall'utente e conservarlo in una variabile.
+
+s04 — Flowgorithm, Output
+https://www.flowgorithm.org/documentation/output.html
+Fondamento: valutare un'espressione e mostrarne il risultato al momento dell'Output.
+
+s05 — Flowgorithm, Assignment
+https://flowgorithm.org/documentation/assignment.html
+Fondamento: salvare il risultato di un calcolo in una variabile. Gli esempi sulla
+copia, sull'ordine delle assegnazioni e sui risultati intermedi sono originali.
+
+s06 — Flowgorithm, Breakpoint
+https://flowgorithm.org/documentation/breakpoint.html
+Fondamento: sospendere l'esecuzione per osservare il valore attuale delle variabili.
+In Frociart si applica l'idea attraverso la prova a passi, senza promettere un
+blocco Breakpoint che il motore non offre.
+
+s07 — Flowgorithm, Data Types
+https://www.flowgorithm.org/documentation/language/types.html
+Fondamento: distinguere numeri, testo e booleani. Frociart usa un solo tipo numerico
+a virgola mobile: non importa la distinzione Integer/Real di Flowgorithm.
+
+s08 — Flowgorithm, Operators
+https://www.flowgorithm.org/documentation/language/operators.html
+Fondamento: confronti, operatori logici, precedenza e raggruppamento con parentesi.
+La sintassi esatta delle carte Frociart è verificata sul suo interprete.
+
+s09 — Flowgorithm, If
+https://www.flowgorithm.org/documentation/if.html
+Fondamento: valutare una condizione booleana e scegliere una delle due alternative.
+
+s10 — Flowgorithm, While
+https://www.flowgorithm.org/documentation/while.html
+Fondamento: controllo prima del corpo, ripetizione quando vero, uscita quando falso.
+
+s11 — Flowgorithm, For
+https://flowgorithm.org/documentation/for.html
+Fondamento: ripetizione contata con valore iniziale, limite e aggiornamento. In
+Frociart si costruisce con Decisione, Operazione e collegamento di ritorno.
+
+s12 — Flowgorithm, Do
+https://www.flowgorithm.org/documentation/language/do.html
+Fondamento: un controllo dopo il corpo garantisce almeno una esecuzione del corpo.
+
+s13 — Harvard CS50x, Lecture 1
+https://cs50.harvard.edu/x/notes/1/
+Fondamento: variabili, condizioni, tipi e limiti della precisione numerica.
+Le regole della divisione tra interi del C non vengono attribuite a Frociart.
+
+s14 — Harvard CS50x, Lecture 2
+https://cs50.harvard.edu/x/notes/2/
+Fondamento: osservare valori intermedi con debugger o stampe ed esplicitare a voce
+il proprio ragionamento per individuare un errore (rubber duck debugging).
+
+s15 — MIT 6.102, Reading 2: Testing, Spring 2026
+https://web.mit.edu/6.102/www/sp26/classes/02-testing/
+Fondamento: partizionare il dominio e provare casi di confine, incluso il caso
+vuoto. Gli insiemi concreti di input delle lezioni sono esercizi originali.
+
+s16 — MIT 6.031, Reading 13: Debugging, Fall 2021
+https://web.mit.edu/6.031/www/fa21/classes/13-debugging/
+Fondamento: trovare un caso ripetibile, ridurlo conservando il difetto, formulare
+un'ipotesi e controllarla; conservare poi il caso come test di regressione.
+
+s17 — Cornell CS 2112, Loop invariants, Fall 2015
+https://www.cs.cornell.edu/courses/cs2112/2015fa/lectures/lec_loopinv/
+Fondamento: inizializzazione, conservazione e uso finale dell'invariante;
+misura decrescente per giustificare la terminazione.
+
+s18 — Cornell CS 2110, Lecture 4: Loop Invariants, Fall 2026
+https://www.cs.cornell.edu/courses/cs2110/2026fa/lectures/lec04/
+Fondamento: dare un significato alle variabili del ciclo e scegliere inizio,
+controllo e aggiornamenti per mantenerlo. L'applicazione al report streaming
+evita gli array usati in alcuni esempi del corso.
+
+s19 — MIT 6.031, Reading 6: Specifications, Fall 2021
+https://web.mit.edu/6.031/www/fa21/classes/06-specifications/
+Fondamento: indicare precondizioni sugli input e postcondizioni sul risultato;
+separare ciò che una parte promette dai suoi dettagli di implementazione.
+
+s20 — MIT 6.0001, Lecture 4: Decomposition, Abstraction, Functions, Fall 2016 (PDF)
+https://ocw.mit.edu/courses/6-0001-introduction-to-computer-science-and-programming-in-python-fall-2016/6ba59859535f1566dd57a7279aeba5d1_MIT6_0001F16_Lec4.pdf
+Fondamento: suddividere un programma, usare interfacce comprensibili e distinguere
+un valore restituito da un risultato mostrato. Le funzioni personalizzate sono
+qui materiale di studio, non una funzione eseguibile nell'editor Frociart.
+
+s21 — Harvard CS50x, Lecture 3
+https://cs50.harvard.edu/x/notes/3/
+Fondamento: ricerca lineare, ricerca binaria su dati ordinati e crescita del
+costo degli algoritmi. Le liste e i valori delle domande sono originali.
+
+s22 — Cornell CS 99, Lecture 5, Summer 2001
+https://www.cs.cornell.edu/courses/cs99/2001su/lectures/Lecture5.htm
+Fondamento: lettura fino a una sentinella e aggiornamento dell'input nel corpo
+del ciclo per rendere possibile la conclusione.
+
+s23 — Cornell CS 2110, Lecture 5: Analyzing Complexity, Fall 2026
+https://www.cs.cornell.edu/courses/cs2110/2026fa/lectures/lec05/
+Fondamento: contare il costo dei passi consecutivi e ripetuti, distinguere tempo
+e spazio e interpretare Big O come limite superiore alla crescita.
+
+COERENZA CON IL MOTORE FROCIART
+
+- Inizio/Fine, Operazione, Decisione e Input/Output sono le forme. Il parallelogramma è unico: LEGGI indica un ingresso, STAMPA un’uscita.
+  Le frecce determinano l'ordine; colore e dicitura delle uscite non cambiano
+  la valutazione della condizione.
+- In un'Operazione si scrive, per esempio, totale = 2 + 3. Le carte che elencano
+  più blocchi indicano quali testi vanno nei rispettivi blocchi.
+- Nelle espressioni i confronti usano ==, !=, <, <=, >, >=; anche = è accettato
+  come uguaglianza. and, or e not sono supportati. and e or hanno corto circuito.
+- La concatenazione di Frociart usa +. La documentazione di Flowgorithm usa
+  invece & per il testo: non copiare indiscriminatamente la sintassi delle fonti.
+- 7 / 2 dà 3.5. I numeri sono a virgola mobile; l'Output arrotondato non è una
+  prova di uguaglianza numerica esatta. La tolleranza 0.000001 della lezione 8
+  appartiene a quell'esercizio, non è una soglia universale per ogni applicazione.
+- while, if, «per ciascuno» e funzioni di studio nelle carte contrassegnate
+  Pseudocodice descrivono un algoritmo. Non sono comandi da incollare tutti
+  dentro un unico blocco Operazione.
+- Il motore non gestisce array né la definizione di funzioni dell'utente.
+  La ricerca su liste della lezione 22 e la funzione della lezione 21 sono
+  esplicitamente esempi di ragionamento. Le funzioni predefinite del motore sono
+  abs, sqrt, min, max, floor, round e len.
+- Il limite di 10.000 passi protegge la prova. Un arresto per limite raggiunto
+  non prova che un algoritmo termini correttamente per tutti gli input.
+
+PRATICA COLLEGATA
+
+Le lezioni usano esempi già presenti e modificabili: Somma di due numeri, Pari o
+dispari, Conto alla rovescia, Maggiore tra due numeri, Esercizio: trova l'errore.
+Servono come basi da adattare al concetto studiato. Le lezioni 22 e 23 non
+indicano un esempio eseguibile di ricerca su array.
+
+La lezione 24 apre ora il proprio esempio completo, «Report di misure», aggiunto
+come sesto esempio senza cambiare i primi cinque. È disponibile anche in:
+examples/06_Report_di_misure.frociart
+
+Il report accetta misure numeriche in [-100, 100], termina con 9999 e rifiuta gli
+altri numeri fuori intervallo. Mantiene somma, conteggio e massimo senza array.
+Con -8, -3, 9999 produce media -5.5 e massimo -3. Con il solo 9999 mostra
+«Nessun dato». Con 105, -4, 6, 9999 rifiuta 105 e produce media 1, massimo 6.
+
+COME SONO STATE CONTROLLATE LE FONTI E LE RISPOSTE
+
+Gli URL sono stati ottenuti e consultati tramite ricerca web, non costruiti
+ipotizzando percorsi di documentazione. Le pagine Harvard, MIT e Cornell sono
+state lette dalla fonte. Per le 11 pagine Flowgorithm sono stati consultati gli
+estratti indicizzati del dominio ufficiale: durante la ricerca, tentativi di
+apertura diretta di quel server hanno restituito timeout o errori HTTP.
+Questo non è un controllo continuo della futura disponibilità dei siti.
+
+Il manifest tests/learning/sources-reviewed.tsv distingue questi tipi di
+consultazione e conserva gli URL osservati. Il test offline confronta il catalogo
+dell'app con il manifest e controlla dominio, unicità e associazioni alle lezioni;
+non finge di aver eseguito nuove richieste HTTP.
+
+La suite tests/learning/LearningTests.java verifica il dataset, 37 quesiti tramite
+l'interprete di produzione e 5 calcoli accademici sul computer di test. Per le
+condizioni con distrattori eseguibili, prova valori che li distinguono dalla
+regola richiesta. Controlla inoltre i casi limite del report e riapre il file
+.frociart consegnato. Gli altri quesiti concettuali e i feedback sono stati
+revisionati editorialmente, non presentati come dimostrazioni automatiche.
+
+Le regressioni della progressione coprono ID e opzioni invalidi, tap ripetuti,
+errore e nuovo tentativo, avanzamento consentito solo dopo una risposta corretta,
+XP assegnati una sola volta, ripasso e ripristino di tutti i campi salvati.
+Layout, gesti, rotazione e tastiera richiedono le verifiche native separate.
+
+Per ripetere i controlli host dal progetto:
+bash tests/learning/run_learning_tests.sh
+
+Esito e casi verificati si trovano in tests/learning/results/. I test su esempi
+finiti sostengono le risposte di quei casi; non certificano l'assenza di ogni
+possibile errore né sostituiscono lo studio della correttezza.

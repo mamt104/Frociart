@@ -1,0 +1,48 @@
+FROCIART — MOTORE, COMPATIBILITÀ E FILE
+Verifiche del 17 ottobre 2026
+
+RISULTATI
+
+184 controlli del motore Java: grammatica, precedenza, testi e Unicode, confronti e logica con cortocircuito, funzioni, input, tutti gli esempi eseguibili, variabili definite su tutti i rami, cicli, rollback delle assegnazioni, limiti e documenti non validi.
+11 controlli di capacità Java: progetto da 500 blocchi, 1500 collegamenti, 4096 variabili e limite esplicito delle segnalazioni.
+18 controlli di compatibilità Java/C#: esportazione Android -> caricamento e salvataggio nel vero codec desktop -> riapertura Android, metadati dei rami, Unicode e casi limite di arrotondamento.
+228 controlli del motore desktop e 69 controlli di clonazione: tutti superati dopo l'aggiunta dei metadati opzionali.
+11 controlli SVG desktop sotto Mono/Xvfb: colori e nomi personalizzati, valori legacy, XML sicuro, titoli completi e indipendenza dal tema dell'editor.
+43 controlli sul vero runtime Android dell'emulatore: salvataggio e recupero, esportazione dei file e provider di condivisione. Nessun mock delle API Android usato in questi controlli.
+15 controlli sui cinque esempi inclusi: lettura e verifica dei file finali, etichette/colori blu e viola, esecuzione dei quattro esempi validi. Il quinto contiene intenzionalmente un ramo mancante.
+
+FILE ED ESPORTAZIONE
+
+JSON .frociart/.flow versione 1, nomi PascalCase e tipi numerici compatibili con Windows.
+I campi opzionali TrueLabel, FalseLabel, TrueColor e FalseColor preservano i valori scelti fra Android e Windows 1.3.1.
+I file legacy senza metadati mantengono i default Sì/No.
+Massimo 60 caratteri per etichetta; colore nel formato #RRGGBB. I metadati non modificano il significato esecutivo dei rami true/false.
+Il codec respinge dati danneggiati, duplicati, coordinate non finite, contenuti troppo grandi e JSON eccessivamente annidato.
+FlowStore usa AtomicFile sia in scrittura sia in lettura: i test hanno riprodotto una scrittura interrotta e un backup legacy .bak, verificando il recupero del progetto precedente.
+La lettura UTF-8 rifiuta sequenze danneggiate, evitando di sostituire silenziosamente caratteri.
+
+Le prove Android hanno creato e riaperto .frociart, SVG vettoriale, PNG, PDF a pagina unica e PDF multipagina. I PDF sono stati aperti con PdfRenderer, verificando i colori delle frecce anche sui pixel renderizzati. PNG e prima pagina PDF sono stati ispezionati visivamente.
+La modalità scura non cambia i pixel del PNG esportato.
+PNG: lato massimo 4096 pixel e massimo 12 milioni di pixel; allocazione liberata al termine.
+PDF: A4, pagina unica oppure adattamento alla larghezza con suddivisione verticale; massimo 24 pagine.
+Il renderer per export viene creato sul thread UI con una copia indipendente del documento e poi usato esclusivamente dal worker, senza toccare il canvas interattivo.
+I test del provider installato hanno verificato MIME, nome, dimensione e lettura; aperture in scrittura, percorsi estranei e attraversamento delle cartelle vengono respinti.
+
+LIMITI DEL MOTORE
+
+500 blocchi, 1500 collegamenti, file massimo 4 MB.
+8192 caratteri per contenuto del blocco; 1024 per domanda di input.
+128 assegnazioni per blocco, 512 elementi per espressione e profondità di parsing massima 80.
+4096 variabili; testo runtime massimo 32768 caratteri; output cumulativo limitato a 262144 unità UTF-16.
+10000 blocchi eseguiti; un input viene contato dopo un valore valido, non ogni volta che si attende.
+2000 segnalazioni visualizzabili per verifica: al limite viene aggiunto un messaggio esplicito, con richiesta di correggere gli errori e ripetere la verifica.
+La verifica di struttura e variabili non dimostra in generale che un algoritmo sia corretto o che tutti i suoi cicli terminino.
+
+AMBIENTE E RIPRODUCIBILITÀ
+
+Le prove di logica Java sono state eseguite su OpenJDK 17; il codice di produzione è compilato anche con compatibilità Java 8.
+Le prove C# di logica e SVG usano il runtime Mono; le prove Android I/O usano un emulatore Android, non un telefono fisico.
+I tempi diagnostici della catena da 500 blocchi nei log si riferiscono alla JVM host: non sono benchmark del telefono e non vanno presentati come tali.
+Il comando tests/run_engine_tests.sh riesegue le prove Java e, se Mono e i sorgenti desktop sono presenti, il percorso di compatibilità completo.
+tests/io/build_io_tests.py prepara un APK di instrumentation firmato con la stessa identità dell'app, da eseguire contro il pacchetto it.frociart.app.
+I log e gli hash sono in tests/results. Gli esempi Android verificati sono in examples.

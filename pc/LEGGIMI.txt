@@ -1,0 +1,45 @@
+FROCIART v1 - WINDOWS
+Versione tecnica del file: 1.83.0.0. Guida aggiornata al 30 ottobre 2026.
+
+SCEGLI LA BUILD
+- Windows autonomo x64: apri Frociart_v1.exe (oppure Frociart.exe
+  nella cartella di compilazione). Il runtime .NET 10.0.14 è incluso.
+- Windows classico: apri Frociart_v1_Classico.exe (oppure Frociart.exe
+  in bin/framework). Richiede .NET Framework 4.8; la build è AnyCPU.
+- Setup leggero x64: apri Frociart_v1_Setup.exe. Prima di iniziare,
+  il percorso guidato spiega quali componenti Microsoft servono e quando
+  occorre rete.
+
+Le build sono applicazioni Windows native. Per disegnare e provare i diagrammi
+non servono browser, account, Python, Node.js, PHP o altri interpreti esterni.
+I pacchetti Windows non hanno firma Authenticode. Il nome v1 e la
+versione tecnica non sono una prova dell'hash o della data di una release:
+controlla il manifest e SHA256SUMS forniti insieme alla copia scaricata.
+
+COMPATIBILITÀ
+La baseline è stata collaudata su un host Windows x64. Le prove su macchine
+pulite e sulle altre edizioni/architetture vanno identificate separatamente.
+La build moderna è win-x64; non è una build nativa ARM64 o Linux/macOS.
+La disponibilità del runtime non equivale al supporto di ogni versione Windows.
+Requisiti ufficiali .NET 10:
+https://github.com/dotnet/core/blob/main/release-notes/10.0/supported-os.md
+
+COMINCIA
+Nuovo flowchart apre un progetto locale. Nella palette un clic crea un blocco
+libero; trascinarlo sulla freccia lo inserisce nel percorso. Scrivi il contenuto
+nell'ispettore, poi usa Verifica, Esegui o Avanti. Ctrl+Z annulla una modifica.
+Progetto > Apri e Progetto > Salva gestiscono i file .frociart; le funzioni di
+recupero sono in Progetto. Conserva una copia dei progetti prima di aggiornare.
+
+I comandi sono raccolti in Progetto, Modifica, Esegui, Codice, Vista e Aiuto.
+Ctrl+K cerca un comando; la Guida contiene i percorsi aggiornati.
+Per icona e doppio clic: Progetto > Impostazioni del progetto e dei file >
+Attiva icona e doppio clic dei progetti. Un'altra app predefinita già scelta
+in Windows viene rispettata: se necessario usa Apri con.
+
+CODICE E STAMPA
+Codice > Genera codice esporta un programma completo nel linguaggio scelto.
+La prova mostrata nella finestra del codice segue il flowchart dell'app:
+non avvia il file esportato. Per eseguire quel file occorre il relativo
+ambiente esterno, secondo le istruzioni del linguaggio.
+Ctrl+P apre l'anteprima di stampa. Esporta permette PDF, SVG e PNG.

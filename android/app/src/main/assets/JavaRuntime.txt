@@ -1,0 +1,451 @@
+// Supporto offline: tipi, limiti, file e disegno. Nessun interprete di diagrammi.
+static final int TURTLE_FORWARD=12,TURTLE_TURN=13,TURTLE_HOME=14,TURTLE_CLEAR=15,TURTLE_PEN=16;
+
+    public static final class Value {
+        private final Object raw;
+        private Value(Object raw){this.raw=raw;}
+        public static Value number(double n){return new Value(finite(n));}
+        public static Value text(String s){if(s==null)s="";if(s.length()>32768)throw problem("Il testo supera il limite di 32768 caratteri.");return new Value(s);}
+        public static Value bool(boolean b){return new Value(b);}
+        public static Value vector(List<Value> items){return new Value(new Vector(items));}
+        public boolean isVector(){return raw instanceof Vector;}
+        public int vectorSize(){return vector().items.size();}
+        public Value element(int index){return vector().at(index);}
+        private Vector vector(){if(!isVector())throw problem("Serve un vettore, per esempio valori = [10, 20, 30].");return(Vector)raw;}
+        public boolean isNumber(){return raw instanceof Double;}
+        public boolean isText(){return raw instanceof String;}
+        public boolean isBoolean(){return raw instanceof Boolean;}
+        public double asNumber(){if(!isNumber())throw problem("Serve un numero, ma il valore è «"+shortText(format(),60)+"».");return(Double)raw;}
+        public boolean asBoolean(){if(isBoolean())return(Boolean)raw;if(isNumber())return asNumber()!=0;throw problem("La condizione deve restituire vero/falso o un numero, non un testo.");}
+        public String format(){
+            if(isVector())return vector().format();
+            if(isBoolean())return(Boolean)raw?"vero":"falso";
+            if(isNumber()){
+                double n=(Double)raw;if(n==0)return "0";if(Math.abs(n)<1e15&&n==Math.rint(n))return Long.toString((long)n);
+                BigDecimal v=new BigDecimal(n).round(new MathContext(15,RoundingMode.HALF_UP)).stripTrailingZeros();int exponent=v.precision()-v.scale()-1;
+                if(exponent>=15||exponent<-4){String digits=v.unscaledValue().abs().toString();int e=Math.abs(exponent);return(v.signum()<0?"-":"")+digits.substring(0,1)+(digits.length()>1?"."+digits.substring(1):"")+"E"+(exponent>=0?"+":"-")+(e<10?"0":"")+e;}
+                return v.toPlainString();
+            }
+            return(String)raw;
+        }
+        @Override public String toString(){return format();}
+    }
+    private static final class Vector {
+        static final int MAX=1024;final List<Value> items;
+        Vector(List<Value> values){if(values.size()>MAX)throw problem("Un vettore può contenere al massimo 1024 elementi.");ArrayList<Value> copy=new ArrayList<>(values);int kind=-1,total=2;for(Value value:copy){int type=scalar(value);if(kind<0)kind=type;else if(kind!=type)throw problem("Tutti gli elementi del vettore devono avere lo stesso tipo.");total+=elementText(value).length()+2;if(total>32768)throw problem("Il contenuto del vettore supera 32768 caratteri.");}items=java.util.Collections.unmodifiableList(copy);}
+        static int scalar(Value value){if(value.isNumber())return 0;if(value.isBoolean())return 1;if(value.isText())return 2;throw problem("I vettori contengono numeri, testi o valori logici; i vettori annidati non sono supportati.");}
+        static String elementText(Value value){return value.isText()?"\""+((String)value.raw).replace("\\","\\\\").replace("\"","\\\"").replace("\n","\\n").replace("\r","\\r").replace("\t","\\t")+"\"":value.format();}
+        String format(){StringBuilder text=new StringBuilder("[");for(Value value:items){if(text.length()>1)text.append(", ");text.append(elementText(value));}return text.append(']').toString();}
+        static int integer(Value value,String label){double n=value.asNumber();if(n<0||n>Integer.MAX_VALUE||n!=Math.floor(n))throw problem(label+" deve essere un intero maggiore o uguale a 0.");return(int)n;}
+        int index(Value value){int i=integer(value,"L’indice");if(i>=items.size())throw problem(items.isEmpty()?"Il vettore è vuoto: non contiene elementi.":"Indice "+i+" fuori dal vettore. Usa un indice da 0 a "+(items.size()-1)+".");return i;}
+        Value at(int i){return items.get(index(Value.number(i)));}
+        Value set(int i,Value value){Value old=at(i);if(scalar(old)!=scalar(value))throw problem("Il nuovo valore deve avere lo stesso tipo degli elementi del vettore.");ArrayList<Value> next=new ArrayList<>(items);next.set(i,value);return Value.vector(next);}
+        @Override public boolean equals(Object object){if(!(object instanceof Vector))return false;Vector other=(Vector)object;if(items.size()!=other.items.size())return false;for(int i=0;i<items.size();i++)if(items.get(i).isNumber()&&other.items.get(i).isNumber()?items.get(i).asNumber()!=other.items.get(i).asNumber():!items.get(i).raw.equals(other.items.get(i).raw))return false;return true;}
+        @Override public int hashCode(){int hash=17;for(Value value:items)hash=hash*31+value.raw.hashCode();return hash;}
+    }
+    static final class Problem extends IllegalArgumentException {Problem(String m){super(m);}}
+    private static Problem problem(String m){return new Problem(m);}
+    private static double finite(double n){if(Double.isNaN(n)||Double.isInfinite(n))throw problem("Il risultato non è un numero finito: controlla dominio e grandezza dei valori.");return n;}
+    private static String lower(String s){return s.toLowerCase(Locale.ROOT);}
+    private static String shortText(String s,int length){return s.length()<=length?s:s.substring(0,length-3)+"...";}
+    private static boolean digit(char c){return c>='0'&&c<='9';}
+
+    private static boolean inputSpace(char c){return c>=9&&c<=13||c==32||c==0x85||c==0xa0||c==0x1680||c>=0x2000&&c<=0x200a||c==0x2028||c==0x2029||c==0x202f||c==0x205f||c==0x3000;}
+    private static String trimInput(String value){int a=0,b=value.length();while(a<b&&inputSpace(value.charAt(a)))a++;while(b>a&&inputSpace(value.charAt(b-1)))b--;return value.substring(a,b);}
+    private static String numericInputText(String value){int end=value.length();while(end>0&&value.charAt(end-1)==0)end--;while(end>0&&(value.charAt(end-1)==32||value.charAt(end-1)>=9&&value.charAt(end-1)<=13))end--;return value.substring(0,end);}
+
+    public static Value parseInput(String raw){
+        if(raw==null)raw="";if(raw.length()>32768)throw problem("Il valore inserito è troppo lungo (massimo 32768 caratteri).");String s=trimInput(raw),numeric=numericInputText(s);
+        if(numericInput(numeric)) {try{double value=Double.parseDouble(numeric.replace(',','.'));if((Double.isInfinite(value)||Double.isNaN(value))&&!numeric.equals(s))return Value.text(raw);return Value.number(value);}catch(NumberFormatException e){throw problem("Il numero inserito è troppo grande. Usa un numero finito più piccolo.");}}
+        String n=lower(s);if(n.equals("true")||n.equals("vero"))return Value.bool(true);if(n.equals("false")||n.equals("falso"))return Value.bool(false);
+        if(n.equals("nan")||n.equals("infinity")||n.equals("+infinity")||n.equals("-infinity")||n.equals("infinito"))throw problem("Inserisci un numero finito.");
+        return Value.text(raw);
+    }
+    private static boolean numericInput(String s){int p=0,count=0;if(p<s.length()&&(s.charAt(p)=='+'||s.charAt(p)=='-'))p++;while(p<s.length()&&digit(s.charAt(p))){p++;count++;}if(p<s.length()&&(s.charAt(p)=='.'||s.charAt(p)==',')){p++;while(p<s.length()&&digit(s.charAt(p))){p++;count++;}}if(count==0)return false;if(p<s.length()&&(s.charAt(p)=='e'||s.charAt(p)=='E')){p++;if(p<s.length()&&(s.charAt(p)=='+'||s.charAt(p)=='-'))p++;int begin=p;while(p<s.length()&&digit(s.charAt(p)))p++;if(p==begin)return false;}return p==s.length();}
+
+
+    private static final class Variables extends LinkedHashMap<String,Value> {
+        private final HashMap<String,String> keys=new HashMap<>();
+        Variables(){}
+        Variables(Map<String,Value> source){if(source!=null)putAll(source);}
+        @Override public Value put(String key,Value value){String normalized=lower(key),original=keys.get(normalized);if(original==null){original=key;keys.put(normalized,key);}return super.put(original,value);}
+        @Override public void putAll(Map<? extends String,? extends Value> values){for(Map.Entry<? extends String,? extends Value> e:values.entrySet())put(e.getKey(),e.getValue());}
+        @Override public Value get(Object key){return key instanceof String?super.get(keys.get(lower((String)key))):null;}
+        @Override public boolean containsKey(Object key){return key instanceof String&&keys.containsKey(lower((String)key));}
+        @Override public Value remove(Object key){if(!(key instanceof String))return null;String original=keys.remove(lower((String)key));return super.remove(original);}
+        @Override public void clear(){super.clear();keys.clear();}
+    }
+
+    private static final class Intrinsics {
+        private static final Set<String> NAMES=new HashSet<>(java.util.Arrays.asList("sin","cos","tan","arcsin","arccos","arctan","int","ln","log","log10","sgn","random","size","char","tochar","tocode","tofixed","tointeger","toreal","tostring"));
+        private static final java.util.regex.Pattern INTEGER=java.util.regex.Pattern.compile("^[+-]?[0-9]+$");
+        private static final java.util.regex.Pattern REAL=java.util.regex.Pattern.compile("^[+-]?(?:[0-9]+(?:[.,][0-9]*)?|[.,][0-9]+)(?:[eE][+-]?[0-9]+)?$");
+        static boolean handles(String name){return NAMES.contains(name);}
+        static String text(Value value){if(!value.isText())throw problem("Questa funzione richiede un testo tra virgolette o una variabile di testo.");return(String)value.raw;}
+        static List<String> characters(String text){
+            ArrayList<String> result=new ArrayList<>();
+            for(int i=0;i<text.length();i++){
+                char ch=text.charAt(i);
+                if(Character.isHighSurrogate(ch)){if(i+1>=text.length()||!Character.isLowSurrogate(text.charAt(i+1)))throw problem("Il testo contiene un carattere Unicode incompleto.");result.add(text.substring(i,i+2));i++;}
+                else{if(Character.isLowSurrogate(ch))throw problem("Il testo contiene un carattere Unicode incompleto.");result.add(String.valueOf(ch));}
+            }
+            return result;
+        }
+        static int characterCount(String text){int count=0;for(int i=0;i<text.length();i++,count++){char ch=text.charAt(i);if(Character.isHighSurrogate(ch)){if(i+1>=text.length()||!Character.isLowSurrogate(text.charAt(i+1)))throw problem("Il testo contiene un carattere Unicode incompleto.");i++;}else if(Character.isLowSurrogate(ch))throw problem("Il testo contiene un carattere Unicode incompleto.");}return count;}
+        static int integer(Value value,int minimum,int maximum,String label){double n=value.asNumber();if(n<minimum||n>maximum||n!=Math.floor(n))throw problem(label+" deve essere un intero da "+minimum+" a "+maximum+".");return(int)n;}
+        static Value evaluate(String name,Value[] args){
+            Value first=args[0];
+            if(name.equals("size"))return Value.number(first.vectorSize());
+            if(name.equals("char")){List<String> chars=characters(text(first));int i=integer(args[1],0,Integer.MAX_VALUE,"L’indice");if(i>=chars.size())throw problem(chars.isEmpty()?"Il testo è vuoto: non contiene caratteri.":"Indice fuori dal testo. Usa un indice da 0 a "+(chars.size()-1)+".");return Value.text(chars.get(i));}
+            if(name.equals("tocode")){List<String> chars=characters(text(first));if(chars.size()!=1)throw problem("tocode richiede esattamente un carattere.");return Value.number(chars.get(0).codePointAt(0));}
+            if(name.equals("int")&&args.length==2){if(!(args[1].raw instanceof String)||!((String)args[1].raw).equalsIgnoreCase("passo"))throw problem("Il secondo argomento di int deve essere \"passo\" per controllare il passo di un ciclo.");if(!(first.raw instanceof Double))throw problem("Il passo del ciclo deve essere un numero intero diverso da zero.");double step=(Double)first.raw;if(Double.isNaN(step)||Double.isInfinite(step)||step==0||step!=Math.rint(step)||step<Integer.MIN_VALUE||step>Integer.MAX_VALUE)throw problem("Il passo del ciclo deve essere un intero diverso da zero, da -2147483648 a 2147483647.");return Value.number(step);}
+            if(name.equals("tointeger")||name.equals("toreal")){
+                String source=trimInput(text(first));boolean whole=name.equals("tointeger");
+                if(!(whole?INTEGER:REAL).matcher(source).matches())throw problem(whole?"Scrivi un testo che contenga un numero intero, per esempio \"42\".":"Scrivi un testo che contenga un numero, per esempio \"12.5\".");
+                double value;try{value=finite(Double.parseDouble(source.replace(',','.')));}catch(NumberFormatException e){throw problem("Il numero da convertire non è valido.");}
+                if(whole&&(value<Integer.MIN_VALUE||value>Integer.MAX_VALUE))throw problem("tointeger accetta valori da -2147483648 a 2147483647.");
+                return Value.number(value);
+            }
+            double n=first.asNumber();
+            switch(name){
+                case "sin":return Value.number(Math.sin(n));case "cos":return Value.number(Math.cos(n));case "tan":return Value.number(Math.tan(n));
+                case "arcsin":case "arccos":if(n < -1||n > 1)throw problem(name+" richiede un numero tra -1 e 1.");return Value.number(name.equals("arcsin")?Math.asin(n):Math.acos(n));
+                case "arctan":return Value.number(Math.atan(n));case "int":return Value.number(n<0?Math.ceil(n):Math.floor(n));case "sgn":return Value.number(n<0?-1:n>0?1:0);
+                case "ln":case "log":case "log10":if(n<=0)throw problem("Il logaritmo richiede un numero maggiore di 0.");return Value.number(name.equals("log10")?Math.log10(n):Math.log(n));
+                case "random":return Value.number(java.util.concurrent.ThreadLocalRandom.current().nextInt(integer(first,1,Integer.MAX_VALUE,"Il limite di random")));
+                case "tochar":int code=integer(first,0,0x10FFFF,"Il codice Unicode");if(code>=0xD800&&code<=0xDFFF)throw problem("Il codice non rappresenta un carattere Unicode completo.");return Value.text(new String(Character.toChars(code)));
+                case "tostring":return Value.text(first.format());
+                case "tofixed":int digits=integer(args[1],0,15,"Le cifre decimali");return Value.text(new BigDecimal(roundAway(n,digits)).setScale(digits,RoundingMode.HALF_UP).toPlainString());
+                default:throw problem("Funzione sconosciuta.");
+            }
+        }
+    }
+    // Match System.Math.Round(double, digits, AwayFromZero), including binary-double boundaries.
+    private static double roundAway(double value,int digits){
+        if(Math.abs(value)>=1e16)return value;
+        double factor=Math.pow(10,digits),scaled=value*factor,absolute=Math.abs(scaled),whole=Math.floor(absolute);
+        if(absolute-whole>=0.5)whole+=1;
+        return Math.copySign(whole,scaled)/factor;
+    }
+
+static final class TextFiles {
+    public interface Journal {String id();void append(String text)throws IOException;void close()throws IOException;boolean saved();}
+    public String activeJournalId(){return journal==null?null:journal.id();}
+    public interface JournalFactory {Journal create(String name)throws IOException;}
+    public JournalFactory journalFactory;
+    private Journal journal;
+    public boolean recoveryCopyRemains;
+    public void closeJournal()throws IOException{if(journal!=null){journal.close();journal=null;}}
+    public static final int MAX_BYTES=4194304,MAX_CHARACTERS=2097152,MAX_LINE=32768;
+    public enum Kind { READ, SAVE }
+    public static final class Request {
+        public final Kind kind;
+        public final String name,text;
+        Request(Kind kind,String name,String text){this.kind=kind;this.name=name;this.text=text;}
+    }
+    private String input,readName,writeName;
+    private int position,outputBytes;
+    private StringBuilder output;
+    public boolean hasRead(){return input!=null;}
+    public boolean hasWrite(){return output!=null;}
+    public String readName(){return readName;}
+    public String writeName(){return writeName;}
+    public String outputDraft(){return output==null?null:output.toString();}
+    private void requireRead(){if(!hasRead())throw error("Apri prima un file in lettura. EOF() controlla quel file.");}
+    public boolean eof(){requireRead();return position>=input.length();}
+    static String name(Value value){
+        if(!value.isText())throw error("Il nome del file deve essere un testo da 1 a 256 caratteri.");
+        String name=value.format();
+        if(name.trim().isEmpty()||name.length()>256)throw error("Il nome del file deve essere un testo da 1 a 256 caratteri.");
+        for(int i=0;i<name.length();i++)if(Character.isISOControl(name.charAt(i)))throw error("Il nome del file non può contenere righe nuove o caratteri di controllo.");
+        validateText(name);
+        return name;
+    }
+    void openRead(String name,String text){
+        if(hasRead())throw error("Un file è già aperto in lettura. Chiudilo prima di aprirne un altro.");
+        validateText(text);input=text;position=0;readName=name;
+    }
+    void openWrite(String name){
+        if(hasWrite())throw error("Un file è già aperto in scrittura. Chiudilo e salvalo prima di aprirne un altro.");
+        try{journal=journalFactory==null?null:journalFactory.create(name);}catch(IOException|SecurityException ex){throw error("Non riesco a preparare la bozza locale. Controlla lo spazio disponibile e File generati, poi riprova.");}
+        recoveryCopyRemains=false;
+        output=new StringBuilder();outputBytes=0;writeName=name;
+    }
+    public String peekLine(){
+        requireRead();if(eof())throw error("Il file è terminato. Usa non EOF() nella condizione del ciclo prima di leggere.");
+        int end=position;
+        while(end<input.length()&&input.charAt(end)!='\r'&&input.charAt(end)!='\n'){if(end-position>=MAX_LINE)throw error("Una riga del file supera 32768 caratteri.");end++;}
+        return input.substring(position,end);
+    }
+    void commitRead(){
+        position+=peekLine().length();
+        if(position<input.length()&&input.charAt(position)=='\r'){position++;if(position<input.length()&&input.charAt(position)=='\n')position++;}
+        else if(position<input.length()&&input.charAt(position)=='\n')position++;
+    }
+    void write(String text,boolean newline){
+        if(!hasWrite())throw error("Apri prima un file in scrittura.");
+        text=(text==null?"":text)+(newline?"\n":"");int bytes=utf8(text).length;
+        if(output.length()+(long)text.length()>MAX_CHARACTERS||outputBytes+(long)bytes>MAX_BYTES)throw error("Il file generato supera il limite di 4 MiB o 2 milioni di caratteri.");
+        try{if(journal!=null)journal.append(text);}catch(IOException|SecurityException ex){throw error("Scrittura interrotta: non riesco a conservare la bozza locale. Il testo precedente resta in File generati.");}
+        output.append(text);outputBytes+=bytes;
+    }
+    void closeRead(){requireRead();input=null;position=0;readName=null;}
+    void saved(){if(journal!=null){recoveryCopyRemains=!journal.saved();journal=null;}output=null;outputBytes=0;writeName=null;}
+    void reset(){try{closeJournal();}catch(IOException ex){throw error("Non riesco a chiudere la bozza locale. Il testo è conservato in File generati.");}input=null;position=0;readName=null;output=null;outputBytes=0;writeName=null;recoveryCopyRemains=false;}
+    private static byte[] utf8(String text){
+        try{ByteBuffer bytes=StandardCharsets.UTF_8.newEncoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).encode(CharBuffer.wrap(text));byte[] result=new byte[bytes.remaining()];bytes.get(result);return result;}
+        catch(CharacterCodingException ex){throw error("Il file contiene caratteri Unicode non validi.");}
+    }
+    private static void validateText(String text){
+        if(text==null)throw error("Il file di testo non è disponibile.");
+        if(text.length()>MAX_CHARACTERS)throw error("Il file supera 2 milioni di caratteri.");
+        if(utf8(text).length>MAX_BYTES)throw error("Il file supera 4 MiB.");
+    }
+    // Streams are owned by the caller and are not closed here.
+    public static String readText(InputStream stream)throws IOException{
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream();byte[] buffer=new byte[8192];int count;
+        while((count=stream.read(buffer))!=-1){if(bytes.size()+(long)count>MAX_BYTES)throw error("Il file supera 4 MiB.");bytes.write(buffer,0,count);}
+        byte[] data=bytes.toByteArray();int start=0;Charset encoding=StandardCharsets.UTF_8;
+        if(data.length>=3&&(data[0]&255)==239&&(data[1]&255)==187&&(data[2]&255)==191)start=3;
+        else if(data.length>=2&&(data[0]&255)==255&&(data[1]&255)==254){start=2;encoding=StandardCharsets.UTF_16LE;}
+        else if(data.length>=2&&(data[0]&255)==254&&(data[1]&255)==255){start=2;encoding=StandardCharsets.UTF_16BE;}
+        try{String text=encoding.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(data,start,data.length-start)).toString();validateText(text);return text;}
+        catch(CharacterCodingException ex){throw error("Il file non è un testo UTF-8 o UTF-16 valido. Salvalo come UTF-8 e riprova.");}
+    }
+    public static void writeText(OutputStream stream,String text)throws IOException{validateText(text);stream.write(utf8(text));stream.flush();}
+    private static Problem error(String message){return problem(message);}
+}
+
+static final class Turtle {
+ public static final int MAX_SEGMENTS=10000;public static final double MAX_COORDINATE=1000000;
+ public static final class Segment {public final double x1,y1,x2,y2;public final String color;Segment(double x1,double y1,double x2,double y2,String color){this.x1=x1;this.y1=y1;this.x2=x2;this.y2=y2;this.color=color;}}
+ public static final class Snapshot {public final double x,y,heading;public final String color;public final long revision;public final List<Segment> segments;Snapshot(Turtle owner){x=owner.x;y=owner.y;heading=owner.heading;color=owner.color;revision=owner.revision;segments=Collections.unmodifiableList(new ArrayList<>(owner.lines));}}
+  static String svg(Snapshot snapshot){
+   double minX=Math.min(0,snapshot.x),maxX=Math.max(0,snapshot.x),minY=Math.min(0,snapshot.y),maxY=Math.max(0,snapshot.y);for(Segment line:snapshot.segments){minX=Math.min(minX,Math.min(line.x1,line.x2));maxX=Math.max(maxX,Math.max(line.x1,line.x2));minY=Math.min(minY,Math.min(line.y1,line.y2));maxY=Math.max(maxY,Math.max(line.y1,line.y2));}
+   double margin=Math.max(10,Math.max(maxX-minX,maxY-minY)*.05),width=Math.max(1,maxX-minX)+2*margin,height=Math.max(1,maxY-minY)+2*margin;
+   java.util.function.DoubleFunction<String> n=v->Double.toString(v);StringBuilder b=new StringBuilder();b.append("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"").append(n.apply(minX-margin)).append(' ').append(n.apply(-maxY-margin)).append(' ').append(n.apply(width)).append(' ').append(n.apply(height)).append("\"><title>Disegno tartaruga — Frociart</title><rect x=\"").append(n.apply(minX-margin)).append("\" y=\"").append(n.apply(-maxY-margin)).append("\" width=\"").append(n.apply(width)).append("\" height=\"").append(n.apply(height)).append("\" fill=\"white\"/>");
+   for(Segment line:snapshot.segments)b.append("<line x1=\"").append(n.apply(line.x1)).append("\" y1=\"").append(n.apply(-line.y1)).append("\" x2=\"").append(n.apply(line.x2)).append("\" y2=\"").append(n.apply(-line.y2)).append("\" stroke=\"").append(line.color).append("\" stroke-width=\"2\" stroke-linecap=\"round\" vector-effect=\"non-scaling-stroke\"/>");return b.append("</svg>").toString();
+  }
+ static final class Spec {int kind;String expression;boolean draw=true,left;}
+ private final ArrayList<Segment> lines=new ArrayList<>();private final List<Segment> view=Collections.unmodifiableList(lines);
+ private double x,y,heading;private String color;private long revision;private boolean used;
+ public Turtle(){reset();}public double x(){return x;}public double y(){return y;}public double heading(){return heading;}public String color(){return color;}public long revision(){return revision;}public boolean used(){return used;}public List<Segment> segments(){return view;}public Snapshot capture(){return new Snapshot(this);}
+ void reset(){lines.clear();x=y=0;heading=90;color="#000000";used=false;revision++;}
+ static boolean isTurtle(int kind){return kind>=TURTLE_FORWARD&&kind<=TURTLE_PEN;}
+ static String defaultText(int kind){return kind==TURTLE_FORWARD?"100":kind==TURTLE_TURN?"DESTRA 90":kind==TURTLE_PEN?"\"blu\"":kind==TURTLE_HOME?"Origine":"Pulisci";}
+ private static int wordEnd(String text,int start){int end=start;while(end<text.length()&&!Character.isWhitespace(text.charAt(end)))end++;return end;}
+ private static int skip(String text,int start){while(start<text.length()&&Character.isWhitespace(text.charAt(start)))start++;return start;}
+ static int expressionOffset(int kind,String text){if(kind==TURTLE_HOME||kind==TURTLE_CLEAR)return text.length();int start=skip(text,0),end=wordEnd(text,start);String word=text.substring(start,end).toUpperCase(Locale.ROOT);if(kind==TURTLE_TURN&&(word.equals("DESTRA")||word.equals("SINISTRA")||word.equals("RIGHT")||word.equals("LEFT"))||kind==TURTLE_FORWARD&&(word.equals("SENZA_TRACCIA")||word.equals("PEN_UP")))return skip(text,end);return 0;}
+ static Spec parse(int kind,String source){Spec spec=new Spec();spec.kind=kind;String text=source==null?"":source.trim();if(kind==TURTLE_HOME||kind==TURTLE_CLEAR)return spec;
+  if(kind==TURTLE_FORWARD){int offset=expressionOffset(kind,text);spec.draw=offset==0;spec.expression=text.substring(offset);}
+  else if(kind==TURTLE_TURN){int end=wordEnd(text,0);String word=text.substring(0,end).toUpperCase(Locale.ROOT);if(!word.equals("DESTRA")&&!word.equals("SINISTRA")&&!word.equals("RIGHT")&&!word.equals("LEFT"))throw problem("Scegli DESTRA o SINISTRA e un angolo in gradi, per esempio DESTRA 90.");spec.left=word.equals("SINISTRA")||word.equals("LEFT");spec.expression=text.substring(skip(text,end));}
+  else if(kind==TURTLE_PEN)spec.expression=text;else throw problem("Comando tartaruga non riconosciuto.");
+  if(spec.expression.trim().isEmpty())throw problem("Scrivi il valore per il comando tartaruga.");return spec;
+ }
+ void apply(Spec spec,Value value){switch(spec.kind){
+  case TURTLE_FORWARD:
+   double distance=number(value),radians=heading*Math.PI/180;double cos=heading==90||heading==270?0:heading==0?1:heading==180?-1:Math.cos(radians);double sin=heading==0||heading==180?0:heading==90?1:heading==270?-1:Math.sin(radians);double nx=x+distance*cos,ny=y+distance*sin;coordinate(nx);coordinate(ny);boolean line=spec.draw&&(nx!=x||ny!=y);if(line&&lines.size()>=MAX_SEGMENTS)throw problem("Il disegno supera 10000 tratti. Controlla il ciclo o usa Pulisci disegno.");if(line)lines.add(new Segment(x,y,nx,ny,color));x=nx;y=ny;break;
+  case TURTLE_TURN:double angle=number(value)%360;heading=((heading+(spec.left?angle:-angle))%360+360)%360;break;
+  case TURTLE_HOME:x=y=0;heading=90;break;
+  case TURTLE_CLEAR:lines.clear();x=y=0;heading=90;break;
+  case TURTLE_PEN:color=parseColor(value);break;
+  default:throw problem("Comando tartaruga non riconosciuto.");
+ }used=true;revision++;}
+ private static double number(Value value){if(value==null||!value.isNumber())throw problem("La distanza e l'angolo richiedono un numero.");double n=value.asNumber();if(!Double.isFinite(n))throw problem("Il valore della tartaruga deve essere finito.");return n;}
+ private static void coordinate(double value){if(!Double.isFinite(value)||Math.abs(value)>MAX_COORDINATE)throw problem("Il disegno supera lo spazio disponibile: coordinate tra -1000000 e 1000000.");}
+ static final String[][] COLORS={{"nero","black","#000000"},{"bianco","white","#FFFFFF"},{"grigio","gray","#808080"},{"rosso","red","#FF0000"},{"arancione","orange","#FF8C00"},{"giallo","yellow","#FFFF00"},{"verde","green","#008000"},{"lime","lime","#00FF00"},{"turchese","teal","#008080"},{"ciano","cyan","#00FFFF"},{"blu","blue","#0000FF"},{"azzurro","skyblue","#00BFFF"},{"viola","purple","#800080"},{"magenta","magenta","#FF00FF"},{"rosa","pink","#FF69B4"},{"marrone","brown","#A52A2A"}};
+ static String parseColor(Value value){if(value==null||!value.isText())throw problem("Il colore richiede un testo, per esempio \"blu\" o \"#3366FF\".");String text=value.format().trim();for(String[] item:COLORS)if(text.equalsIgnoreCase(item[0])||text.equalsIgnoreCase(item[1]))return item[2];if(text.equalsIgnoreCase("grey"))return "#808080";if(text.matches("#[0-9a-fA-F]{6}"))return text.toUpperCase(Locale.ROOT);if(text.matches("#[0-9a-fA-F]{3}"))return ("#"+text.charAt(1)+text.charAt(1)+text.charAt(2)+text.charAt(2)+text.charAt(3)+text.charAt(3)).toUpperCase(Locale.ROOT);throw problem("Colore non riconosciuto. Usa un nome, per esempio \"rosso\", oppure #RRGGBB fra virgolette.");}
+ private static Problem problem(String message){return new Problem(message);}
+}
+
+static final class TypeSpec {
+    final int kind,length;final boolean array;
+    TypeSpec(int kind,boolean array,int length){this.kind=kind;this.array=array;this.length=length;}
+}
+static final class ArrayCell {
+    Value value;int kind;
+    ArrayCell(Value value,int kind){this.value=value;this.kind=kind;}
+}
+static final class ArrayArgument {
+    final ArrayCell cell;final Value snapshot;
+    ArrayArgument(ArrayCell cell){this.cell=cell;snapshot=cell.value;}
+}
+static final class _fc_Runtime {
+    interface Reader {String read(String prompt);}
+    interface FileReader {String read(String name);}
+    interface FileSaver {boolean save(String name,String text);}
+    final Reader reader;final java.util.function.Consumer<String> writer;
+    FileReader fileReader;FileSaver fileSaver;
+    final TextFiles files=new TextFiles();final Turtle turtle=new Turtle();
+    final ArrayList<String> output=new ArrayList<>();
+    final ArrayList<Boolean> outputNewlines=new ArrayList<>();
+    final ArrayList<Frame> frames=new ArrayList<>();
+    Variables lastVariables=new Variables(),errorVariables;
+    int steps,outputSize;int maxSteps=10000;boolean references;
+    java.nio.file.Path recoveryPath;
+    private final java.io.BufferedReader console=new java.io.BufferedReader(new java.io.InputStreamReader(System.in,java.nio.charset.StandardCharsets.UTF_8));
+    static final class Frame {
+        final String scope;Variables variables=new Variables(),transaction;
+        final Map<Integer,List<Value>> retained=new HashMap<>();Value assignment;
+        final Map<String,ArrayCell> bindings=new TreeMap<>(String.CASE_INSENSITIVE_ORDER),newArrays=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        final Map<ArrayCell,ArrayCell> overlays=new HashMap<>();
+        final Set<String> wholeWrites=new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        Frame(String scope){this.scope=scope;}
+    }
+    _fc_Runtime(){this(null,null,null,null);}
+    _fc_Runtime(Reader reader,java.util.function.Consumer<String> writer,FileReader fileReader,FileSaver fileSaver){
+        this.reader=reader==null?this::consoleRead:reader;this.writer=writer;
+        this.fileReader=fileReader==null?this::readPath:fileReader;this.fileSaver=fileSaver==null?this::savePath:fileSaver;
+        if(fileSaver==null)files.journalFactory=this::journal;
+    }
+    private String consoleRead(String prompt){System.out.print(prompt);System.out.flush();try{String text=console.readLine();if(text==null)throw problem("Input terminato prima di ricevere un valore valido.");return text;}catch(java.io.IOException e){throw problem("Non riesco a leggere l’input.");}}
+    void guard(){if(steps>=maxSteps)throw problem("Limite di esecuzione raggiunto. Controlla la condizione del ciclo.");}
+    void step(){guard();steps++;}
+    boolean test(java.util.function.Supplier<Value> expression){step();return expression.get().asBoolean();}
+    void guardCall(){if(frames.size()>=128)throw problem("Troppe chiamate annidate: massimo 128 livelli.");}
+    void enter(String scope,String[] names,Value[] values){enter(scope,names,values,false);}
+    void enter(String scope,String[] names,Value[] values,boolean references){
+        guardCall();this.references|=references;Frame f=new Frame(scope);
+        for(int i=0;i<names.length;i++){Value value=values[i];if(value!=null&&value.raw instanceof ArrayArgument){ArrayCell cell=((ArrayArgument)value.raw).cell;f.bindings.put(names[i],cell);value=cell.value;}f.variables.put(names[i],value);}
+        frames.add(f);
+    }
+    Value lookup(String name){Frame f=frame();return value((f.transaction==null?f.variables:f.transaction).get(name),name);}
+    Value reference(String name,TypeSpec declaration,TypeSpec parameter){
+        Frame f=frame();Value value=lookup(name);value.vector();TypeSpec spec=declaration==null?parameter:declaration;int kind=spec==null?0:spec.kind;
+        if(f.transaction!=null&&(f.wholeWrites.contains(name)||!f.variables.containsKey(name))){
+            ArrayCell cell=f.newArrays.get(name);if(cell==null){cell=new ArrayCell(value,kind);f.newArrays.put(name,cell);}return new Value(new ArrayArgument(cell));
+        }
+        ArrayCell cell=f.bindings.get(name);if(cell==null){Value original=f.variables.get(name);original.vector();cell=new ArrayCell(original,kind);f.bindings.put(name,cell);}
+        if(f.transaction!=null){ArrayCell staged=f.overlays.get(cell);if(staged!=null)return new Value(new ArrayArgument(staged));if(value!=cell.value)return new Value(new ArrayArgument(overlay(f,cell,value)));}
+        return new Value(new ArrayArgument(cell));
+    }
+    Value checkReference(Value argument,int kind){
+        if(argument==null||!(argument.raw instanceof ArrayArgument))throw problem("Parametro per riferimento non valido.");
+        ArrayArgument address=(ArrayArgument)argument.raw;checkType(address.snapshot,kind,true);ArrayCell cell=address.cell;
+        if(cell.kind!=0&&kind!=0&&cell.kind!=kind)throw problem("Il tipo del vettore per riferimento deve coincidere con quello originale.");
+        checkType(cell.value,kind,true);if(cell.kind==0&&kind!=0)cell.kind=kind;return cell.value;
+    }
+    ArrayCell overlay(Frame f,ArrayCell cell,Value value){ArrayCell staged=f.overlays.get(cell);if(staged==null){staged=new ArrayCell(value,cell.kind);f.overlays.put(cell,staged);}return staged;}
+    void propagate(ArrayCell cell){
+        for(Frame f:frames){
+            for(Map.Entry<String,ArrayCell> pair:f.bindings.entrySet())if(pair.getValue()==cell){String name=pair.getKey();f.variables.put(name,cell.value);if(f.transaction!=null&&!f.wholeWrites.contains(name)){ArrayCell staged=f.overlays.get(cell);f.transaction.put(name,staged==null?cell.value:staged.value);}}
+            if(f.transaction!=null){
+                for(Map.Entry<String,ArrayCell> pair:f.newArrays.entrySet())if(pair.getValue()==cell)f.transaction.put(pair.getKey(),cell.value);
+                for(Map.Entry<ArrayCell,ArrayCell> pair:f.overlays.entrySet())if(pair.getValue()==cell)for(Map.Entry<String,ArrayCell> alias:f.bindings.entrySet())if(alias.getValue()==pair.getKey()&&!f.wholeWrites.contains(alias.getKey()))f.transaction.put(alias.getKey(),cell.value);
+            }
+        }
+    }
+    void checkCell(ArrayCell cell,Value value){if(value.vectorSize()!=cell.value.vectorSize())throw problem("Un vettore per riferimento conserva la dimensione originale.");checkType(value,cell.kind,true);}
+    Frame frame(){return frames.get(frames.size()-1);}
+    void captureError(){if(errorVariables==null&&!frames.isEmpty())errorVariables=new Variables(frame().variables);}
+    void leave(){Frame f=frame();if(f.scope==null)lastVariables=new Variables(f.variables);frames.remove(frames.size()-1);}
+    Value value(Value value,String name){if(value!=null)return value;if(name.equalsIgnoreCase("pi")||name.equals("π"))return Value.number(Math.PI);throw problem("La variabile «"+name+"» non ha ancora un valore.");}
+    long valueSize(Value v){if(v==null)return 8;if(v.raw instanceof ArrayArgument)return valueSize(((ArrayArgument)v.raw).snapshot);if(v.isText())return v.format().length();if(v.isVector()){long n=v.vectorSize()*8L;for(Value x:v.vector().items)if(x.isText())n+=x.format().length();return n;}return 8;}
+    void checkMemory(){long size=outputSize,slots=0;for(Frame f:frames){for(Variables values:new Variables[]{f.variables,f.transaction})if(values!=null){slots+=values.size();for(Value v:values.values())size+=valueSize(v);}for(List<Value> retained:f.retained.values())for(Value v:retained)size+=valueSize(v);if(f.assignment!=null)size+=valueSize(f.assignment);if(size>2097152||slots>16384)throw problem("La memoria dei valori supera il limite di esecuzione.");}}
+    void begin(){Frame f=frame();f.transaction=new Variables(f.variables);if(references){f.overlays.clear();f.newArrays.clear();f.wholeWrites.clear();}}
+    Value stage(String name,Value value){return stage(name,value,true);}
+    Value stage(String name,Value value,boolean check){return stage(name,value,check,false);}
+    Value stage(String name,Value value,boolean check,boolean indexed){
+        Frame f=frame();ArrayCell cell;
+        if(!references)f.transaction.put(name,value);
+        else if(!indexed){f.transaction.put(name,value);f.wholeWrites.add(name);f.newArrays.remove(name);}
+        else if(f.wholeWrites.contains(name)&&(cell=f.newArrays.get(name))!=null){checkCell(cell,value);cell.value=value;propagate(cell);}
+        else if(!f.wholeWrites.contains(name)&&(cell=f.bindings.get(name))!=null){ArrayCell staged=overlay(f,cell,f.transaction.get(name));checkCell(staged,value);staged.value=value;propagate(staged);}
+        else f.transaction.put(name,value);
+        if(check)checkMemory();return value;
+    }
+    Value staged(String name){return frame().transaction.get(name);}
+    Value variable(String name){return frame().variables.get(name);}
+    void commit(){commit(false);}
+    void commit(boolean check){
+        if(check)checkMemory();Frame f=frame();
+        if(references){
+            for(Map.Entry<ArrayCell,ArrayCell> pair:f.overlays.entrySet())checkCell(pair.getKey(),pair.getValue().value);
+            for(ArrayCell cell:f.newArrays.values())checkCell(cell,cell.value);
+            for(String name:f.wholeWrites)f.bindings.remove(name);
+            for(Map.Entry<ArrayCell,ArrayCell> pair:f.overlays.entrySet()){pair.getKey().value=pair.getValue().value;propagate(pair.getKey());}
+            f.bindings.putAll(f.newArrays);
+        }
+        f.variables=f.transaction;f.transaction=null;f.overlays.clear();f.newArrays.clear();f.wholeWrites.clear();
+    }
+    void acceptInput(String name,Value value,boolean indexed){begin();try{stage(name,value,true,indexed);commit();}finally{frame().transaction=null;}}
+    Value hold(int key,Value value){List<Value> values=frame().retained.get(key);if(values==null){values=new ArrayList<>();frame().retained.put(key,values);}values.add(value);return value;}
+    Value release(int key,Value value){frame().retained.remove(key);return value;}
+    Value call(int key,java.util.function.Supplier<Value> invocation){Value value=invocation.get();release(key,value);hold(-1,value);try{checkMemory();}finally{release(-1,value);}return value;}
+    Value unary(String op,Value value){return op.equals("not")?Value.bool(!value.asBoolean()):Value.number(op.equals("-")?-value.asNumber():value.asNumber());}
+    Value binary(String op,Value a,Value b){
+        if(op.equals("&")||op.equals("+")&&(a.isText()||b.isText()))return Value.text(a.format()+b.format());
+        if(op.equals("=")||op.equals("==")||op.equals("!=")||op.equals("<>")){boolean same=a.isNumber()&&b.isNumber()?a.asNumber()==b.asNumber():a.raw.equals(b.raw);return Value.bool(op.equals("!=")||op.equals("<>")?!same:same);}
+        if(op.equals("<")||op.equals("<=")||op.equals(">")||op.equals(">=")){int c=a.isText()&&b.isText()?((String)a.raw).compareTo((String)b.raw):Double.compare(a.asNumber()==0?0:a.asNumber(),b.asNumber()==0?0:b.asNumber());return Value.bool(op.equals("<")?c<0:op.equals("<=")?c<=0:op.equals(">")?c>0:c>=0);}
+        double x=a.asNumber(),y=b.asNumber();switch(op){case "+":return Value.number(x+y);case "-":return Value.number(x-y);case "*":return Value.number(x*y);case "/":if(y==0)throw problem("Divisione per zero.");return Value.number(x/y);case "%":if(y==0)throw problem("Resto con divisore zero.");return Value.number(x%y);case "^":return Value.number(Math.pow(x,y));default:throw problem("Operatore non riconosciuto.");}
+    }
+    Value at(Value target,java.util.function.Supplier<Value> index){Vector v=target.vector();return v.at(v.index(index.get()));}
+    Value atName(String name,java.util.function.Supplier<Value> index){lookup(name).vector();Value i=index.get();Vector v=lookup(name).vector();return v.at(v.index(i));}
+    Value setAfter(Value value,Value target,java.util.function.Supplier<Value> index){Frame f=frame();f.assignment=value;try{Vector v=target.vector();return v.set(v.index(index.get()),value);}finally{f.assignment=null;}}
+    Value setAfterName(Value value,String name,java.util.function.Supplier<Value> index){lookup(name).vector();Frame f=frame();f.assignment=value;try{Value i=index.get();Vector v=lookup(name).vector();return v.set(v.index(i),value);}finally{f.assignment=null;}}
+    Value checkType(Value v,int kind,boolean array){if(array){if(v==null||!v.isVector())throw problem("Serve un vettore.");for(Value x:v.vector().items)checkType(x,kind,false);return v;}boolean valid=v!=null&&!v.isVector();if(kind==1)valid=v!=null&&v.isNumber()&&v.asNumber()==Math.rint(v.asNumber());else if(kind==2)valid=v!=null&&v.isNumber();else if(kind==3)valid=v!=null&&v.isText();else if(kind==4)valid=v!=null&&v.isBoolean();else if(kind==5)valid=false;if(!valid)throw problem("Il valore non corrisponde al tipo dichiarato.");return v;}
+    Value convert(Value value,TypeSpec declaration,TypeSpec parameter){if(declaration!=null){if(declaration.array){if(!value.isVector()||value.vectorSize()!=declaration.length)throw problem("La dimensione del vettore dichiarato non può cambiare.");List<Value> next=new ArrayList<>();for(Value v:value.vector().items)next.add(convertScalar(v,declaration.kind));value=Value.vector(next);}else value=convertScalar(value,declaration.kind);}if(parameter!=null)value=checkType(value,parameter.kind,parameter.array);return value;}
+    private Value convertScalar(Value v,int kind){if(kind==1&&v!=null&&v.isNumber()){double n=v.asNumber();return Value.number(n<0?Math.ceil(n):Math.floor(n));}return checkType(v,kind,false);}
+    Value initial(int kind,boolean array,int length){Value value=kind==3?Value.text(""):kind==4?Value.bool(false):Value.number(0);return array?Value.vector(java.util.Collections.nCopies(length,value)):value;}
+    boolean wantsText(TypeSpec d,TypeSpec p,boolean indexed){TypeSpec s=d==null?p:d;return s!=null&&s.kind==3&&(indexed||!s.array);}
+    Value read(String name,String prompt,TypeSpec declaration,TypeSpec parameter,Value vector,java.util.function.Supplier<Value> indexExpression){
+        guard();String display=name;Integer index=null;if(indexExpression!=null){Vector v=vector.vector();Value i=indexExpression.get();if(references)v=lookup(name).vector();index=v.index(i);display+="["+index+"]";}guard();if(prompt==null||prompt.trim().isEmpty()||prompt.equals("Inserisci un valore per x"))prompt="Inserisci un valore per "+display;
+        while(true){String raw=reader.read(prompt+": ");if(raw==null)throw problem("Input terminato prima di ricevere un valore valido.");try{Value v=wantsText(declaration,parameter,index!=null)?Value.text(raw):parseInput(raw);if(index!=null)v=(references?lookup(name):vector).vector().set(index,v);v=convert(v,declaration,parameter);acceptInput(name,v,index!=null);return v;}catch(Problem error){System.err.println(error.getMessage());}}
+    }
+    void emit(Value value){emit(value,true);}
+    void emit(Value value,boolean newline){String text=value==null?"":value.format();if(outputSize+(long)text.length()>262144)throw problem("Il risultato supera 256 KiB.");output.add(text);outputNewlines.add(newline);outputSize+=text.length();if(writer==null){if(newline)System.out.println(text);else System.out.print(text);System.out.flush();}else writer.accept(text);}
+    Value intrinsic(String name,Value... args){
+        if(name.equals("eof"))return Value.bool(files.eof());Value first=args[0];
+        if(name.equals("array")||name.equals("vettore")){int length=Vector.integer(first,"La dimensione");if(length>1024)throw problem("Un vettore può contenere al massimo 1024 elementi.");Value initial=args.length==2?args[1]:Value.number(0);Vector.scalar(initial);return Value.vector(java.util.Collections.nCopies(length,initial));}
+        if(name.equals("len")){if(first.isVector())return Value.number(first.vectorSize());if(first.isText())return Value.number(Intrinsics.characterCount(first.format()));throw problem("len richiede un testo o un vettore.");}
+        if(name.equals("sum")||name.equals("somma")||(name.equals("min")||name.equals("max"))&&args.length==1){Vector vector=first.vector();if(vector.items.isEmpty()&&!name.equals("sum")&&!name.equals("somma"))throw problem("Il vettore è vuoto.");double n=0;for(int i=0;i<vector.items.size();i++){double v=vector.at(i).asNumber();n=name.equals("min")?(i==0?v:Math.min(n,v)):name.equals("max")?(i==0?v:Math.max(n,v)):finite(n+v);}return Value.number(n);}
+        if(Intrinsics.handles(name))return Intrinsics.evaluate(name,args);double n=first.asNumber();
+        switch(name){case "abs":return Value.number(Math.abs(n));case "sqrt":if(n<0)throw problem("La radice richiede un numero non negativo.");return Value.number(Math.sqrt(n));case "floor":return Value.number(Math.floor(n));case "round":return Value.number(roundAway(n,args.length==1?0:Intrinsics.integer(args[1],0,15,"Le cifre decimali")));case "min":case "max":for(int i=1;i<args.length;i++){double next=args[i].asNumber();n=name.equals("min")?Math.min(n,next):Math.max(n,next);}return Value.number(n);default:throw problem("Funzione sconosciuta.");}
+    }
+    void requireClosed(boolean reading){if(reading?files.hasRead():files.hasWrite())throw problem("Chiudi il file precedente prima di aprirne un altro.");}
+    void requireWrite(){if(!files.hasWrite())throw problem("Apri prima un file in scrittura.");}
+    void openFile(boolean reading,Value name){requireClosed(reading);String path=TextFiles.name(name);if(reading)files.openRead(path,fileReader.read(path));else files.openWrite(path);}
+    Value readFile(String name,TypeSpec declaration,TypeSpec parameter,Value vector,java.util.function.Supplier<Value> indexExpression){
+        Integer index=null;if(indexExpression!=null){Vector v=vector.vector();Value i=indexExpression.get();if(references)v=lookup(name).vector();index=v.index(i);}String raw=files.peekLine();
+        Value value=wantsText(declaration,parameter,index!=null)?Value.text(raw):parseInput(raw);if(index!=null)value=(references?lookup(name):vector).vector().set(index,value);value=convert(value,declaration,parameter);acceptInput(name,value,index!=null);files.commitRead();return value;
+    }
+    void writeFile(Value value,boolean newline){files.write(value.format(),newline);}
+    void closeFile(boolean reading){if(reading){files.closeRead();return;}requireWrite();if(!fileSaver.save(files.writeName(),files.outputDraft()))throw problem("Salvataggio annullato: la bozza resta disponibile.");files.saved();}
+    void finishFiles(){if(files.hasWrite())closeFile(false);if(files.hasRead())files.closeRead();}
+    private String readPath(String name){try(java.io.InputStream in=java.nio.file.Files.newInputStream(java.nio.file.Paths.get(name))){return TextFiles.readText(in);}catch(java.io.IOException|SecurityException error){throw problem("Non riesco a leggere il file «"+name+"».");}}
+    private TextFiles.Journal journal(String name)throws java.io.IOException{
+        java.nio.file.Path target=java.nio.file.Paths.get(name).toAbsolutePath(),parent=target.getParent();if(parent==null||!java.nio.file.Files.isDirectory(parent))throw new java.io.IOException("Cartella non disponibile");
+        final java.nio.file.Path draft=java.nio.file.Files.createTempFile(parent,".frociart-recovery-",".txt");recoveryPath=draft;
+        final java.nio.channels.FileChannel channel=java.nio.channels.FileChannel.open(draft,java.nio.file.StandardOpenOption.WRITE);return new TextFiles.Journal(){
+            public String id(){return draft.toString();}public void append(String text)throws java.io.IOException{java.nio.ByteBuffer bytes=java.nio.ByteBuffer.wrap(TextFiles.utf8(text));while(bytes.hasRemaining())channel.write(bytes);channel.force(true);}
+            public void close()throws java.io.IOException{channel.close();}public boolean saved(){try{channel.close();return true;}catch(java.io.IOException e){return false;}}
+        };
+    }
+    private boolean savePath(String name,String text){
+        try{
+            files.closeJournal();java.nio.file.Path target=java.nio.file.Paths.get(name).toAbsolutePath();
+            if(java.nio.file.Files.exists(target,java.nio.file.LinkOption.NOFOLLOW_LINKS)){
+                String answer=reader.read("Il file «"+name+"» esiste. Sostituirlo? [s/N] ");if(answer==null||!answer.trim().equalsIgnoreCase("s"))return false;
+                java.nio.file.Files.move(recoveryPath,target,java.nio.file.StandardCopyOption.REPLACE_EXISTING,java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            }else{
+                // CREATE_NEW refuses a competing file. The durable recovery copy remains on any failure.
+                try(java.nio.channels.FileChannel out=java.nio.channels.FileChannel.open(target,java.nio.file.StandardOpenOption.CREATE_NEW,java.nio.file.StandardOpenOption.WRITE);java.nio.channels.FileChannel in=java.nio.channels.FileChannel.open(recoveryPath,java.nio.file.StandardOpenOption.READ)){
+                    long at=0;java.nio.ByteBuffer buffer=java.nio.ByteBuffer.allocate(8192);while(in.read(buffer)>=0){buffer.flip();while(buffer.hasRemaining())out.write(buffer);buffer.clear();}out.force(true);
+                }
+                java.nio.file.Files.delete(recoveryPath);
+            }
+            recoveryPath=null;return true;
+        }catch(java.io.IOException|SecurityException error){throw problem("File non salvato. La bozza è conservata in "+recoveryPath+".");}
+    }
+    void turtle(int kind,Value value,boolean flag){Turtle.Spec spec=new Turtle.Spec();spec.kind=kind;spec.draw=flag;spec.left=flag;this.turtle.apply(spec,value);}
+    java.awt.image.BufferedImage drawing(int width,int height){
+        java.awt.image.BufferedImage image=new java.awt.image.BufferedImage(width,height,java.awt.image.BufferedImage.TYPE_INT_RGB);java.awt.Graphics2D g=image.createGraphics();
+        try{g.setColor(java.awt.Color.WHITE);g.fillRect(0,0,width,height);g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,java.awt.RenderingHints.VALUE_ANTIALIAS_ON);g.setStroke(new java.awt.BasicStroke(2f,java.awt.BasicStroke.CAP_ROUND,java.awt.BasicStroke.JOIN_ROUND));
+            double minX=Math.min(0,turtle.x()),maxX=Math.max(0,turtle.x()),minY=Math.min(0,turtle.y()),maxY=Math.max(0,turtle.y());for(Turtle.Segment s:turtle.segments()){minX=Math.min(minX,Math.min(s.x1,s.x2));maxX=Math.max(maxX,Math.max(s.x1,s.x2));minY=Math.min(minY,Math.min(s.y1,s.y2));maxY=Math.max(maxY,Math.max(s.y1,s.y2));}
+            double scale=Math.min((width-48)/Math.max(1,maxX-minX),(height-48)/Math.max(1,maxY-minY));double cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+            for(Turtle.Segment s:turtle.segments()){g.setColor(java.awt.Color.decode(s.color));g.draw(new java.awt.geom.Line2D.Double(width/2+(s.x1-cx)*scale,height/2-(s.y1-cy)*scale,width/2+(s.x2-cx)*scale,height/2-(s.y2-cy)*scale));}
+        }finally{g.dispose();}return image;
+    }
+    void showDrawing(){if(!turtle.used())return;if(java.awt.GraphicsEnvironment.isHeadless()){System.err.println("Il disegno richiede un ambiente grafico Java.");return;}javax.swing.SwingUtilities.invokeLater(()->{javax.swing.JFrame window=new javax.swing.JFrame("Disegno — Frociart");window.setDefaultCloseOperation(javax.swing.JFrame.DISPOSE_ON_CLOSE);javax.swing.JPanel panel=new javax.swing.JPanel(){protected void paintComponent(java.awt.Graphics g){super.paintComponent(g);g.drawImage(drawing(Math.max(50,getWidth()),Math.max(50,getHeight())),0,0,null);}};panel.setPreferredSize(new java.awt.Dimension(800,600));window.setContentPane(panel);window.pack();window.setLocationByPlatform(true);window.setVisible(true);});}
+    boolean run(java.util.function.Supplier<Value> main,boolean drawing){try{main.get();if(drawing)showDrawing();return true;}catch(RuntimeException|StackOverflowError error){System.err.println(error.getMessage()==null?"Esecuzione interrotta.":error.getMessage());return false;}finally{try{files.closeJournal();}catch(java.io.IOException e){System.err.println("Non riesco a chiudere la bozza.");}if(recoveryPath!=null)System.err.println("Bozza recuperabile: "+recoveryPath);}}
+}
