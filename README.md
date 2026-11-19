@@ -1,4 +1,4 @@
-![Frociart — La logica prende forma](docs/assets/frociart-cover.png)
+[![Frociart — La logica prende forma](docs/assets/frociart-cover.png)](https://frociart.pages.dev/)
 
 # Frociart v1
 
@@ -6,7 +6,7 @@
 
 Frociart è un editor di flowchart per Windows e Android. Collega i blocchi, costruisci decisioni con due rami e prova il risultato con valori diversi. Questa versione è dedicata alla creazione e alla simulazione dei flowchart.
 
-[Sito del progetto](https://mamt104.github.io/Frociart/) · [Scarica per Windows](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) · [Scarica per Android](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk)
+[Sito ufficiale e demo](https://frociart.pages.dev/) · [Scarica per Windows](https://mamt104.github.io/Frociart/download/Frociart_v1.exe) · [Scarica per Android](https://mamt104.github.io/Frociart/download/Frociart_v1_Android.apk)
 
 ## Il Mentalista
 
